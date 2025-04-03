@@ -1,0 +1,34 @@
+{
+  "role_name": "trainer",
+  "permissions": {
+    "get_sessions": true,
+    "save_sessions": true,
+    "update_sessions": true,
+    "delete_sessions": true,
+    "get_points": true,
+    "save_points": true,
+    "get_question_topics": true,
+    "get_questions": true,
+    "update_question": true,
+    "save_pushed_questions": true,
+    "save_questions": true,
+    "delete_question": true,
+    "get_topics": true,
+    "save_topic": true,
+    "delete_topic": true,
+    "update_topic": true,
+    "media": true
+}
+,
+  "access": {
+    "view_own_classrooms": true,
+    "view_own_assignments": true,
+    "access_admin_panel": false,
+    "view_all_users": false,
+    "view_all_courses": false,
+    "view_own_courses": false,
+    "view_associated_students": false,
+    "view_enrolled_courses": false,
+    "view_assigned_assignments": false
+  }
+}

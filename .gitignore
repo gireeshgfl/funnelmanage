@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Node.js
+/node_modules
+
+# Nameko
+/__pycache__/
+
+# Flask
+/*.pyc
+
+# Next.js
+/.next/
+/out/
+/node_modules/

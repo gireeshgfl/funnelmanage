@@ -1,0 +1,43 @@
+{
+  "role_name": "student",
+  "permissions": {
+    "read_course": true,
+    "enroll_course": true,
+    "submit_assignment": true,
+    "request_association": true,
+    "read_notification": true,
+    "mark_notification_read": true,
+    "create_user": false,
+    "update_user": false,
+    "delete_user": false,
+    "create_category": false,
+    "update_category": false,
+    "delete_category": false,
+    "approve_course": false,
+    "read_all_activities": false,
+    "read_all_notifications": false,
+    "create_course": false,
+    "update_course": false,
+    "delete_course": false,
+    "accept_association": false,
+    "create_classroom": false,
+    "update_classroom": false,
+    "delete_classroom": false,
+    "create_assignment": false,
+    "update_assignment": false,
+    "delete_assignment": false,
+    "grade_assignment": false,
+    "invite_student": false
+  },
+  "access": {
+    "view_enrolled_courses": true,
+    "view_assigned_assignments": true,
+    "access_admin_panel": false,
+    "view_all_users": false,
+    "view_all_courses": false,
+    "view_own_courses": false,
+    "view_associated_students": false,
+    "view_own_classrooms": false,
+    "view_own_assignments": false
+  }
+}

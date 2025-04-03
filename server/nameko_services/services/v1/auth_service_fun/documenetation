@@ -1,0 +1,261 @@
+# AuthService Class Documentation
+
+## Table of Contents
+1. [Class Overview](#class-overview)
+2. [Properties](#properties)
+3. [Private Methods](#private-methods)
+4. [Public Methods](#public-methods)
+5. [Database Models](#database-models)
+
+## Class Overview
+
+The `AuthService` class provides authentication and authorization functionalities for a microservice architecture. It uses Nameko for RPC, MongoDB for data storage, and Redis for caching.
+
+## Properties
+
+1. **secret_key**
+   - Description: Secret key for JWT encoding/decoding
+   - Type: String
+
+2. **jwt_algorithm**
+   - Description: Algorithm used for JWT encoding/decoding
+   - Type: String
+
+3. **access_token_expire_minutes**
+   - Description: Expiration time for access tokens in minutes
+   - Type: Integer
+
+4. **refresh_token_expire_days**
+   - Description: Expiration time for refresh tokens in days
+   - Type: Integer
+
+5. **redis_token_key**
+   - Description: Prefix for Redis token keys
+   - Type: String
+
+6. **user_db**
+   - Description: User database instance
+   - Type: User object
+
+7. **token_db**
+   - Description: Token database instance
+   - Type: Token object
+
+8. **otp_db**
+   - Description: OTP database instance
+   - Type: OTP object
+
+9. **captcha_db**
+   - Description: Captcha database instance
+   - Type: Captcha object
+
+## Private Methods - Python internal methods
+
+### _create_access_token(user)
+- Description: Creates an access token for a user
+- Parameters:
+  - user (dict): User information
+- Returns: Encoded access token (string)
+
+### _create_refresh_token(user)
+- Description: Creates a refresh token for a user
+- Parameters:
+  - user (dict): User information
+- Returns: Encoded refresh token (string)
+
+### _store_tokens(username, access_token, refresh_token, user_id)
+- Description: Stores access and refresh tokens in the database
+- Parameters:
+  - username (str): User's username
+  - access_token (str): Access token
+  - refresh_token (str): Refresh token
+  - user_id (str): User's ID
+- Returns: Database operation result
+
+## Public Methods  -- RPC methods
+
+### 1. register(data)
+- Description: Registers a new user
+- Parameters:
+  - data (dict):
+    - username (str): User's username
+    - password (str): User's password
+    - phone (str): User's phone number
+    - email (str): User's email
+    - captcha (str): Captcha verification code
+    - role (str): User's role
+- Returns:
+  - Success: `{'message': 'User created successfully', 'status': 200}`
+  - Errors:
+    - Captcha validation failed: `{'message': 'Captcha validation failed', 'status': 401}`
+    - User exists: `{'message': 'User already exists', 'status': 409}`
+    - Role not found: `{'message': 'Role data not found', 'status': 400}`
+    - Invalid role: `{'message': 'Invalid role', 'status': 400}`
+
+### 2. signin(data)
+- Description: Authenticates a user and generates tokens
+- Parameters:
+  - data (dict):
+    - email (str): User's email
+    - password (str): User's password
+- Returns:
+  - Success: `{'access_token': <token>, 'refresh_token': <token>, 'status': 200}`
+  - Error: `{'error': 'Invalid credentials', 'status': 401}`
+
+### 3. refresh_token(refresh_token)
+- Description: Refreshes the access token using a refresh token
+- Parameters:
+  - refresh_token (str): The refresh token
+- Returns:
+  - Success: `{'access_token': <token>, 'refresh_token': <token>, 'status': 200}`
+  - Error: `{'error': 'Invalid refresh token', 'status': 401}`
+
+### 4. verify_token(token)
+- Description: Verifies a token's validity
+- Parameters:
+  - token (str): The token to verify
+- Returns: Result of token verification (implementation-specific)
+
+### 5. signout(jwt_token)
+- Description: Logs out a user by invalidating their tokens
+- Parameters:
+  - jwt_token (str): The JWT token to invalidate
+- Returns: `{'message': 'Logged out successfully', 'status': 200}`
+
+### 6. generate_captcha()
+- Description: Generates a new captcha
+- Returns:
+  ```python
+  {
+    'captcha_image_base64': <base64_encoded_image>,
+    'captcha_text': <captcha_text>,
+    'status': 200
+  }
+  ```
+
+### 7. generate_otp(data)
+- Description: Generates a one-time password for a user
+- Parameters:
+  - data (dict):
+    - email (str): User's email
+- Returns: `{'message': 'OTP generated', 'status': 200}`
+
+### 8. verify_otp_and_change_password(data)
+- Description: Verifies OTP and changes user's password
+- Parameters:
+  - data (dict):
+    - email (str): User's email
+    - otp (str): One-time password
+    - new_password (str): New password
+- Returns:
+  - Success: `{'message': 'Password changed successfully', 'status': 200}`
+  - Errors:
+    - OTP expired: `{'message': 'OTP has expired', 'status': 400}`
+    - Invalid OTP: `{'message': 'Invalid OTP', 'status': 400}`
+
+
+
+## Database Models
+
+The AuthService uses the following database models to interact with the underlying database:
+
+### User Model
+
+```python
+class User(BaseDAO):
+    def __init__(self, db_connection):
+        super().__init__(db_connection, 'users')
+    
+    def create_user(self, user_data):
+        return self.insert_one(user_data)
+    
+    def find_user_by_username(self, username):
+        return self.find_one({'username': username})
+    
+    def find_user_by_email(self, email):
+        return self.find_one({'email': email}, {"_id": 1})
+    
+    def find_user_by_user_id(self, user_id):
+        return self.find_one({'_id': ObjectId(user_id)})
+    
+    def update_user_password(self, email, new_hashed_password):
+        return self.update_one(
+            {'email': email},
+            {'$set': {'password': new_hashed_password}}
+        )
+```
+
+The User model handles user-related database operations, including:
+- Creating new users
+- Finding users by username, email, or user ID
+- Updating user passwords
+
+### Token Model
+
+```python
+class Token(BaseDAO):
+    def __init__(self, db_connection):
+        super().__init__(db_connection, 'users_token')
+    
+    def verify_tokens(self, user_id, token, redis_client):
+        token_data = self.find_one({'access_token': token})
+        if token_data:
+           return True
+    
+    def store_tokens(self, token_doc):
+        return self.replace_one(
+            {'user_id': token_doc['user_id']},
+            token_doc,
+            upsert=True
+        )
+    
+    def delete_tokens(self, user_id, redis_client):
+        result = self.delete_one({'user_id': user_id})
+        redis_key = f'token:{user_id}'
+        redis_client.delete(redis_key)
+        
+        return result
+```
+
+The Token model manages token-related operations, including:
+- Verifying tokens
+- Storing new tokens
+- Deleting tokens (both from the database and Redis cache)
+
+### OTP Model
+
+```python
+class OTP(BaseDAO):
+    def __init__(self, db_connection):
+        super().__init__(db_connection, 'otp')
+    
+    def create_otp(self, otp):
+        return self.insert_one(otp)
+    
+    def find_otp(self, otp):
+        return self.find_one({'otp': otp})
+```
+
+The OTP model handles operations related to One-Time Passwords:
+- Creating new OTPs
+- Finding OTPs for verification
+
+### Captcha Model
+
+```python
+class Captcha(BaseDAO):
+    def __init__(self, db_connection):
+        super().__init__(db_connection, 'captcha')
+    
+    def create_captcha(self, captcha_text):
+        return self.insert_one(captcha_text)
+    
+    def find_captcha(self, captcha_text):
+        return self.find_one({'captcha_text': captcha_text})
+```
+
+The Captcha model manages captcha-related operations:
+- Creating new captchas
+- Finding captchas for verification
+
+These models extend a BaseDAO class, which likely provides basic database operations. They interact with different collections in the database ('users', 'users_token', 'otp', and 'captcha') to perform specific operations required by the AuthService.
