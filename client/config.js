@@ -85,4 +85,13 @@ export const API_ROUTES = {
     TRAINER_STATUS: `${BASE_URL}/super_admin_service/trainer_status`,
   },
 
+  // ===========================
+  // 8. Funnel Service
+  // ===========================
+  FUNNEL_SERVICE: {
+    SAVE_PARTICIPANTS: `${BASE_URL}/funnel_service/save_participants`,
+    GET_PARTICIPANTS: `${BASE_URL}/funnel_service/get_participants`,
+  },
+
+
 };

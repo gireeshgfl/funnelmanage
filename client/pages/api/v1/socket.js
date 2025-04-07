@@ -96,9 +96,11 @@ export default async function handler(req, res) {
           // Handle disconnect.
           socket.on('disconnect', (reason) => {
             console.log(`User disconnected: ${userId}. Reason: ${reason}`);
+            const sessionId = socket.sessionId || (participants[userId] && participants[userId].sessionId);
+            eventBus.emit('userLeft', { userId, sessionId });
             delete participants[userId];
-            eventBus.emit('userLeft', { userId, sessionId: socket.sessionId });
           });
+          
 
           // Handle chat messages and other events.
           socket.on('chatmessage', (data) => {
@@ -147,9 +149,9 @@ export default async function handler(req, res) {
 
       eventBus.on('userLeft', ({ userId, sessionId }) => {
         if (sessionId) {
-          io.to(sessionId).emit('userLeft', { userId });
+          io.to(sessionId).emit('userLeft', { userId, sessionId });
         } else {
-          io.emit('userLeft', { userId });
+          io.emit('userLeft', { userId, sessionId });
         }
       });
 

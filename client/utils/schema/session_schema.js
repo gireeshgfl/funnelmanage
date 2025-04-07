@@ -106,3 +106,8 @@ export const trainerStatusSchema = z.object({
   status: z.string(),
 });
 
+export const funnelDataSchema = z.object({
+  userId: z.string().length(24, "userId must be a 24-character string"),
+  username: z.string().min(1, "username is required"),
+  sessionId: z.string().length(24, "sessionId must be a 24-character string"),
+});

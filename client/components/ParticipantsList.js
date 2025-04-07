@@ -3,7 +3,9 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
 import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
-import { Users, Smile, Frown, Meh, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Users } from 'lucide-react';
+import axios from 'axios';
+import { API_ROUTES } from '@/config';
 
 const ParticipantsList = ({ currentSessionId }) => {
   const [participants, setParticipants] = useState([]);
@@ -11,18 +13,39 @@ const ParticipantsList = ({ currentSessionId }) => {
 
   useEffect(() => {
     if (!socket) return;
+    console.log("🧠 Binding socket listeners...");
 
     const handleInitialParticipants = (participantsList) => {
+      console.log("🚀 initialParticipants", participantsList);
       setParticipants(participantsList.filter(p => p.sessionId === currentSessionId));
     };
 
-    const handleUserJoined = (userDetails) => {
+    const handleUserJoined = async (userDetails) => {
       if (userDetails.role === 'student' && userDetails.sessionId === currentSessionId) {
-        setParticipants(prev => [...prev.filter(p => p.userId !== userDetails.userId), userDetails]);
+        console.log("👤 userJoined", userDetails);
+
+        setParticipants(prev => {
+          const alreadyExists = prev.some(p => p.userId === userDetails.userId);
+          if (alreadyExists) return prev;
+          return [...prev, userDetails];
+        });
+
+        const { userId, username, sessionId } = userDetails;
+
+        try {
+          await axios.post(`${API_ROUTES.FUNNEL_SERVICE.SAVE_PARTICIPANTS}`, {
+            userId,
+            username,
+            sessionId
+          });
+        } catch (error) {
+          console.error('Error saving participant:', error?.response?.data || error.message);
+        }
       }
     };
 
     const handleUserLeft = ({ userId, sessionId }) => {
+      console.log("❌ userLeft triggered", userId, sessionId);
       if (sessionId === currentSessionId) {
         setParticipants(prev => prev.filter(p => p.userId !== userId));
       }
@@ -30,17 +53,21 @@ const ParticipantsList = ({ currentSessionId }) => {
 
     const handleUpdateEmojis = ({ userId, emojis, sessionId }) => {
       if (sessionId === currentSessionId) {
-        setParticipants(prev => prev.map(p => 
-          p.userId === userId ? { ...p, emojis } : p
-        ));
+        setParticipants(prev =>
+          prev.map(p =>
+            p.userId === userId ? { ...p, emojis } : p
+          )
+        );
       }
     };
 
     const handleUpdateStudentPoints = ({ studentId, points, sessionId }) => {
       if (sessionId === currentSessionId) {
-        setParticipants(prev => prev.map(p => 
-          p.userId === studentId ? { ...p, points } : p
-        ));
+        setParticipants(prev =>
+          prev.map(p =>
+            p.userId === studentId ? { ...p, points } : p
+          )
+        );
       }
     };
 
@@ -66,18 +93,19 @@ const ParticipantsList = ({ currentSessionId }) => {
     }
   };
 
-  const hasEmojis = useMemo(() => 
+  const hasEmojis = useMemo(() =>
     participants.some(p => p.emojis?.length > 0),
     [participants]
   );
 
   const getEmojiIcon = (emoji) => {
-    switch(emoji) {
-      case '😊': return <Smile className="h-4 w-4" />;
-      case '😢': return <Frown className="h-4 w-4" />;
-      case '👍': return <ThumbsUp className="h-4 w-4" />;
-      case '👎': return <ThumbsDown className="h-4 w-4" />;
-      case '😐': return <Meh className="h-4 w-4" />;
+    switch (emoji) {
+      case '👍': return '👍';
+      case '👎': return '👎';
+      case '❓': return '❓';
+      case '🙋': return '🙋';
+      case '💡': return '💡';
+      case '🎉': return '🎉';
       default: return emoji;
     }
   };
@@ -88,8 +116,8 @@ const ParticipantsList = ({ currentSessionId }) => {
         <h3 className="font-semibold text-gray-800 dark:text-gray-200">
           Participants ({participants.length})
         </h3>
-        <Button 
-          onClick={handleClearAllEmojis} 
+        <Button
+          onClick={handleClearAllEmojis}
           variant={hasEmojis ? "danger" : "outline"}
           size="sm"
           disabled={!hasEmojis}
@@ -107,7 +135,7 @@ const ParticipantsList = ({ currentSessionId }) => {
         ) : (
           <ul className="space-y-2">
             {participants.map((participant) => (
-              <li 
+              <li
                 key={participant.userId}
                 className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
@@ -115,7 +143,7 @@ const ParticipantsList = ({ currentSessionId }) => {
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-medium">
                     {participant.username.charAt(0).toUpperCase()}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 dark:text-gray-200 truncate">
                       {participant.username}
@@ -124,7 +152,7 @@ const ParticipantsList = ({ currentSessionId }) => {
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
                         {participant.points || 0} pts
                       </span>
-                      
+
                       {participant.emojis?.length > 0 && (
                         <div className="flex items-center gap-1">
                           {participant.emojis.map((emoji, i) => (

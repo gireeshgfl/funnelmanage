@@ -50,7 +50,14 @@ export default function Header() {
               <span>Question Bank</span>
             </Link>
             <Link 
-              href="/dashboard/trainer/offers-points" 
+              href="/dashboard/trainer/funnels" 
+              className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors px-3 py-2 rounded-md"
+            >
+              <Filter className="h-5 w-5" />
+              <span>Funnels</span>
+            </Link>
+            <Link 
+              href="/dashboard/trainer/rewards" 
               className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors px-3 py-2 rounded-md"
             >
               <Gift className="h-5 w-5" />
@@ -129,7 +136,7 @@ export default function Header() {
         <div className="md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <div className="px-2 pt-2 pb-3 space-y-1">
             <Link
-              href="/dashboard/trainer"
+              href="/dashboard/trainer/sessions"
               className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -143,6 +150,14 @@ export default function Header() {
             >
               <BookOpen className="h-5 w-5" />
               <span>Question Bank</span>
+            </Link>
+            <Link
+              href="/dashboard/trainer/funnels"
+              className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Filter className="h-5 w-5" />
+              <span>Funnels</span>
             </Link>
             <Link
               href="/dashboard/trainer/offers-points"

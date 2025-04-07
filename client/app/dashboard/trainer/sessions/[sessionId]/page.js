@@ -219,7 +219,7 @@ const SessionWorkspace = () => {
         </div>
   
         {/* Middle Section - Question Bank (wider) */}
-        <div className="w-[40rem] h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+        <div className="w-[35rem] h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
             <BookOpen className="h-5 w-5 text-primary-500" />
             <h2 className="text-lg font-semibold">Question Bank</h2>

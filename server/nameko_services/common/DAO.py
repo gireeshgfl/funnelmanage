@@ -850,5 +850,24 @@ class ChatDAO(BaseDAO):
             {"$push": {"chats": chat_entry}}
         )
 
-
+# ------------------------------
+# Funnel Service DAO Module
+# Handles funnel-related operations.
+# ------------------------------
+class FunnelDAO(BaseDAO):
+    def __init__(self, db_connection):
+        """
+        Initialize FunnelDAO with the 'funnel' collection.
+        """
+        super().__init__(db_connection, collection_name="funnel")
     
+    def save_participants(self, user_id, data):
+        """
+        Save a new chat entry into the funnel collection.
+        """
+        data['created_by'] = ObjectId(user_id)
+        data['created_at'] = datetime.utcnow()
+
+        result = self.insert_one(data)
+        data['_id'] = result.inserted_id
+        return data
