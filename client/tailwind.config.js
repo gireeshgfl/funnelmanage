@@ -1,7 +1,7 @@
 // ===============================================================================
 // GoFreeLab Proprietary
 // -------------------------------------------------------------------------------
-// Project Name    : Eduvocate
+// Project Name    : Funnel-management
 // File Name       : tailwind.config.js
 // -------------------------------------------------------------------------------
 // Copyright (c) 2025 GoFreeLab. All rights reserved.
@@ -26,10 +26,7 @@ module.exports = {
     
     extend: {
       fontFamily: {
-        sans: ['Inter', 'Open Sans', 'Roboto', 'Arial', 'sans-serif'],
-        serif: ['Georgia', 'Cambria', 'serif'],
-        mono: ['Courier New', 'Courier', 'monospace'],
-        display: ['Poppins', 'Inter', 'sans-serif'],
+        sans: ['Inter'],
       },
       colors: {
         // Light mode colors

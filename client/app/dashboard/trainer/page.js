@@ -81,7 +81,7 @@ const TrainerDashboard = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
         <div className="flex flex-col md:flex-row items-center justify-between">
           <div>
-            <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Welcome back, {userName}!
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
@@ -90,7 +90,7 @@ const TrainerDashboard = () => {
           </div>
           <div className="mt-4 md:mt-0">
             <button
-              onClick={() => navigateTo('/dashboard/trainer/sessions/new')}
+              onClick={() => navigateTo('/dashboard/trainer/sessions')}
               className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center space-x-2"
             >
               <Calendar className="h-5 w-5" />
@@ -166,17 +166,17 @@ const TrainerDashboard = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
-              onClick={() => navigateTo('/dashboard/trainer/sessions/new')}
+              onClick={() => navigateTo('/dashboard/trainer/sessions')}
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               <span className="font-medium text-gray-700 dark:text-gray-300">New Session</span>
             </button>
             <button
-              onClick={() => navigateTo('/dashboard/trainer/question-bank/new')}
+              onClick={() => navigateTo('/dashboard/trainer/question-bank')}
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <BookOpen className="h-5 w-5 text-primary-600 dark:text-primary-400" />
@@ -202,7 +202,7 @@ const TrainerDashboard = () => {
         {/* Upcoming Sessions */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-display font-semibold text-gray-900 dark:text-white">Upcoming Sessions</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upcoming Sessions</h2>
             <button 
               onClick={() => navigateTo('/dashboard/trainer/sessions')}
               className="text-sm text-primary-600 dark:text-primary-400 hover:underline"

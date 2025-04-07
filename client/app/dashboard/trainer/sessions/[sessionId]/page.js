@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useContext } from 'react';
-import { Plus, X, MessageSquare, Users, BookOpen, List, Award } from 'lucide-react';
+import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter, Gift, Calendar, Menu } from 'lucide-react';
 import MCQCreation from '@/components/MCQCreation';
 import CouponPage from '@/components/CouponPage';
 import ChatRoom from '@/components/ChatRoom';
@@ -9,13 +9,19 @@ import QuestionBank from '@/components/QuestionBank';
 import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@hooks/useAuth';
+import Link from 'next/link';
 
-const IndexPage = () => {
+const SessionWorkspace = () => {
   const [activeFeature, setActiveFeature] = useState(null);
   const [trainerName, setTrainerName] = useState('Trainer');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { socket } = useContext(SocketContext);
+  const { signout } = useAuth();
   const router = useRouter();
 
   // Extract session ID from URL
@@ -24,6 +30,25 @@ const IndexPage = () => {
     : '';
 
   useEffect(() => {
+    // Check for saved theme preference or system preference
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('color-theme');
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+        setDarkMode(true);
+        document.documentElement.classList.add('dark');
+      }
+      
+      // Prevent page scrolling
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.height = '100%';
+      document.body.style.height = '100%';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    }
+
     const fetchTrainerData = async () => {
       try {
         const response = await fetch(API_ROUTES.AUTH_SERVICE.USER, {
@@ -46,7 +71,39 @@ const IndexPage = () => {
     };
 
     fetchTrainerData();
+    
+    // Cleanup function to reset styles when component unmounts
+    return () => {
+      if (typeof window !== 'undefined') {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.height = '';
+        document.body.style.height = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+      }
+    };
   }, [router]);
+
+  const toggleDarkMode = () => {
+    if (darkMode) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('color-theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('color-theme', 'dark');
+    }
+    setDarkMode(!darkMode);
+  };
+
+  const handleSignout = async () => {
+    try {
+      await signout();
+      router.push('/login');
+    } catch (error) {
+      console.error('Signout failed:', error);
+    }
+  };
 
   const handlePushContent = (type, content) => {
     if (socket) {
@@ -60,7 +117,7 @@ const IndexPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen w-full">
+      <div className="flex items-center justify-center min-h-screen w-full bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
       </div>
     );
@@ -68,8 +125,8 @@ const IndexPage = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md">
+      <div className="flex items-center justify-center min-h-screen w-full bg-gray-50 dark:bg-gray-900">
+        <div className="bg-red-100 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300 p-4 max-w-md rounded-lg">
           <p className="font-bold">Error</p>
           <p>{error}</p>
         </div>
@@ -78,92 +135,182 @@ const IndexPage = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Participants Panel */}
-      <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
-          <Users className="h-5 w-5 text-primary-500" />
-          <h2 className="text-lg font-semibold">Participants</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          <ParticipantsList currentSessionId={sessionId} />
-        </div>
-      </div>
-
-      {/* Question Bank Panel */}
-      <div className="w-80 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
-          <BookOpen className="h-5 w-5 text-primary-500" />
-          <h2 className="text-lg font-semibold">Question Bank</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <QuestionBank />
-        </div>
-      </div>
-
-      {/* Main Workspace */}
-      <div className="flex-1 flex flex-col">
-        {/* Toolbar */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
-          <div className="flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5 text-primary-500" />
-            <h2 className="text-lg font-semibold">Session Workspace</h2>
-          </div>
-          
-          {activeFeature ? (
-            <button
-              onClick={() => setActiveFeature(null)}
-              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          ) : (
-            <div className="relative">
-              <button className="flex items-center px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-sm">
-                <Plus className="h-4 w-4 mr-1" />
-                <span>Add Content</span>
-              </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 z-10">
-                <button
-                  onClick={() => setActiveFeature('MCQCreation')}
-                  className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
-                >
-                  <List className="h-4 w-4 mr-2" />
-                  <span>Create MCQs</span>
-                </button>
-                <button
-                  onClick={() => setActiveFeature('CouponPage')}
-                  className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
-                >
-                  <Award className="h-4 w-4 mr-2" />
-                  <span>Manage Coupons</span>
-                </button>
+    <div className="fixed inset-0 flex flex-col dark:bg-gray-900 transition-colors duration-200">
+      {/* Fixed Header */}
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 h-16 flex-shrink-0">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex justify-between h-full items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 flex items-center">
+                <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+                <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Funnel Management</span>
               </div>
             </div>
-          )}
+  
+            <div className="flex items-center space-x-4">
+              {/* Dark Mode Toggle */}
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800"
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? (
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fillRule="evenodd" clipRule="evenodd"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                  </svg>
+                )}
+              </button>
+  
+              {/* User Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center text-sm rounded-full focus:outline-none"
+                  id="user-menu"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                >
+                  <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                    <svg 
+                      className="h-5 w-5 text-primary-600 dark:text-primary-400" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                </button>
+  
+                {isDropdownOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-gray-200 dark:border-gray-700">
+                    <div className="py-1">
+                      <button
+                        onClick={handleSignout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Active Feature Content */}
-        <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-gray-800">
-          {activeFeature === 'MCQCreation' && (
-            <MCQCreation pushMCQsToChat={(mcqs) => handlePushContent('mcq', mcqs)} />
-          )}
-          {activeFeature === 'CouponPage' && (
-            <CouponPage pushCouponsToChat={(coupons) => handlePushContent('coupon', coupons)} />
-          )}
+      </header>
+  
+      {/* Main Content Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Participants (narrower) */}
+        <div className="w-80 h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+            <Users className="h-5 w-5 text-primary-500" />
+            <h2 className="text-lg font-semibold">Participants</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ParticipantsList currentSessionId={sessionId} />
+          </div>
         </div>
-
-        {/* Chat Room */}
-        <div className="border-t border-gray-200 dark:border-gray-700">
-          <ChatRoom 
-            sessionId={sessionId} 
-            trainerUserName={trainerName} 
-            isTrainer={true} 
-          />
+  
+        {/* Middle Section - Question Bank (wider) */}
+        <div className="w-[40rem] h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+            <BookOpen className="h-5 w-5 text-primary-500" />
+            <h2 className="text-lg font-semibold">Question Bank</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <QuestionBank />
+          </div>
+        </div>
+  
+        {/* Right Section - Session Workspace */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-[30rem]">
+          {/* Workspace Toolbar */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between items-center flex-shrink-0">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-5 w-5 text-primary-500" />
+              <h2 className="text-lg font-semibold">Session Workspace</h2>
+            </div>
+            
+            <div className="relative group">
+              {activeFeature ? (
+                <button
+                  onClick={() => setActiveFeature(null)}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Close current feature"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              ) : (
+                <>
+                  <button className="flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg shadow-sm transition-colors group">
+                    <Plus className="h-5 w-5 mr-2" />
+                    <span>Add Content</span>
+                  </button>
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <button
+                      onClick={() => setActiveFeature('MCQCreation')}
+                      className="flex items-center w-full px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg"
+                    >
+                      <List className="h-4 w-4 mr-3 text-primary-500" />
+                      <span>Create MCQs</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveFeature('CouponPage')}
+                      className="flex items-center w-full px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-b-lg"
+                    >
+                      <Award className="h-4 w-4 mr-3 text-primary-500" />
+                      <span>Manage Coupons</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+  
+          {/* Dynamic Content Area */}
+          {activeFeature ? (
+            <>
+              {/* Feature Content Area (when active) */}
+              <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-gray-800">
+                {activeFeature === 'MCQCreation' && (
+                  <MCQCreation pushMCQsToChat={(mcqs) => handlePushContent('mcq', mcqs)} />
+                )}
+                {activeFeature === 'CouponPage' && (
+                  <CouponPage pushCouponsToChat={(coupons) => handlePushContent('coupon', coupons)} />
+                )}
+              </div>
+              {/* Chat Room (reduced height when feature is active) */}
+              <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-48 flex-shrink-0">
+                <div className="h-full overflow-y-auto">
+                  <ChatRoom 
+                    sessionId={sessionId} 
+                    trainerUserName={trainerName} 
+                    isTrainer={true} 
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Full-height Chat Room (when no feature is active) */
+            <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-800">
+              <ChatRoom 
+                sessionId={sessionId} 
+                trainerUserName={trainerName} 
+                isTrainer={true} 
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default IndexPage;
+export default SessionWorkspace;

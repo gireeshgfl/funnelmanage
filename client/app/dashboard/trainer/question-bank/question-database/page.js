@@ -127,7 +127,7 @@ function TopicDatabase() {
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back
         </button>
-        <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xlfont-bold text-gray-900 dark:text-white">
           Topic Database
         </h1>
         <div className="w-8"></div> {/* Spacer for alignment */}

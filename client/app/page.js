@@ -75,11 +75,8 @@ export default function WelcomePage() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <svg className="h-8 w-8 text-primary-500" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8L20 9v6l-8 4-8-4V9l8-4.2z" />
-                  <path d="M12 16l-4-2v-4l4 2 4-2v4l-4 2z" />
-                </svg>
-                <span className="ml-2 text-xl font-display font-bold text-gray-900 dark:text-white">FunnelManagement</span>
+              <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+              <span className="ml-2 text-xl  font-bold text-gray-900 dark:text-white">Funnel Management</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -114,7 +111,7 @@ export default function WelcomePage() {
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-4xl font-display font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
               <span className="block">Welcome to</span>
               <span className="block text-primary-500">FunnelManagement</span>
             </h1>

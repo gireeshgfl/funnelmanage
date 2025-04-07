@@ -165,14 +165,28 @@ const IndexPage = () => {
             <div></div> {/* Empty div for spacing */}
           </div>
 
-          <EmojiSelector />
-          <ChatRoom
-            sessionId={sessionId}
-            studentUserName={studentUserName}
-            studentUserId={studentUserId}
-            isTrainer={false}
-            onCorrectAnswer={onCorrectAnswerHandler}
-          />
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Whiteboard Area - 70% width */}
+            <div className="w-full lg:w-7/12 bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-[600px] flex items-center justify-center">
+              <p className="text-gray-500 dark:text-gray-400">Whiteboard content goes here</p>
+            </div>
+
+            {/* Chat Room Area - 30% width */}
+            <div className="w-full lg:w-5/12">
+              <div className="h-[600px] flex flex-col">
+                <EmojiSelector />
+                <div className="flex-grow">
+                  <ChatRoom
+                    sessionId={sessionId}
+                    studentUserName={studentUserName}
+                    studentUserId={studentUserId}
+                    isTrainer={false}
+                    onCorrectAnswer={onCorrectAnswerHandler}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Sidebar toggle button */}
           <Button 

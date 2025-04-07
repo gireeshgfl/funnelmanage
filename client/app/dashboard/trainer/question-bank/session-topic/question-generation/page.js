@@ -38,7 +38,7 @@ export default function QuestionPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Question Form Column */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 h-[810px] overflow-y-auto">
-            <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
               {editIndex !== null ? 'Edit Question' : 'Create Question'}
             </h2>
             <QuestionForm 
@@ -57,7 +57,7 @@ export default function QuestionPage() {
 
           {/* Question List Column */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 h-[810px] overflow-y-auto">
-            <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
               Saved Questions
             </h2>
             <QuestionList 

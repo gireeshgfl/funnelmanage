@@ -3,7 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Archive, RefreshCw, Plus, Edit2, Trash2, Power, ArrowRight } from 'lucide-react';
 import SessionFormModal from '@/components/session_management/SessionFormModal';
-import { getSessions, createSession, updateSession, deleteSession, archiveSession, unarchiveSession, activateSession } from '@/hooks/session_management/sessionService';
+import SessionList from '@/components/session_management/SessionList'; // Import the SessionList component
+import { 
+  getSessions, 
+  createSession, 
+  updateSession, 
+  deleteSession, 
+  archiveSession, 
+  unarchiveSession, 
+  activateSession 
+} from '@/hooks/session_management/sessionService';
 import { getTopics } from '@/hooks/session_management/topicService';
 import { getParticipants } from '@/hooks/session_management/participantService';
 
@@ -23,6 +32,7 @@ const SessionManagementPage = () => {
     fetchData();
   }, []);
 
+  // Fetch sessions, topics, and participants concurrently
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -108,27 +118,32 @@ const SessionManagementPage = () => {
     router.push(`/dashboard/trainer/sessions/${sessionId}`);
   };
 
+  // Filter sessions based on the selected filter type
   const filteredSessions = sessions.filter(session => {
     if (filterType === 'archived') return session.archived === 'True';
     return session.archived !== 'True';
   });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+  //       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="space-y-6">
       {/* Header and Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Session Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Session Management</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {filterType === 'active' ? 'Active training sessions' : 'Archived sessions'}
+          {filterType !== 'active' && (
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Archived sessions
+            </p>
+          )}
           </p>
         </div>
         
@@ -152,7 +167,7 @@ const SessionManagementPage = () => {
             >
               <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
-                <span>Active</span>
+                <span>Sessions</span>
               </div>
             </button>
             <button
@@ -183,127 +198,21 @@ const SessionManagementPage = () => {
         </div>
       )}
 
-      {/* Sessions List */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {filteredSessions.length === 0 ? (
-          <div className="p-8 text-center">
-            <Calendar className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-            <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">No sessions found</h3>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">
-              {filterType === 'active' 
-                ? 'Get started by creating a new training session'
-                : 'No archived sessions available'}
-            </p>
-            {filterType === 'active' && (
-              <button
-                onClick={() => {
-                  setEditMode(false);
-                  setCurrentSession(null);
-                  setOpenModal(true);
-                }}
-                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none"
-              >
-                <Plus className="-ml-1 mr-2 h-5 w-5" />
-                New Session
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredSessions.map((session) => (
-              <div key={session._id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate">
-                        {session.name || 'Untitled Session'}
-                      </h3>
-                      {session.status === 'Activate' && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                          Active
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {session.description || 'No description provided'}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {session.topics?.slice(0, 3).map(topic => (
-                        <span key={topic} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200">
-                          {topic}
-                        </span>
-                      ))}
-                      {session.topics?.length > 3 && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                          +{session.topics.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <button
-                      onClick={() => handleJoinSession(session._id)}
-                      className="flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
-                    >
-                      <ArrowRight className="-ml-1 mr-2 h-4 w-4" />
-                      Join
-                    </button>
-                    
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => {
-                          setEditMode(true);
-                          setCurrentSession(session);
-                          setOpenModal(true);
-                        }}
-                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="h-5 w-5" />
-                      </button>
-                      
-                      {filterType === 'active' ? (
-                        <button
-                          onClick={() => handleArchive(session._id)}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                          title="Archive"
-                        >
-                          <Archive className="h-5 w-5" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleUnarchive(session._id)}
-                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                          title="Unarchive"
-                        >
-                          <RefreshCw className="h-5 w-5" />
-                        </button>
-                      )}
-                      
-                      <button
-                        onClick={() => handleActivate(session._id)}
-                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                        title={session.status === 'Activate' ? 'Deactivate' : 'Activate'}
-                      >
-                        <Power className="h-5 w-5" />
-                      </button>
-                      
-                      <button
-                        onClick={() => handleDelete(session._id)}
-                        className="p-1.5 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Sessions List using the SessionList component */}
+      <SessionList
+        sessions={filteredSessions}
+        filterType={filterType}
+        onEdit={(session) => {
+          setEditMode(true);
+          setCurrentSession(session);
+          setOpenModal(true);
+        }}
+        onDelete={handleDelete}
+        onArchive={handleArchive}
+        onUnarchive={handleUnarchive}
+        onJoin={handleJoinSession}
+        onActivate={handleActivate}
+      />
 
       {/* Session Form Modal */}
       <SessionFormModal

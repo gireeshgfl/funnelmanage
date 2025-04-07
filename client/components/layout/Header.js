@@ -27,7 +27,7 @@ export default function Header() {
           <div className="flex items-center">
             <Link href="/dashboard/trainer" className="flex items-center space-x-2">
               <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-              <span className="text-xl font-display font-bold text-gray-900 dark:text-white">
+              <span className="text-xl font-bold text-gray-900 dark:text-white">
                 Funnel Management
               </span>
             </Link>

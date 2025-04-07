@@ -1,198 +1,199 @@
 import React, { useState, useContext } from 'react';
 import { SocketContext } from '@/context/socketContext';
-import { Input, Button } from '@components/ui/components';
+import { Input, Button, Card } from '@components/ui/components';
+import { CheckCircle, Edit2, Trash2, Plus, Send } from 'lucide-react';
 
-const MCQCreation = () => {
+const MCQCreation = ({ pushMCQsToChat }) => {
   const { socket } = useContext(SocketContext);
   
   const [mcqQuestions, setMCQQuestions] = useState([]);
   const [questionText, setQuestionText] = useState('');
   const [answers, setAnswers] = useState(['', '', '', '']); 
-  const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0); 
-  const [editIndex, setEditIndex] = useState(null); 
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
+  const [editIndex, setEditIndex] = useState(null);
 
-  const handleQuestionChange = (event) => {
-    setQuestionText(event.target.value);
-  };
+  const handleQuestionChange = (e) => setQuestionText(e.target.value);
 
-  const handleAnswerChange = (index, event) => {
+  const handleAnswerChange = (index, e) => {
     const newAnswers = [...answers];
-    newAnswers[index] = event.target.value;
+    newAnswers[index] = e.target.value;
     setAnswers(newAnswers);
   };
 
-  const handleCorrectAnswerChange = (index) => {
-    setCorrectAnswerIndex(index);
-  };
-
   const handleAddQuestion = () => {
-    if (questionText.trim() === '' || answers.some(answer => answer.trim() === '')) {
+    if (!questionText.trim() || answers.some(a => !a.trim())) {
       alert('Please provide both the question and all possible answers.');
       return;
     }
 
     const mcq = {
       question: questionText,
-      answers: answers.map((answer, index) => ({
-        text: answer,
-        isCorrect: index === correctAnswerIndex
+      answers: answers.map((text, i) => ({
+        text,
+        isCorrect: i === correctAnswerIndex
       })),
-      correctAnswerIndex: correctAnswerIndex,
+      correctAnswerIndex
     };
 
     if (editIndex !== null) {
-      const updatedQuestions = [...mcqQuestions];
-      updatedQuestions[editIndex] = mcq;
-      setMCQQuestions(updatedQuestions);
+      const updated = [...mcqQuestions];
+      updated[editIndex] = mcq;
+      setMCQQuestions(updated);
       setEditIndex(null);
     } else {
       setMCQQuestions([...mcqQuestions, mcq]);
     }
 
+    // Reset form
     setQuestionText('');
     setAnswers(['', '', '', '']);
     setCorrectAnswerIndex(0);
   };
 
   const handleDeleteQuestion = (index) => {
-    const updatedQuestions = [...mcqQuestions];
-    updatedQuestions.splice(index, 1);
-    setMCQQuestions(updatedQuestions);
+    setMCQQuestions(mcqQuestions.filter((_, i) => i !== index));
   };
 
   const handleEditQuestion = (index) => {
-    const selectedQuestion = mcqQuestions[index];
-    setQuestionText(selectedQuestion.question);
-    setAnswers(selectedQuestion.answers.map(answer => answer.text));
-    setCorrectAnswerIndex(selectedQuestion.correctAnswerIndex);
+    const q = mcqQuestions[index];
+    setQuestionText(q.question);
+    setAnswers(q.answers.map(a => a.text));
+    setCorrectAnswerIndex(q.correctAnswerIndex);
     setEditIndex(index);
   };
 
   const handlePushMCQs = () => {
-    if (mcqQuestions.length === 0) {
+    if (!mcqQuestions.length) {
       alert('No MCQ questions to send.'); 
       return;
     }
 
-    if (socket) {
+    if (pushMCQsToChat) {
+      pushMCQsToChat(mcqQuestions);
+    } else if (socket) {
       socket.emit('pushMCQs', mcqQuestions);
-      console.log('MCQ questions sent to chat box:', mcqQuestions);
-    } else {
-      console.error('Socket connection not available.');
     }
     
     setMCQQuestions([]);
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-gray-50 dark:bg-gray-900 rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6">Trainer Interface</h1>
-      
+    <div className="space-y-6">
       {/* MCQ Creation Form */}
-      <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
-          {editIndex !== null ? 'Edit' : 'Create'} MCQ
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Plus className="h-5 w-5 text-primary-500" />
+          {editIndex !== null ? 'Edit Question' : 'Create New Question'}
         </h2>
         
-        {/* Input field for question */}
         <Input
-          label="Question"
+          label="Question Text"
           value={questionText}
           onChange={handleQuestionChange}
           placeholder="Enter your question..."
           className="mb-4"
         />
         
-        {/* Input fields for possible answers */}
-        {answers.map((answer, index) => (
-          <div key={index} className="mb-4">
-            <Input
-              label={`Answer ${index + 1}`}
-              value={answer}
-              onChange={(event) => handleAnswerChange(index, event)}
-              placeholder={`Enter answer ${index + 1}...`}
-              className="mb-2"
-            />
-            {/* Radio button to select correct answer */}
-            <div className="flex items-center mb-4">
-              <input
-                type="radio"
-                id={`correct-answer-${index}`}
-                checked={correctAnswerIndex === index}
-                onChange={() => handleCorrectAnswerChange(index)}
-                className="h-4 w-4 text-primary-500 focus:ring-primary-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+        <div className="space-y-4 mb-6">
+          {answers.map((answer, i) => (
+            <div key={i} className="space-y-2">
+              <Input
+                label={`Option ${i + 1}`}
+                value={answer}
+                onChange={(e) => handleAnswerChange(i, e)}
+                placeholder={`Enter option ${i + 1}`}
               />
-              <label htmlFor={`correct-answer-${index}`} className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                Correct answer
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="correctAnswer"
+                  checked={correctAnswerIndex === i}
+                  onChange={() => setCorrectAnswerIndex(i)}
+                  className="h-4 w-4 text-primary-500 border-gray-300 focus:ring-primary-500"
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Mark as correct answer
+                </span>
               </label>
             </div>
-          </div>
-        ))}
-        
-        {/* Add button to add new question */}
+          ))}
+        </div>
+
         <Button
           onClick={handleAddQuestion}
           variant="primary"
-          className="mt-4"
+          className="w-full"
+          icon={editIndex !== null ? <Edit2 size={18} /> : <Plus size={18} />}
         >
-          {editIndex !== null ? 'Update' : 'Add'} Question
+          {editIndex !== null ? 'Update Question' : 'Add Question'}
         </Button>
-      </div>
+      </Card>
 
-      {/* Display MCQ questions */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">MCQ Questions</h2>
+      {/* Questions List */}
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <List className="h-5 w-5 text-primary-500" />
+            Your Questions ({mcqQuestions.length})
+          </h2>
+          <Button
+            onClick={handlePushMCQs}
+            variant="primary"
+            disabled={!mcqQuestions.length}
+            icon={<Send size={18} />}
+          >
+            Push to Chat
+          </Button>
+        </div>
+
         {mcqQuestions.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400">No questions added yet</p>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            No questions created yet
+          </div>
         ) : (
           <div className="space-y-4">
-            {mcqQuestions.map((mcq, index) => (
-              <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <h3 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                  {`Question ${index + 1}: ${mcq.question}`}
-                </h3>
-                <ul className="space-y-1 mb-3">
-                  {mcq.answers.map((answer, answerIndex) => (
-                    <li 
-                      key={answerIndex} 
-                      className={`text-sm ${answer.isCorrect ? 'text-green-600 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-400'}`}
-                    >
-                      {answer.text} {answer.isCorrect && '(Correct)'}
+            {mcqQuestions.map((mcq, i) => (
+              <div key={i} className="border rounded-lg p-4 hover:border-primary-300 transition-colors">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-medium text-lg mb-2">
+                    Q{i + 1}: {mcq.question}
+                  </h3>
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => handleEditQuestion(i)}
+                      variant="ghost"
+                      size="sm"
+                      icon={<Edit2 size={16} />}
+                    />
+                    <Button
+                      onClick={() => handleDeleteQuestion(i)}
+                      variant="ghost"
+                      size="sm"
+                      icon={<Trash2 size={16} />}
+                      className="text-red-500 hover:text-red-600"
+                    />
+                  </div>
+                </div>
+                
+                <ul className="space-y-2 mt-2">
+                  {mcq.answers.map((ans, j) => (
+                    <li key={j} className="flex items-center space-x-2">
+                      {ans.isCorrect ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <div className="h-4 w-4 rounded-full border border-gray-300" />
+                      )}
+                      <span className={ans.isCorrect ? 'font-medium text-green-600' : ''}>
+                        {ans.text}
+                      </span>
                     </li>
                   ))}
                 </ul>
-                {/* Buttons for editing and deleting questions */}
-                <div className="flex space-x-2">
-                  <Button 
-                    onClick={() => handleEditQuestion(index)} 
-                    variant="outline"
-                    size="small"
-                  >
-                    Edit
-                  </Button>
-                  <Button 
-                    onClick={() => handleDeleteQuestion(index)} 
-                    variant="danger"
-                    size="small"
-                  >
-                    Delete
-                  </Button>
-                </div>
               </div>
             ))}
           </div>
         )}
-      </div>
-
-      {/* Button to push MCQs to chat box */}
-      <Button 
-        onClick={handlePushMCQs} 
-        variant="primary"
-        disabled={mcqQuestions.length === 0}
-        className="w-full md:w-auto"
-      >
-        Push MCQs
-      </Button>
+      </Card>
     </div>
   );
 };

@@ -120,7 +120,7 @@ export default function TopicSelectionForm() {
     <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden p-8 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center mb-8">
         <BookOpen className="h-8 w-8 text-primary-500 mr-3" />
-        <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Indicate Your Preferred Subject For Discussion
         </h1>
       </div>
