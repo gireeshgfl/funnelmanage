@@ -71,15 +71,6 @@ class FunnelService:
     @rbac_check(required_roles=['trainer'])
     @serialize_result
     def get_participants(self, user_id):
-        """
-        Retrieve all participants (funnel entries) created by a specific user.
-
-        Args:
-            user_id (str): The ObjectId string of the user.
-
-        Returns:
-            dict: Response with message, status, and data list.
-        """
         try:
             participants = self.funnel_dao.get_participants_created_by_user(user_id)
             return {
