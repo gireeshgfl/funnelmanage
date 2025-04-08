@@ -1,8 +1,13 @@
+"use client";
+
+import FunnelComponent from '@/components/FunnelComponent';
+import { useFunnel } from '@/hooks/useFunnel';
+
 export default function HomePage() {
-    return (
-      <main style={{ padding: '2rem', fontFamily: 'sans-serif', textAlign: 'center' }}>
-        <h1>Welcome to Funnelling</h1>
-      </main>
-    );
-  }
-  
+  const { participants, loading, error } = useFunnel();
+
+  if (loading) return <p style={{ textAlign: 'center' }}>Loading...</p>;
+  if (error) return <p style={{ textAlign: 'center' }}>Error loading participants.</p>;
+
+  return <FunnelComponent participants={participants} />;
+}

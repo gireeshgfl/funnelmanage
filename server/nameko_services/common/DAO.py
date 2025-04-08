@@ -887,5 +887,5 @@ class FunnelDAO(BaseDAO):
         user_object_id = ObjectId(user_id)
 
         query = { "created_by": user_object_id }
-        results = self.find(query)
+        results = self.find_many(query)
         return list(results)
