@@ -871,3 +871,21 @@ class FunnelDAO(BaseDAO):
         result = self.insert_one(data)
         data['_id'] = result.inserted_id
         return data
+    
+    def is_participant_in_session(self, data):
+        user_id = data.get("userId")
+        session_id = data.get("sessionId")
+        query = {
+            "userId": user_id,
+            "sessionId": session_id
+        }
+
+        result = self.find_one(query)
+        return result is not None
+    
+    def get_participants_created_by_user(self, user_id):
+        user_object_id = ObjectId(user_id)
+
+        query = { "created_by": user_object_id }
+        results = self.find(query)
+        return list(results)

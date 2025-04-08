@@ -53,10 +53,44 @@ class FunnelService:
     @rbac_check(required_roles=['trainer'])
     @serialize_result
     def save_participants(self, user_id, data):
-        print(data)
+        if self.funnel_dao.is_participant_in_session(data):
+            return {
+                "message": "Participant already added to this session.",
+                "status": 409
+            }
+
         self.funnel_dao.save_participants(user_id, data)
 
         return {
-            "message": "Chat saved successfully",
+            "message": "Participant saved successfully.",
             "status": 200
         }
+
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def get_participants(self, user_id):
+        """
+        Retrieve all participants (funnel entries) created by a specific user.
+
+        Args:
+            user_id (str): The ObjectId string of the user.
+
+        Returns:
+            dict: Response with message, status, and data list.
+        """
+        try:
+            participants = self.funnel_dao.get_participants_created_by_user(user_id)
+            return {
+                "message": "Participants fetched successfully.",
+                "status": 200,
+                "data": participants
+            }
+        except ValueError as ve:
+            return {
+                "message": str(ve),
+                "status": 400,
+                "data": []
+            }
+
