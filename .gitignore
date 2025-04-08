@@ -1,17 +1,62 @@
+# -----------------------------
 # Python
+# -----------------------------
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
 *.pyc
+*.egg-info/
+dist/
+build/
+.eggs/
+.env/
+.venv/
+venv/
+ENV/
+.Python
 
-# Node.js
-/node_modules
+# -----------------------------
+# Node.js / JavaScript / Next.js
+# -----------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.next/
+out/
+*.log
+*.tsbuildinfo
 
-# Nameko
-/__pycache__/
+# -----------------------------
+# Environment & Secrets
+# -----------------------------
+.env
+.env.*
+*.env
+*.env.*
+*.key
+*.pem
+*.crt
+config.yaml
 
-# Flask
-/*.pyc
+# -----------------------------
+# IDEs & Editors
+# -----------------------------
+.vscode/
+.idea/
+*.swp
 
-# Next.js
-/.next/
-/out/
-/node_modules/
+# -----------------------------
+# OS & Misc
+# -----------------------------
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# -----------------------------
+# Git
+# -----------------------------
+*.orig
