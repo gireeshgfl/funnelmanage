@@ -556,6 +556,20 @@ class SessionDAO(BaseDAO):
             return None 
         # Assume `find_one` is a method that wraps a MongoDB find_one call.
         return self.find_one({"_id": session_id})
+    
+    def get_session_names_by_ids(self, session_ids):
+        """
+        Retrieve session names for a list of session IDs.
+        """
+        try:
+            object_ids = [ObjectId(sid) for sid in session_ids]
+        except Exception:
+            return []
+
+        query = { "_id": { "$in": object_ids } }
+        projection = { "sessionName": 1 }  # Only fetch sessionName
+        return self.find_many(query, projection=projection)
+
 
 
 # ------------------------------
@@ -889,3 +903,21 @@ class FunnelDAO(BaseDAO):
         query = { "created_by": user_object_id }
         results = self.find_many(query)
         return list(results)
+    
+    def get_enriched_participants_created_by_user(self, user_id, session_dao):
+        user_object_id = ObjectId(user_id)
+        participants = self.find_many({"created_by": user_object_id})
+
+        # Extract unique session IDs
+        session_ids = list({p.get("sessionId") for p in participants if p.get("sessionId")})
+        
+        if session_ids:
+            sessions = session_dao.get_session_names_by_ids(session_ids)
+            session_map = {str(s["_id"]): s.get("sessionName") for s in sessions}
+            
+            for participant in participants:
+                sid = participant.get("sessionId")
+                if sid in session_map:
+                    participant["sessionName"] = session_map[sid]
+
+        return participants

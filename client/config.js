@@ -91,6 +91,7 @@ export const API_ROUTES = {
   FUNNEL_SERVICE: {
     SAVE_PARTICIPANTS: `${BASE_URL}/funnel_service/save_participants`,
     GET_PARTICIPANTS: `${BASE_URL}/funnel_service/get_participants`,
+    FUNNELLING: `${BASE_URL}/funnel_service/funnelling`,
   },
 
 

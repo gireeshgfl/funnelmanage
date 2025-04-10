@@ -2,7 +2,7 @@ from nameko.rpc import rpc
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from common.dependencies import MongoProvider, WorkerContextProvider
-from common.DAO import FunnelDAO
+from common.DAO import FunnelDAO, SessionDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher
@@ -20,6 +20,10 @@ class FunnelService:
     @property
     def funnel_dao(self):
         return FunnelDAO(self.mongo_provider)
+
+    @property
+    def session_dao(self):
+        return SessionDAO(self.mongo_provider)
 
 
     def dispatch_event(event_type):
@@ -72,7 +76,9 @@ class FunnelService:
     @serialize_result
     def get_participants(self, user_id):
         try:
-            participants = self.funnel_dao.get_participants_created_by_user(user_id)
+            participants = self.funnel_dao.get_enriched_participants_created_by_user(
+                user_id, self.session_dao
+            )
             return {
                 "message": "Participants fetched successfully.",
                 "status": 200,
@@ -84,4 +90,5 @@ class FunnelService:
                 "status": 400,
                 "data": []
             }
+
 
