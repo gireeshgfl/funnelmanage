@@ -4,11 +4,10 @@ import { API_ROUTES } from '@/config';
 
 export function useFunnel() {
   const [participants, setParticipants] = useState([]);
-  const [funnellingData, setFunnellingData] = useState(null);
-
+  const [funnellingResponse, setFunnellingResponse] = useState(null); // Store full response
+  const [funnellingMessage, setFunnellingMessage] = useState(null);
   const [loadingParticipants, setLoadingParticipants] = useState(true);
   const [loadingFunnelling, setLoadingFunnelling] = useState(false);
-
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -33,10 +32,14 @@ export function useFunnel() {
 
   const fetchFunnellingData = async (id) => {
     setLoadingFunnelling(true);
+    setFunnellingResponse(null);
+    setFunnellingMessage(null);
     try {
       const res = await axios.get(`${API_ROUTES.FUNNEL_SERVICE.FUNNELLING}?id=${id}`);
-      if (res.data?.status === 200 && typeof res.data.data === 'object') {
-        setFunnellingData(res.data.data);
+      if (res.data?.status === 200) {
+        setFunnellingResponse(res.data); // Store full response
+      } else if (res.data?.status === 404) {
+        setFunnellingMessage(res.data.message);
       } else {
         throw new Error("Unexpected funnelling response format");
       }
@@ -50,10 +53,12 @@ export function useFunnel() {
 
   return {
     participants,
-    funnellingData,
+    funnellingData: funnellingResponse?.data, // Extract data for convenience
+    funnellingResponse, // Full response object
+    funnellingMessage,
     loadingParticipants,
     loadingFunnelling,
     error,
-    fetchFunnellingData, 
+    fetchFunnellingData,
   };
 }

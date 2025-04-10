@@ -90,5 +90,43 @@ class FunnelService:
                 "status": 400,
                 "data": []
             }
+    
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def funnelling(self, user_id, payload):
+        """
+        Get all participants created by this trainer (user_id) who have been added
+        to >= N different sessionIds. 'N' is payload["id"].
+        """
+        try:
+            min_sessions = int(payload["query_params"]["id"])
+        except (TypeError, ValueError):
+            return {
+                "message": "Invalid or missing 'id' in payload.",
+                "status": 400
+            }
+
+        participants = self.funnel_dao.get_users_with_min_sessions(
+            created_by=user_id,
+            min_session_count=min_sessions,
+            session_dao=self.session_dao
+        )
+
+        if not participants:
+            return {
+                "message": f"No participants attended {min_sessions} or more unique sessions.",
+                "status": 404,
+                "data": []
+            }
+
+        return {
+            "message": f"Participants who attended {min_sessions} or more sessions fetched successfully.",
+            "status": 200,
+            "data": participants
+        }
+
+
 
 

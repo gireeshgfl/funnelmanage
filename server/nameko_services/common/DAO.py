@@ -921,3 +921,53 @@ class FunnelDAO(BaseDAO):
                     participant["sessionName"] = session_map[sid]
 
         return participants
+    
+    def get_users_with_min_sessions(self, created_by, min_session_count, session_dao):
+        """
+        Return summarized records with session names for each userId created by `created_by`
+        who attended at least `min_session_count` unique sessions.
+        """
+        created_by = ObjectId(created_by)
+
+        # Step 1: Get all relevant funnel records by trainer
+        all_records = list(self.find_many({"created_by": created_by}))
+
+        # Step 2: Build user-session mapping
+        user_summary = {}
+        for record in all_records:
+            user_id = record.get("userId")
+            username = record.get("username")
+            session_id = record.get("sessionId")
+            if user_id and session_id:
+                if user_id not in user_summary:
+                    user_summary[user_id] = {
+                        "userId": user_id,
+                        "username": username,
+                        "session_ids": set()
+                    }
+                user_summary[user_id]["session_ids"].add(session_id)
+
+        # Step 3: Filter users with >= N unique sessions
+        result = []
+        for summary in user_summary.values():
+            session_ids = list(summary["session_ids"])
+            if len(session_ids) >= min_session_count:
+                # Enrich sessionIds with names
+                enriched_sessions = []
+                for sid in session_ids:
+                    session_doc = session_dao.get_session_by_id(sid)
+                    session_name = session_doc.get("sessionName") if session_doc else "Unknown"
+                    enriched_sessions.append({
+                        "sessionName": session_name
+                    })
+
+                result.append({
+                    "userId": summary["userId"],
+                    "username": summary["username"],
+                    "session_count": len(session_ids),
+                    "sessions": enriched_sessions
+                })
+
+        return result
+
+
