@@ -1,10 +1,9 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, BookOpen, Users, Info, X, Check } from 'lucide-react';
+import { Calendar, Clock, BookOpen, Users, Info, X, Check, ChevronsUpDown, Search } from 'lucide-react';
 import { Input, Dropdown, Button, DropdownItem } from '@components/ui/components';
 
-const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopics = [], availableParticipants = [] }) => {
-  // Form state
+const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopics = [], availableParticipants = [], fetchFunnellingData }) => {
   const [sessionName, setSessionName] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -14,8 +13,25 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Funnel Participants state
+  const [funnelCount, setFunnelCount] = useState(1);
+  const [isFetchingFunnel, setIsFetchingFunnel] = useState(false);
+  const [funnelParticipants, setFunnelParticipants] = useState([]);
+  const [selectedFunnelParticipants, setSelectedFunnelParticipants] = useState([]);
+  const [funnelSelectionMode, setFunnelSelectionMode] = useState('all');
+  const [hasFetchedParticipants, setHasFetchedParticipants] = useState(false);
 
-  // Prepare dropdown data
+  // Discount state
+  const [discount, setDiscount] = useState('');
+  const [discountError, setDiscountError] = useState('');
+
+  // Debug useEffect
+  useEffect(() => {
+    console.log('Funnel Participants:', funnelParticipants);
+    console.log('Selected Funnel Participants:', selectedFunnelParticipants);
+  }, [funnelParticipants, selectedFunnelParticipants]);
+
   const topicOptions = useMemo(() => 
     availableTopics.map(topic => ({
       value: topic.id || topic.value,
@@ -32,7 +48,6 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
     [availableParticipants]
   );
 
-  // Populate form fields
   useEffect(() => {
     if (initialData) {
       setSessionName(initialData.sessionName || '');
@@ -42,6 +57,10 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       setAdditionalInfo(initialData.additionalInfo || '');
       setSelectedTopics(initialData.questions ? initialData.questions.map(q => q.id) : []);
       setSelectedParticipants(initialData.participants ? initialData.participants.map(p => p.id) : []);
+      setSelectedFunnelParticipants(initialData.funnelParticipants || []);
+      setFunnelParticipants(initialData.funnelParticipantsData || []);
+      setHasFetchedParticipants(!!initialData.funnelParticipantsData);
+      setDiscount(initialData.discount || '');
     } else {
       resetForm();
     }
@@ -55,10 +74,16 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
     setAdditionalInfo('');
     setSelectedTopics([]);
     setSelectedParticipants([]);
+    setSelectedFunnelParticipants([]);
+    setFunnelCount(1);
+    setFunnelParticipants([]);
+    setFunnelSelectionMode('all');
+    setHasFetchedParticipants(false);
+    setDiscount('');
+    setDiscountError('');
     setFormError('');
   };
 
-  // hasChanges logic
   const hasChanges = useMemo(() => {
     if (!initialData) return true;
     return (
@@ -67,12 +92,32 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       time !== (initialData.time || '') ||
       topic !== (initialData.topic || '') ||
       additionalInfo !== (initialData.additionalInfo || '') ||
+      discount !== (initialData.discount || '') ||
       JSON.stringify(selectedTopics.sort()) !== JSON.stringify((initialData.questions ? initialData.questions.map(q => q.id) : []).sort()) ||
-      JSON.stringify(selectedParticipants.sort()) !== JSON.stringify((initialData.participants ? initialData.participants.map(p => p.id) : []).sort())
+      JSON.stringify(selectedParticipants.sort()) !== JSON.stringify((initialData.participants ? initialData.participants.map(p => p.id) : []).sort()) ||
+      JSON.stringify(selectedFunnelParticipants.sort()) !== JSON.stringify((initialData.funnelParticipants || []).sort())
     );
-  }, [sessionName, date, time, topic, additionalInfo, selectedTopics, selectedParticipants, initialData]);
+  }, [sessionName, date, time, topic, additionalInfo, discount, selectedTopics, selectedParticipants, selectedFunnelParticipants, initialData]);
+
+  const handleDiscountChange = (e) => {
+    const value = e.target.value;
+    // Allow empty string or valid numbers between 0-100
+    if (value === '' || (!isNaN(value) && value >= 0 && value <= 100)) {
+      setDiscount(value);
+      setDiscountError('');
+    } else {
+      setDiscount(value);
+      setDiscountError('Please enter a valid percentage (0-100)');
+    }
+  };
 
   const handleSubmit = async () => {
+    // Validate discount first
+    if (discount && (isNaN(discount) || discount < 0 || discount > 100)) {
+      setFormError('Please enter a valid discount percentage (0-100)');
+      return;
+    }
+
     if (!sessionName || !date || !time || selectedTopics.length === 0) {
       setFormError('Please fill in all required fields and select at least one topic.');
       return;
@@ -98,15 +143,23 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
         name: found.text || found.name 
       } : { id, name: "" };
     });
+
+    const funnelParticipantsPayload = selectedFunnelParticipants.map((id) => {
+      const found = funnelParticipants.find((p) => p.value === id);
+      return found || { id, name: "" };
+    });
   
     const sessionData = { 
       sessionName, 
       date, 
       time, 
       topic, 
-      additionalInfo, 
+      additionalInfo,
+      discount: discount || 0, // Include discount (default to 0 if empty)
       questions: questionsPayload,
-      participants: participantsPayload
+      participants: participantsPayload,
+      funnelParticipants: funnelParticipantsPayload,
+      funnelParticipantsData: funnelParticipants
     };
   
     try {
@@ -136,19 +189,79 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
     );
   };
 
+  const fetchFunnelParticipants = async () => {
+    if (!funnelCount || funnelCount < 1) {
+      setFormError('Please enter a valid number (1 or above)');
+      return;
+    }
+    
+    if (discountError) {
+      setFormError('Please fix discount errors before fetching participants');
+      return;
+    }
+    
+    setIsFetchingFunnel(true);
+    setHasFetchedParticipants(false);
+    try {
+      const response = await fetchFunnellingData(funnelCount);
+      console.log('API Response:', response);
+      
+      if (response?.status === 200 && Array.isArray(response.data)) {
+        const formattedData = response.data.map(participant => ({
+          value: participant.userId,
+          label: participant.username || `Participant ${participant.userId}`,
+          sessionCount: participant.session_count,
+          sessions: participant.sessions
+        }));
+        
+        console.log('Formatted Data:', formattedData);
+        setFunnelParticipants(formattedData);
+        setHasFetchedParticipants(true);
+        setFormError('');
+      } else {
+        const errorMsg = response?.message || 'Failed to fetch funnel participants';
+        console.error('API Error:', errorMsg);
+        setFormError(errorMsg);
+      }
+    } catch (error) {
+      console.error('Fetch Error:', error);
+      setFormError(error.message || 'Failed to fetch funnel participants');
+    } finally {
+      setIsFetchingFunnel(false);
+    }
+  };
+
+  const handleFunnelParticipantSelect = (participantId) => {
+    if (funnelSelectionMode === 'all') {
+      setSelectedFunnelParticipants(funnelParticipants.map(p => p.value));
+    } else {
+      setSelectedFunnelParticipants(prev => 
+        prev.includes(participantId)
+          ? prev.filter(id => id !== participantId)
+          : [...prev, participantId]
+      );
+    }
+  };
+
+  const handleFunnelCountChange = (e) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value)) {
+      setFunnelCount(value);
+    } else {
+      setFunnelCount('');
+    }
+  };
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
           <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75" onClick={onClose}></div>
         </div>
 
-        {/* Modal container */}
         <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          {/* Header */}
           <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
@@ -163,7 +276,6 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
             </div>
           </div>
 
-          {/* Error message */}
           {formError && (
             <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 dark:border-red-600 p-4 mx-4 mt-2 rounded">
               <div className="flex">
@@ -181,10 +293,8 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
             </div>
           )}
 
-          {/* Form content */}
           <div className="px-4 py-5 sm:p-6">
             <div className="space-y-6">
-              {/* Session Name */}
               <Input
                 label="Session Name"
                 id="sessionName"
@@ -194,7 +304,6 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 className="w-full"
               />
 
-              {/* Date and Time */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Date"
@@ -218,7 +327,6 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 />
               </div>
 
-              {/* Topic */}
               <Input
                 label="Topic"
                 id="topic"
@@ -227,7 +335,6 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 className="w-full"
               />
 
-              {/* Questions */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Questions
@@ -288,7 +395,6 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 )}
               </div>
 
-              {/* Participants */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Participants
@@ -348,7 +454,146 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 )}
               </div>
 
-              {/* Additional Info */}
+              {/* Funnel Participants with Discount Section */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Funnel Participants & Discount
+                </label>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
+                  <div>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={funnelCount}
+                      onChange={handleFunnelCountChange}
+                      className="w-full"
+                      placeholder="Enter participant count"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="Discount (%)"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={discount}
+                      onChange={handleDiscountChange}
+                      className="w-full"
+                      placeholder="0-100"
+                      error={discountError}
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <Button
+                    onClick={fetchFunnelParticipants}
+                    variant="outline"
+                    loading={isFetchingFunnel}
+                    className="flex items-center"
+                    disabled={!!discountError}
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Fetch Participants
+                  </Button>
+                  {discountError && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{discountError}</p>
+                  )}
+                </div>
+
+                {isFetchingFunnel && (
+                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Fetching participants...
+                  </div>
+                )}
+
+                <div className="flex gap-4 mb-2">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      className="form-radio text-primary-600 dark:text-primary-400"
+                      checked={funnelSelectionMode === 'all'}
+                      onChange={() => setFunnelSelectionMode('all')}
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Select All</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      className="form-radio text-primary-600 dark:text-primary-400"
+                      checked={funnelSelectionMode === 'single'}
+                      onChange={() => setFunnelSelectionMode('single')}
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Select Individually</span>
+                  </label>
+                </div>
+
+                {funnelParticipants.length > 0 && (
+                  <>
+                    <Dropdown
+                      trigger={
+                        <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                          {selectedFunnelParticipants.length > 0 
+                            ? `${selectedFunnelParticipants.length} selected` 
+                            : 'Select funnel participants'}
+                          <ChevronsUpDown className="h-5 w-5 text-gray-400" />
+                        </button>
+                      }
+                      position="bottom"
+                      className="w-full z-50"
+                    >
+                      <div className="max-h-60 overflow-y-auto">
+                        {funnelParticipants.map(participant => (
+                          <DropdownItem 
+                            key={participant.value}
+                            onClick={() => handleFunnelParticipantSelect(participant.value)}
+                            className={`flex items-center ${selectedFunnelParticipants.includes(participant.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
+                          >
+                            {funnelSelectionMode === 'single' && (
+                              <input
+                                type="checkbox"
+                                checked={selectedFunnelParticipants.includes(participant.value)}
+                                readOnly
+                                className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
+                              />
+                            )}
+                            <div>
+                              <p className="text-sm font-medium">{participant.label}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Attended {participant.sessionCount} session(s)
+                              </p>
+                            </div>
+                          </DropdownItem>
+                        ))}
+                      </div>
+                    </Dropdown>
+
+                    {selectedFunnelParticipants.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedFunnelParticipants.map(participantId => {
+                          const participant = funnelParticipants.find(p => p.value === participantId);
+                          return (
+                            <span 
+                              key={participantId} 
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
+                            >
+                              {participant?.label || participantId}
+                              <button 
+                                onClick={() => handleFunnelParticipantSelect(participantId)}
+                                className="ml-1.5 inline-flex text-purple-400 hover:text-purple-600 dark:hover:text-purple-300"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
               <Input
                 label="Additional Info"
                 id="additionalInfo"
@@ -362,7 +607,6 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
             </div>
           </div>
 
-          {/* Footer with actions */}
           <div className="bg-gray-50 dark:bg-gray-700/30 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200 dark:border-gray-700">
             <Button
               onClick={handleSubmit}

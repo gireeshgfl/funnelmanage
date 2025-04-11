@@ -37,7 +37,8 @@ export function useFunnel() {
     try {
       const res = await axios.get(`${API_ROUTES.FUNNEL_SERVICE.FUNNELLING}?id=${id}`);
       if (res.data?.status === 200) {
-        setFunnellingResponse(res.data); // Store full response
+        setFunnellingResponse(res.data); 
+        return res.data;
       } else if (res.data?.status === 404) {
         setFunnellingMessage(res.data.message);
       } else {
@@ -53,8 +54,8 @@ export function useFunnel() {
 
   return {
     participants,
-    funnellingData: funnellingResponse?.data, // Extract data for convenience
-    funnellingResponse, // Full response object
+    funnellingData: funnellingResponse?.data, 
+    funnellingResponse, 
     funnellingMessage,
     loadingParticipants,
     loadingFunnelling,
