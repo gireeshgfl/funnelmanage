@@ -51,74 +51,25 @@ class SessionService:
 
     @rpc
     @error_handler
-    @rbac_check(required_roles=['trainer','student'])
+    @rbac_check(required_roles=['trainer', 'student'])
     @serialize_result
     def save_chat(self, user_id, data):
-        """
-        Save a new chat entry to a session. If the session does not exist,
-        create a new document containing sessionId and a chats array.
-        """
-        # Copy data to avoid modifying the original input
         data = data.copy()
-
-        # Validate and set created_by for the chat entry
         try:
-            created_by = ObjectId(user_id)
+            saved_chat = self.chat_dao.save_chat(user_id, data)
+            return {
+                "message": "Chat saved successfully",
+                "data": saved_chat,
+                "status": 200
+            }
+        except ValueError as ve:
+            return {
+                "message": str(ve),
+                "status": 400
+            }
         except Exception:
             return {
-                "message": "Invalid user_id format",
-                "status": 400
+                "message": "Failed to save chat",
+                "status": 500
             }
 
-        # Check if sessionId is provided in data
-        session_id = data.get("sessionId")
-        if not session_id:
-            return {
-                "message": "sessionId is required",
-                "status": 400
-            }
-
-        # Create a chat entry with the necessary fields
-        chat_entry = {
-            "sender": data.get("sender"),
-            "message": data.get("message"),
-            "created_by": created_by,
-            "created_at": datetime.utcnow()
-        }
-
-        # Check for an existing session using sessionId
-        existing_session = self.chat_dao.find_by_session(session_id)
-
-        if existing_session:
-            # Append the new chat entry to the existing document's chats array
-            update_result = self.chat_dao.append_chat(session_id, chat_entry)
-            if update_result.modified_count > 0:
-                updated_doc = self.chat_dao.find_by_session(session_id)
-                return {
-                    "message": "Chat appended successfully",
-                    "data": updated_doc,
-                    "status": 200
-                }
-            else:
-                return {
-                    "message": "Failed to update existing chat session",
-                    "status": 500
-                }
-        else:
-            # Create a new session document with only sessionId and chats array
-            new_session_data = {
-                "sessionId": session_id,
-                "chats": [chat_entry]
-            }
-            saved_chat = self.chat_dao.save_chat(new_session_data)
-            if saved_chat:
-                return {
-                    "message": "Chat saved successfully",
-                    "data": saved_chat,
-                    "status": 200
-                }
-            else:
-                return {
-                    "message": "Failed to save chat",
-                    "status": 500
-                }

@@ -839,30 +839,34 @@ class ChatDAO(BaseDAO):
         """
         super().__init__(db_connection, collection_name="chats")
 
-    def save_chat(self, data):
+    def save_chat(self, user_id, data):
         """
-        Insert a new chat session document in the database.
+        Validate input and insert a single chat entry as a document.
         """
-        result = self.insert_one(data)
+        # Validate user_id
+        try:
+            created_by = ObjectId(user_id)
+        except Exception:
+            raise ValueError("Invalid user_id format")
+
+        session_id = data.get("sessionId")
+        if not session_id:
+            raise ValueError("sessionId is required")
+
+        # Construct the chat entry
+        chat_entry = {
+            "sessionId": session_id,
+            "sender": data.get("sender"),
+            "message": data.get("message"),
+            "created_by": created_by,
+            "created_at": datetime.utcnow()
+        }
+
+        result = self.insert_one(chat_entry)
         if result and result.inserted_id:
-            data["_id"] = result.inserted_id
-            return data
+            chat_entry["_id"] = result.inserted_id
+            return chat_entry
         return None
-
-    def find_by_session(self, session_id):
-        """
-        Retrieve a chat session document by sessionId.
-        """
-        return self.collection.find_one({"sessionId": session_id})
-
-    def append_chat(self, session_id, chat_entry):
-        """
-        Append a new chat entry to the chats array for the given sessionId.
-        """
-        return self.collection.update_one(
-            {"sessionId": session_id},
-            {"$push": {"chats": chat_entry}}
-        )
 
 # ------------------------------
 # Funnel Service DAO Module
