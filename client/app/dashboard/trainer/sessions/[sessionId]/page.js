@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
 import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter, Gift, Calendar, Menu } from 'lucide-react';
 import MCQCreation from '@/components/MCQCreation';
 import CouponPage from '@/components/CouponPage';
@@ -20,6 +21,7 @@ const SessionWorkspace = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isEndingSession, setIsEndingSession] = useState(false);
   const { socket } = useContext(SocketContext);
   const { signout } = useAuth();
   const router = useRouter();
@@ -105,6 +107,34 @@ const SessionWorkspace = () => {
     }
   };
 
+  const handleEndSession = async () => {
+    setIsEndingSession(true);
+    try {
+      const [response] = await Promise.all([
+        axios.delete(`${API_ROUTES.CHAT_SERVICE.DELETE_CHAT}?id=${sessionId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }),
+        new Promise(resolve => setTimeout(resolve, 1000)) 
+      ]);
+  
+      if (response.status === 200) {
+        console.log('Session ended successfully!');
+        router.push('/dashboard/trainer/sessions');
+      } else {
+        console.error('Failed to end session:', response.data);
+        setError('Failed to end session');
+      }
+    } catch (error) {
+      console.error('Error during session end request:', error);
+      setError('Error during session end');
+    } finally {
+      setIsEndingSession(false);
+    }
+  };
+  
   const handlePushContent = (type, content) => {
     if (socket) {
       const event = type === 'mcq' ? 'pushMCQs' : 'pushCoupons';
@@ -114,6 +144,22 @@ const SessionWorkspace = () => {
       });
     }
   };
+
+  if (isEndingSession) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Ending Session</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center">
+              Please wait while we end the session and redirect you...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -143,11 +189,25 @@ const SessionWorkspace = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-                <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Funnel Management</span>
+                <button 
+                  onClick={() => router.push('/dashboard/trainer')}
+                  className="ml-2 text-xl font-bold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 focus:outline-none"
+                >
+                  Funnel Management
+                </button>
               </div>
             </div>
-  
+
             <div className="flex items-center space-x-4">
+              {/* End Session Button */}
+              <button
+                type="button"
+                onClick={handleEndSession}
+                className="px-3 py-1 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800"
+              >
+                End Session
+              </button>
+
               {/* Dark Mode Toggle */}
               <button
                 type="button"
@@ -165,7 +225,7 @@ const SessionWorkspace = () => {
                   </svg>
                 )}
               </button>
-  
+
               {/* User Dropdown */}
               <div className="relative">
                 <button
@@ -186,7 +246,7 @@ const SessionWorkspace = () => {
                     </svg>
                   </div>
                 </button>
-  
+
                 {isDropdownOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-gray-200 dark:border-gray-700">
                     <div className="py-1">
@@ -208,7 +268,7 @@ const SessionWorkspace = () => {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Participants (narrower) */}
-        <div className="w-80 h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+        <div className="w-60 h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
             <Users className="h-5 w-5 text-primary-500" />
             <h2 className="text-lg font-semibold">Participants</h2>

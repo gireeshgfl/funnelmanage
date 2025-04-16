@@ -32,7 +32,7 @@ const IndexPage = () => {
           await fetchPoints(data.user_id);
         } else {
           setError('Not authenticated');
-          router.push('/signup');
+          router.push('/login');
         }
       } catch (error) {
         console.error('Error fetching user info:', error);

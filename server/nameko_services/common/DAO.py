@@ -867,6 +867,39 @@ class ChatDAO(BaseDAO):
             chat_entry["_id"] = result.inserted_id
             return chat_entry
         return None
+    
+    def fetch_chat(self, payload):
+        """
+        Extract session ID from payload and return chat messages sorted by time.
+        """
+        try:
+            query_params = payload.get("query_params", {})
+            session_id = query_params.get("id")
+        except Exception:
+            raise ValueError("Invalid or missing session ID in query_params")
+
+        query = {"sessionId": session_id}
+        chats_cursor = self.collection.find(query).sort("created_at", 1)
+        return list(chats_cursor)
+    
+    def delete_chat_by_session_payload(self, payload):
+        """
+        Extract sessionId from the payload and delete all chat entries with that ID.
+        """
+        try:
+            query_params = payload.get("query_params", {})
+            session_id = query_params.get("id")
+        except Exception:
+            raise ValueError("Invalid payload: Missing or malformed 'query_params'")
+
+        if not session_id:
+            raise ValueError("sessionId is required in query_params")
+
+        result = self.collection.delete_many({"sessionId": session_id})
+        return result.deleted_count
+
+
+
 
 # ------------------------------
 # Funnel Service DAO Module

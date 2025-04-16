@@ -10,29 +10,41 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
   const { socket } = useContext(SocketContext);
   const messagesEndRef = useRef(null);
 
-  // Socket connection and session setup
+  // Fetch session status and chat history
   useEffect(() => {
-    if (socket && sessionId) {
-      socket.emit("setSessionId", { sessionId });
-    }
-  }, [socket, sessionId]);
-
-  // Fetch session status
-  useEffect(() => {
-    async function fetchSessionStatus() {
+    async function fetchInitialData() {
       if (!sessionId) return;
+      
       try {
-        const response = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_SESSION_STATUS}?id=${sessionId}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.data) setSessionStatus(data.data);
+        // Fetch session status
+        const statusResponse = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_SESSION_STATUS}?id=${sessionId}`);
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          if (statusData.data) setSessionStatus(statusData.data);
+        }
+
+        // Fetch chat history
+        const chatResponse = await fetch(`${API_ROUTES.CHAT_SERVICE.FETCH_CHAT}?id=${sessionId}`);
+        if (chatResponse.ok) {
+          const chatData = await chatResponse.json();
+          if (chatData.data && Array.isArray(chatData.data)) {
+            const formattedMessages = chatData.data.map(msg => ({
+              username: msg.sender,
+              content: msg.message,
+              timestamp: msg.createdAt || new Date().toISOString(),
+              type: 'regular',
+              role: msg.sender === studentUserName ? 'student' : 
+                    msg.sender === trainerUserName ? 'trainer' : 'other',
+            }));
+            setMessages(formattedMessages);
+          }
         }
       } catch (error) {
-        console.error("Error fetching session status:", error);
+        console.error("Error fetching initial data:", error);
       }
     }
-    fetchSessionStatus();
-  }, [sessionId]);
+    fetchInitialData();
+  }, [sessionId, studentUserName, trainerUserName]);
 
   // Socket event listeners
   useEffect(() => {

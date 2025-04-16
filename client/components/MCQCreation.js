@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { SocketContext } from '@/context/socketContext';
 import { Input, Button, Card } from '@components/ui/components';
 import { CheckCircle, Edit2, Trash2, Plus, Send } from 'lucide-react';
+import { List } from 'lucide-react';
 
 const MCQCreation = ({ pushMCQsToChat }) => {
   const { socket } = useContext(SocketContext);

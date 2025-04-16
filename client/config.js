@@ -74,6 +74,8 @@ export const API_ROUTES = {
   // ===========================
   CHAT_SERVICE: {
     SAVE_CHAT: `${BASE_URL}/chat_service/save_chat`,
+    FETCH_CHAT: `${BASE_URL}/chat_service/fetch_chat`,
+    DELETE_CHAT: `${BASE_URL}/chat_service/delete_chat`,
   },
 
   // ===========================

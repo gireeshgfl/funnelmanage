@@ -72,4 +72,51 @@ class SessionService:
                 "message": "Failed to save chat",
                 "status": 500
             }
+    
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['trainer', 'student'])
+    @serialize_result
+    def fetch_chat(self, user_id, payload):
+        try:
+            chats = self.chat_dao.fetch_chat(payload)
+            return {
+                "message": "Chats fetched successfully",
+                "data": chats,
+                "status": 200
+            }
+        except ValueError as ve:
+            return {
+                "message": str(ve),
+                "status": 400
+            }
+        except Exception:
+            return {
+                "message": "Failed to fetch chats",
+                "status": 500
+            }
+    
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def delete_chat(self, user_id, payload):
+        try:
+            deleted_count = self.chat_dao.delete_chat_by_session_payload(payload)
+
+            return {
+                "message": f"Deleted {deleted_count} chat(s)",
+                "status": 200
+            }
+
+        except ValueError as ve:
+            return {
+                "message": str(ve),
+                "status": 400
+            }
+        except Exception:
+            return {
+                "message": "Failed to delete chat(s)",
+                "status": 500
+            }
 

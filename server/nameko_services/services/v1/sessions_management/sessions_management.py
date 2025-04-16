@@ -202,7 +202,6 @@ class SessionService:
             }
         
         status = self.session_service_dao.get_session_status(session_id)
-        print(status)
         if status is not None:
             return {
                 "message": "Session status fetched successfully",
