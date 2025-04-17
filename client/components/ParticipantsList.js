@@ -52,10 +52,13 @@ const ParticipantsList = ({ currentSessionId }) => {
     };
 
     const handleUpdateEmojis = ({ userId, emojis, sessionId }) => {
+      console.log("🔄 Handling emoji update for", userId, "with emojis:", emojis);
       if (sessionId === currentSessionId) {
-        setParticipants(prev =>
-          prev.map(p =>
-            p.userId === userId ? { ...p, emojis } : p
+        setParticipants(prev => 
+          prev.map(p => 
+            p.userId === userId 
+              ? { ...p, emojis: Array.isArray(emojis) ? emojis : [emojis] } 
+              : p
           )
         );
       }
@@ -88,10 +91,33 @@ const ParticipantsList = ({ currentSessionId }) => {
 
   const handleClearAllEmojis = () => {
     if (socket) {
+      // Optimistic UI update
+      setParticipants(prev => 
+        prev.map(p => ({ ...p, emojis: [] }))
+      );
       socket.emit('clearAllEmojis');
-      socket.emit('resetEmojiSelectors');
     }
   };
+  
+  // Add this effect to handle server confirmation
+  useEffect(() => {
+    if (!socket) return;
+  
+    const handleClearAll = ({ confirmed, participants }) => {
+      if (confirmed) {
+        console.log('Server confirmed clearAllEmojis');
+        setParticipants(prev => 
+          prev.map(p => ({ ...p, emojis: [] }))
+        );
+      }
+    };
+  
+    socket.on('clearAllEmojis', handleClearAll);
+  
+    return () => {
+      socket.off('clearAllEmojis', handleClearAll);
+    };
+  }, [socket]);
 
   const hasEmojis = useMemo(() =>
     participants.some(p => p.emojis?.length > 0),

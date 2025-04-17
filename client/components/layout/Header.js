@@ -5,11 +5,11 @@ import { useAuth } from '@hooks/useAuth';
 import Link from 'next/link';
 import { Filter, BookOpen, Gift, Calendar, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function Sidebar({ onCollapseChange }) {
+export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
   const { signout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
 
   const handleSignout = async () => {
     try {

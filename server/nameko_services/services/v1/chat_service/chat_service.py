@@ -11,7 +11,7 @@ from bson.objectid import ObjectId
 
 logger = setup_logging('chat_service', log_level=logging.ERROR)
 
-class SessionService:
+class ChatService:
     name = 'chat_service'
     mongo_provider = MongoProvider()
     dispatch = EventDispatcher()

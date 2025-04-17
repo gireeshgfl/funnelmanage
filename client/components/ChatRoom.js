@@ -10,6 +10,13 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
   const { socket } = useContext(SocketContext);
   const messagesEndRef = useRef(null);
 
+  useEffect(() => {
+    if (socket && sessionId) {
+      console.log('Emitting setSessionId for session:', sessionId);
+      socket.emit('setSessionId', { sessionId });
+    }
+  }, [socket, sessionId]);
+
   // Fetch session status and chat history
   useEffect(() => {
     async function fetchInitialData() {
@@ -48,9 +55,15 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
 
   // Socket event listeners
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('Socket not available');
+      return;
+    }
+  
+    console.log('Setting up socket listeners for chat');
 
     const handleReceiveMessage = (data) => {
+      console.log('Received message:', data);
       setMessages(prev => [
         ...prev,
         {
@@ -101,18 +114,18 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
       if (updatedData?.status) setSessionStatus(updatedData.status);
     };
 
-    socket.on('recievemessage', handleReceiveMessage);
+    socket.on('chatmessage', handleReceiveMessage);
     socket.on('broadcastMCQs', handleBroadcastMCQs);
     socket.on('pushQuestion', handlePushQuestion);
     socket.on('sessionUpdated', handleSessionUpdate);
 
     return () => {
-      socket.off('recievemessage', handleReceiveMessage);
+      socket.off('chatmessage', handleReceiveMessage);
       socket.off('broadcastMCQs', handleBroadcastMCQs);
       socket.off('pushQuestion', handlePushQuestion);
       socket.off('sessionUpdated', handleSessionUpdate);
     };
-  }, [socket, isTrainer, trainerUserName, studentUserName, studentUserId]);
+  }, [socket, isTrainer, trainerUserName, studentUserName]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -120,17 +133,29 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!socket || !inputMessage.trim()) return;
-
+    if (!socket || !inputMessage.trim() || !sessionId) return;
+  
     const messageData = {
       sender: isTrainer ? trainerUserName : studentUserName,
       message: inputMessage,
       sessionId,
     };
-
+  
+    // Add to local state immediately
+    setMessages(prev => [
+      ...prev,
+      {
+        username: messageData.sender,
+        content: messageData.message,
+        timestamp: new Date().toISOString(),
+        type: 'regular',
+        role: isTrainer ? 'trainer' : 'student',
+      },
+    ]);
+  
     socket.emit('chatmessage', messageData);
     setInputMessage('');
-
+  
     try {
       await fetch(API_ROUTES.CHAT_SERVICE.SAVE_CHAT, {
         method: 'POST',

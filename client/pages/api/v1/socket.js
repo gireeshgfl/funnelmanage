@@ -155,15 +155,17 @@ export default async function handler(req, res) {
             debug(`Received updateEmojis from ${userId}:`, emojis);
             
             if (participants[socket.userId]) {
-              // Update local state first
-              participants[socket.userId].emojis = emojis;
+              // Update local state with complete participant data
+              participants[socket.userId] = {
+                ...participants[socket.userId],
+                emojis: Array.isArray(emojis) ? emojis : [emojis].filter(Boolean),
+                sessionId: socket.sessionId // Ensure sessionId is included
+              };
               
-              // Then broadcast via eventBus
+              // Broadcast via eventBus with complete participant data
               debug(`Broadcasting updateEmojis via eventBus for ${userId}`);
               eventBus.emit('updateEmojis', { 
-                userId: socket.userId, 
-                emojis, 
-                sessionId: socket.sessionId,
+                ...participants[socket.userId], // Include all participant properties
                 socketId: socket.id
               });
             }
@@ -206,7 +208,10 @@ export default async function handler(req, res) {
               debug(`Broadcasting clearAllEmojis via eventBus for room ${room}`);
               eventBus.emit('clearAllEmojis', { 
                 sessionId: room,
-                socketId: socket.id
+                socketId: socket.id,
+                participants: Object.values(participants)
+                    .filter(p => p.sessionId === room)
+                    .map(p => ({userId: p.userId}))
               });
             }
           });
@@ -329,27 +334,49 @@ export default async function handler(req, res) {
         }
       });
 
-      eventBus.on('updateEmojis', ({ userId, emojis, sessionId, socketId }) => {
+      eventBus.on('updateEmojis', (participantData) => {
+        const { userId, sessionId, socketId } = participantData;
+        
         // Track this event to detect duplicates
         const count = emittedEvents.trackEvent('updateEmojis', userId, sessionId || 'global');
         
         debug(`EVENTBUS HANDLER: updateEmojis for ${userId} in ${sessionId || 'global'} (count: ${count})`);
         
+        // Prepare complete participant data for broadcast
+        const broadcastData = {
+          userId,
+          username: participantData.username,
+          role: participantData.role,
+          emojis: participantData.emojis,
+          points: participantData.points || 0,
+          sessionId: participantData.sessionId
+        };
+      
         if (sessionId) {
           debug(`Broadcasting updateEmojis to room ${sessionId} except ${socketId}`);
-          io.in(sessionId).except(socketId).emit('updateEmojis', { userId, emojis });
+          io.in(sessionId).except(socketId).emit('updateEmojis', broadcastData);
         } else {
           debug(`Broadcasting updateEmojis globally except ${socketId}`);
-          io.except(socketId).emit('updateEmojis', { userId, emojis });
+          io.except(socketId).emit('updateEmojis', broadcastData);
         }
       });
 
-      eventBus.on('clearAllEmojis', ({ sessionId, socketId }) => {
+      eventBus.on('clearAllEmojis', ({ sessionId, socketId, participants }) => {
         debug(`EVENTBUS HANDLER: clearAllEmojis for room ${sessionId}`);
         
         if (sessionId) {
           debug(`Broadcasting clearAllEmojis to room ${sessionId} except ${socketId}`);
-          io.in(sessionId).except(socketId).emit('clearAllEmojis');
+          io.in(sessionId).except(socketId).emit('clearAllEmojis', {
+            cleared: true,
+            participants
+          });
+          
+          // Also send to originator with different flag
+          debug(`Confirming clearAllEmojis to originator ${socketId}`);
+          io.to(socketId).emit('clearAllEmojis', {
+            confirmed: true,
+            participants
+          });
         }
       });
 
@@ -378,10 +405,10 @@ export default async function handler(req, res) {
         
         if (sessionId) {
           debug(`Broadcasting chatmessage to room ${sessionId} except ${socketId}`);
-          io.in(sessionId).except(socketId).emit('recievemessage', data);
+          io.in(sessionId).except(socketId).emit('chatmessage', data);
         } else {
           debug(`Broadcasting chatmessage globally except ${socketId}`);
-          io.except(socketId).emit('recievemessage', data);
+          io.except(socketId).emit('chatmessage', data);
         }
       });
 

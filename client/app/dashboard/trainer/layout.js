@@ -6,13 +6,16 @@ import { usePathname } from 'next/navigation';
 const Layout = ({ children }) => {
   const pathname = usePathname();
   const isSessionWorkspace = pathname?.includes('/dashboard/trainer/sessions/');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Initial state set to true
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Hide Sidebar in session workspace */}
       {!isSessionWorkspace && (
-        <Sidebar onCollapseChange={setSidebarCollapsed} />
+        <Sidebar 
+          onCollapseChange={setSidebarCollapsed} 
+          initialCollapsed={sidebarCollapsed}
+        />
       )}
 
       <div 
