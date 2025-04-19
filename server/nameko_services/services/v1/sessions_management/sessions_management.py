@@ -220,11 +220,10 @@ class SessionService:
     @rbac_check(required_roles=['student'])
     @serialize_result
     def save_points(self, user_id, data):
-        
-        # Convert questionId to ObjectId
+        # Step 1: Convert questionId to ObjectId
         question_id = ObjectId(data['questionId'])
-        
-        # Retrieve the question using QuestionDAO
+
+        # Step 2: Get question document from DAO
         question = self.question_dao.get_question_by_id(question_id)
         if not question:
             return {
@@ -232,57 +231,62 @@ class SessionService:
                 "message": "Question not found",
                 "data": {}
             }
-        
-        # Validate that the question has a points array and that the selectedAnswerIndex is valid
+
+        # Step 3: Validate points array and selected index
         if 'points' not in question or not (0 <= data['selectedAnswerIndex'] < len(question['points'])):
             return {
                 "status": 400,
                 "message": "Invalid answer index or points not defined",
                 "data": {}
             }
-        
-        # Check if the student has already answered this question
-        existing_answer = self.points_dao.find_one({
-            "questionId": question_id,
-            "studentUserId": ObjectId(user_id)
-        })
+
+        # Step 4: Check if answer already submitted
+        existing_answer = self.points_dao.check_existing_answer(user_id, question_id)
         if existing_answer:
-            existing_answer_status = existing_answer.get("answerStatus", "Answer")
             return {
                 "status": 409,
                 "message": "Points Already allocated",
+                "data": {}
             }
-        
-        # Determine if the answer is correct
-        if data['selectedAnswerIndex'] == question.get('correctAnswerIndex'):
-            answer_status = "Correct Answer"
-        else:
-            answer_status = "Incorrect Answer"
-        
-        # Calculate the points earned from the answer
-        points_earned = question['points'][data['selectedAnswerIndex']]
-        
-        # Build the data to be saved. Note that questionId and studentUserId are stored as ObjectId for DB operations.
+
+        # Step 5: Determine answer status
+        selected_index = data['selectedAnswerIndex']
+        correct_index = question['correctAnswerIndex']
+        answer_status = "Correct Answer" if selected_index == correct_index else "Incorrect Answer"
+
+        # Step 6: Calculate points
+        points_earned = question['points'][selected_index]
+
+        # Step 7: Get answer texts
+        selected_answer_text = question['answers'][selected_index]
+        correct_answer_text = question['answers'][correct_index]
+
+        # Step 8: Prepare data to save
         points_data = {
             **data,
             "questionId": question_id,
             "pointsEarned": points_earned,
             "answerStatus": answer_status,
-            "studentUserId": ObjectId(user_id)
+            "studentUserId": ObjectId(user_id),
+            "selectedAnswerText": selected_answer_text,
+            "correctAnswerText": correct_answer_text
         }
-        
-        # Save the points record using PointsDAO
+
+        # Step 9: Save to DB via DAO
         result = self.points_dao.create_points(points_data)
-        
-        # Return response with numeric status and id as a string.
+
+        # Step 10: Return enriched response
         return {
             "status": 200,
             "message": f"{answer_status}. Points saved successfully",
             "data": {
                 "id": str(result['_id']),
-                "pointsEarned": points_earned
+                "pointsEarned": points_earned,
+                "selectedAnswerText": selected_answer_text,
+                "correctAnswerText": correct_answer_text
             }
         }
+
 
 
     @rpc

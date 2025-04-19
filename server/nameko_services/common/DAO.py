@@ -417,6 +417,10 @@ class QuestionDAO(BaseDAO):
         if not isinstance(question_id, ObjectId):
             question_id = ObjectId(question_id)
         return self.find_one({'_id': question_id})
+    
+    def get_correct_answer_text(self, question):
+        index = question.get('correctAnswerIndex')
+        return question['answers'][index] if index is not None and 0 <= index < len(question['answers']) else None
 
     def create_question(self, question_data):
         """
@@ -720,6 +724,12 @@ class PointsDAO(BaseDAO):
         Initialize PointsDAO with the 'points' collection.
         """
         super().__init__(db_connection, collection_name='points')
+    
+    def check_existing_answer(self, student_user_id, question_id):
+        return self.find_one({
+            "questionId": question_id,
+            "studentUserId": ObjectId(student_user_id)
+        })
 
     def create_points(self, points_data):
         """

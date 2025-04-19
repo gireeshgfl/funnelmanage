@@ -3,7 +3,7 @@ import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
 
-const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, isTrainer, onCorrectAnswer }) => {
+const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, isTrainer }) => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [sessionStatus, setSessionStatus] = useState("Activate");
@@ -17,20 +17,17 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     }
   }, [socket, sessionId]);
 
-  // Fetch session status and chat history
   useEffect(() => {
     async function fetchInitialData() {
       if (!sessionId) return;
-      
+
       try {
-        // Fetch session status
         const statusResponse = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_SESSION_STATUS}?id=${sessionId}`);
         if (statusResponse.ok) {
           const statusData = await statusResponse.json();
           if (statusData.data) setSessionStatus(statusData.data);
         }
 
-        // Fetch chat history
         const chatResponse = await fetch(`${API_ROUTES.CHAT_SERVICE.FETCH_CHAT}?id=${sessionId}`);
         if (chatResponse.ok) {
           const chatData = await chatResponse.json();
@@ -40,7 +37,7 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
               content: msg.message,
               timestamp: msg.createdAt || new Date().toISOString(),
               type: 'regular',
-              role: msg.sender === studentUserName ? 'student' : 
+              role: msg.sender === studentUserName ? 'student' :
                     msg.sender === trainerUserName ? 'trainer' : 'other',
             }));
             setMessages(formattedMessages);
@@ -53,13 +50,12 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     fetchInitialData();
   }, [sessionId, studentUserName, trainerUserName]);
 
-  // Socket event listeners
   useEffect(() => {
     if (!socket) {
       console.log('Socket not available');
       return;
     }
-  
+
     console.log('Setting up socket listeners for chat');
 
     const handleReceiveMessage = (data) => {
@@ -71,43 +67,32 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
           content: data.message,
           timestamp: new Date().toISOString(),
           type: 'regular',
-          role: data.sender === studentUserName ? 'student' : 
+          role: data.sender === studentUserName ? 'student' :
                 data.sender === trainerUserName ? 'trainer' : 'other',
         }
       ]);
     };
 
     const handleBroadcastMCQs = (mcqArray) => {
-      const mcqMessages = mcqArray.map(mcq => ({
+      console.log('Received broadcastMCQs:', JSON.stringify(mcqArray, null, 2));
+      const mcqMessages = (Array.isArray(mcqArray) ? mcqArray : []).map(mcq => ({
         username: trainerUserName,
-        content: `Question: ${mcq.question}`,
+        content: `Question: ${mcq.question || mcq.questionText || 'No question text provided'}`,
         timestamp: new Date().toISOString(),
         type: 'mcq',
-        mcqData: { 
-          id: mcq.id || '', 
-          question: mcq.question, 
-          questionText: mcq.questionText, 
-          questionType: mcq.questionType, 
-          answers: mcq.answers, 
-          answerMediaUrls: mcq.answerMediaUrls || [] 
+        mcqData: {
+          id: mcq.id || '',
+          question: mcq.question || '',
+          questionText: mcq.questionText || '',
+          questionType: mcq.questionType || 'text',
+          answers: Array.isArray(mcq.answers)
+            ? mcq.answers.map(answer => typeof answer === 'string' ? { text: answer } : answer)
+            : [],
+          answerMediaUrls: Array.isArray(mcq.answerMediaUrls) ? mcq.answerMediaUrls : []
         },
         role: 'trainer',
       }));
       setMessages(prev => [...prev, ...mcqMessages]);
-    };
-
-    const handlePushQuestion = (questionData) => {
-      setMessages(prev => [
-        ...prev,
-        {
-          username: trainerUserName,
-          content: `Question: ${questionData.question}`,
-          timestamp: new Date().toISOString(),
-          type: 'mcq',
-          mcqData: questionData,
-          role: 'trainer',
-        }
-      ]);
     };
 
     const handleSessionUpdate = (updatedData) => {
@@ -116,32 +101,28 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
 
     socket.on('chatmessage', handleReceiveMessage);
     socket.on('broadcastMCQs', handleBroadcastMCQs);
-    socket.on('pushQuestion', handlePushQuestion);
     socket.on('sessionUpdated', handleSessionUpdate);
 
     return () => {
       socket.off('chatmessage', handleReceiveMessage);
       socket.off('broadcastMCQs', handleBroadcastMCQs);
-      socket.off('pushQuestion', handlePushQuestion);
       socket.off('sessionUpdated', handleSessionUpdate);
     };
   }, [socket, isTrainer, trainerUserName, studentUserName]);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSendMessage = async () => {
     if (!socket || !inputMessage.trim() || !sessionId) return;
-  
+
     const messageData = {
       sender: isTrainer ? trainerUserName : studentUserName,
       message: inputMessage,
       sessionId,
     };
-  
-    // Add to local state immediately
+
     setMessages(prev => [
       ...prev,
       {
@@ -152,10 +133,10 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
         role: isTrainer ? 'trainer' : 'student',
       },
     ]);
-  
+
     socket.emit('chatmessage', messageData);
     setInputMessage('');
-  
+
     try {
       await fetch(API_ROUTES.CHAT_SERVICE.SAVE_CHAT, {
         method: 'POST',
@@ -167,43 +148,8 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     }
   };
 
-  const handleSelectAnswer = (messageIndex, answerIndex) => {
-    setMessages(prev => prev.map((msg, idx) =>
-      idx === messageIndex ? { ...msg, selectedAnswer: answerIndex } : msg
-    ));
-  };
-
-  const handleSubmitMCQ = async (messageIndex) => {
-    const message = messages[messageIndex];
-    if (message.selectedAnswer === undefined) return;
-
-    const { id, question, answers } = message.mcqData;
-    const selectedAnswer = answers[message.selectedAnswer].text;
-
-    try {
-      const response = await fetch(API_ROUTES.SESSION_SERVICE.SAVE_POINTS, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionId: id,
-          selectedAnswerIndex: message.selectedAnswer,
-          selectedAnswerText: selectedAnswer,
-          studentUserName,
-          studentUserId,
-          questionText: question,
-          sessionId,
-        }),
-      });
-
-      if (response.ok && onCorrectAnswer) {
-        const result = await response.json();
-        if (result.message === "Correct Answer. Points saved successfully") {
-          onCorrectAnswer(true);
-        }
-      }
-    } catch (error) {
-      console.error('Error submitting MCQ:', error);
-    }
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   if (sessionStatus === "Deactivate") {
@@ -219,13 +165,8 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     );
   }
 
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* Messages container */}
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-700/30 space-y-4">
         {messages.map((message, index) => (
           <div key={index} className={`flex ${message.role === 'trainer' ? 'justify-end' : 'justify-start'}`}>
@@ -241,107 +182,13 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
                   {formatTime(message.timestamp)}
                 </span>
               </div>
-
-              {message.type === 'mcq' ? (
-                <div className="mt-2">
-                  {/* MCQ Question */}
-                  <div className="mb-3">
-                    {message.mcqData.questionType === 'video-text' ? (
-                      <video controls className="w-full max-h-48 rounded-lg mb-2">
-                        <source src={message.mcqData.question} type="video/mp4" />
-                      </video>
-                    ) : message.mcqData.questionType === 'image-text' ? (
-                      <img 
-                        src={message.mcqData.question} 
-                        alt="Question" 
-                        className="w-full max-h-48 rounded-lg mb-2 object-cover"
-                      />
-                    ) : null}
-                    <p className="font-medium">{message.mcqData.questionText || message.content}</p>
-                  </div>
-
-                  {/* MCQ Answers */}
-                  {message.mcqData.questionType === 'image-image' ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      {message.mcqData.answerMediaUrls?.map((url, answerIndex) => (
-                        <label 
-                          key={answerIndex}
-                          className={`relative cursor-pointer ${!isTrainer ? 'hover:opacity-90' : 'cursor-default'}`}
-                        >
-                          <input
-                            type="radio"
-                            name={`mcq-${index}`}
-                            checked={message.selectedAnswer === answerIndex}
-                            onChange={() => handleSelectAnswer(index, answerIndex)}
-                            disabled={isTrainer}
-                            className="absolute opacity-0 w-0 h-0"
-                          />
-                          <div className={`border-2 rounded-lg overflow-hidden transition-all ${
-                            message.selectedAnswer === answerIndex 
-                              ? 'border-primary-500 dark:border-primary-400' 
-                              : 'border-transparent'
-                          }`}>
-                            <img
-                              src={url}
-                              alt={`Option ${answerIndex + 1}`}
-                              className="w-full h-24 object-cover"
-                            />
-                            {message.mcqData.answers?.[answerIndex]?.text && (
-                              <div className="p-2 text-center text-sm bg-white dark:bg-gray-700">
-                                {message.mcqData.answers[answerIndex].text}
-                              </div>
-                            )}
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  ) : (
-                    <ul className="space-y-2">
-                      {message.mcqData.answers?.map((answer, answerIndex) => (
-                        <li key={answerIndex}>
-                          <label className={`flex items-center p-2 rounded-lg cursor-pointer ${
-                            !isTrainer ? 'hover:bg-gray-100 dark:hover:bg-gray-600' : ''
-                          } ${
-                            message.selectedAnswer === answerIndex
-                              ? 'bg-primary-100 dark:bg-primary-900/30'
-                              : 'bg-white dark:bg-gray-700'
-                          }`}>
-                            <input
-                              type="radio"
-                              name={`mcq-${index}`}
-                              checked={message.selectedAnswer === answerIndex}
-                              onChange={() => handleSelectAnswer(index, answerIndex)}
-                              disabled={isTrainer}
-                              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600"
-                            />
-                            <span className="ml-3">{answer.text}</span>
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {!isTrainer && (
-                    <Button
-                      onClick={() => handleSubmitMCQ(index)}
-                      variant="primary"
-                      size="sm"
-                      className="mt-3 w-full"
-                    >
-                      Submit Answer
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <p>{message.content}</p>
-              )}
+              <p className="text-gray-800 dark:text-gray-200">{message.content}</p>
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message input */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex gap-2">
           <input
