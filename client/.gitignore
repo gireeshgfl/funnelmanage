@@ -34,3 +34,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# certificate files
+.cert/ openssl-san.cnf key.pem.bak cert.pem.bak
