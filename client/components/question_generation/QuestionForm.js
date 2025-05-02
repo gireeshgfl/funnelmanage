@@ -12,6 +12,8 @@ export const QuestionForm = ({ onSubmit, initialData, onCancel, topicId }) => {
   const [answerFiles, setAnswerFiles] = useState([null, null, null, null]);
   const [answerFilePreviews, setAnswerFilePreviews] = useState([null, null, null, null]);
   const [questionText, setQuestionText] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [pointsError, setPointsError] = useState(false);
 
   const { uploadQuestionMedia } = useMediaUpload();
 
@@ -41,10 +43,37 @@ export const QuestionForm = ({ onSubmit, initialData, onCancel, topicId }) => {
     setAnswerFiles([null, null, null, null]);
     setAnswerFilePreviews([null, null, null, null]);
     setQuestionText('');
-    onCancel();
+    setErrorMessage('');
+    setPointsError(false);
+    onCancel && onCancel();
+  };
+
+  const validatePoints = () => {
+    const allZero = points.every(point => point === 0);
+    const correctAnswerHasZero = points[correctAnswerIndex] === 0;
+    
+    if (allZero) {
+      setErrorMessage("At least one answer should have points greater than 0");
+      setPointsError(true);
+      return false;
+    }
+    
+    if (correctAnswerHasZero) {
+      setErrorMessage("The correct answer must have points greater than 0");
+      setPointsError(true);
+      return false;
+    }
+    
+    setErrorMessage('');
+    setPointsError(false);
+    return true;
   };
 
   const handleSubmit = async () => {
+    if (!validatePoints()) {
+      return;
+    }
+
     if (questionType === 'text-text') {
       const submissionData = {
         question,
@@ -255,10 +284,14 @@ export const QuestionForm = ({ onSubmit, initialData, onCancel, topicId }) => {
                 const newPoints = [...points];
                 newPoints[index] = Math.max(0, parseInt(e.target.value) || 0);
                 setPoints(newPoints);
+                if (pointsError) {
+                  setPointsError(false);
+                  setErrorMessage('');
+                }
               }}
               onFocus={(e) => e.target.select()}
               min="0"
-              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white [appearance:textfield]"
+              className={`block w-full px-3 py-2 border ${pointsError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white [appearance:textfield]`}
             />
           </div>
           
@@ -278,7 +311,7 @@ export const QuestionForm = ({ onSubmit, initialData, onCancel, topicId }) => {
       ))}
 
       {/* Form Buttons */}
-      <div className="flex space-x-3 pt-4">
+      <div className="flex space-x-3 pt-4 items-center">
         <button
           onClick={handleSubmit}
           className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200"
@@ -292,6 +325,9 @@ export const QuestionForm = ({ onSubmit, initialData, onCancel, topicId }) => {
           >
             Cancel
           </button>
+        )}
+        {errorMessage && (
+          <p className="text-red-500 text-sm ml-3">{errorMessage}</p>
         )}
       </div>
     </div>

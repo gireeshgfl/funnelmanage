@@ -335,65 +335,71 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 className="w-full"
               />
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Questions
-                </label>
-                <Dropdown
-                  trigger={
-                    <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                      {selectedTopics.length > 0 
-                        ? `${selectedTopics.length} selected` 
-                        : 'Select questions'}
-                      <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  }
-                  position="bottom"
-                  className="w-full"
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Questions
+        </label>
+        {topicOptions.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            No topics available. Please add topics.
+          </p>
+        ) : (
+          <Dropdown
+            trigger={
+              <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                {selectedTopics.length > 0 
+                  ? `${selectedTopics.length} selected` 
+                  : 'Select questions'}
+                <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            }
+            position="bottom"
+            className="w-full"
+          >
+            <div className="max-h-60 overflow-y-auto">
+              {topicOptions.map(option => (
+                <DropdownItem 
+                  key={option.value}
+                  onClick={() => handleTopicSelect(option.value)}
+                  className={`flex items-center ${selectedTopics.includes(option.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
                 >
-                  <div className="max-h-60 overflow-y-auto">
-                    {topicOptions.map(option => (
-                      <DropdownItem 
-                        key={option.value}
-                        onClick={() => handleTopicSelect(option.value)}
-                        className={`flex items-center ${selectedTopics.includes(option.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedTopics.includes(option.value)}
-                          readOnly
-                          className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
-                        />
-                        {option.label}
-                      </DropdownItem>
-                    ))}
-                  </div>
-                </Dropdown>
-                {selectedTopics.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selectedTopics.map(topicId => {
-                      const topic = availableTopics.find(t => (t.id || t.value) === topicId);
-                      return (
-                        <span 
-                          key={topicId} 
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200"
-                        >
-                          {topic?.text || topic?.name || topicId}
-                          {topic?.difficulty && ` (${topic.difficulty})`}
-                          <button 
-                            onClick={() => handleTopicSelect(topicId)}
-                            className="ml-1.5 inline-flex text-primary-400 hover:text-primary-600 dark:hover:text-primary-300"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedTopics.includes(option.value)}
+                    readOnly
+                    className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
+                  />
+                  {option.label}
+                </DropdownItem>
+              ))}
+            </div>
+          </Dropdown>
+        )}
+        {selectedTopics.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {selectedTopics.map(topicId => {
+              const topic = availableTopics.find(t => (t.id || t.value) === topicId);
+              return (
+                <span 
+                  key={topicId} 
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200"
+                >
+                  {topic?.text || topic?.name || topicId}
+                  {topic?.difficulty && ` (${topic.difficulty})`}
+                  <button 
+                    onClick={() => handleTopicSelect(topicId)}
+                    className="ml-1.5 inline-flex text-primary-400 hover:text-primary-600 dark:hover:text-primary-300"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

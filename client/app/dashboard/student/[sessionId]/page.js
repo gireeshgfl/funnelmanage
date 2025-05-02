@@ -16,7 +16,8 @@ const QuestionDisplay = ({
   selectedAnswer, 
   setSelectedAnswer, 
   onCorrectAnswer,
-  onClearQuestion
+  onClearQuestion,
+  fetchPoints
 }) => {
   const [pointsEarned, setPointsEarned] = useState(null);
   const [selectedAnswerText, setSelectedAnswerText] = useState('');
@@ -58,6 +59,9 @@ const QuestionDisplay = ({
             onCorrectAnswer(true);
           }
         }
+
+        // Call fetchPoints after successful savePoints
+        await fetchPoints();
   
         setTimeout(() => {
           setShowResults(false);
@@ -174,11 +178,11 @@ const QuestionDisplay = ({
             )}
           </div>
 
-          <div className="space-y-3 mb-6">
+          <div className="grid grid-cols-2 gap-3 mb-6">
             {question.answers.map((answer, index) => (
               <div 
                 key={index}
-                className={`p-4 rounded-lg cursor-pointer border-2 transition-colors ${
+                className={`p-4 min-h-[120px] rounded-lg cursor-pointer border-2 transition-colors ${
                   selectedAnswer === index
                     ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                     : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
@@ -246,7 +250,6 @@ const IndexPage = () => {
       };
     
       setCurrentQuestion(formattedQuestion);
-      setActiveTab('question');
       setSelectedAnswer(null);
     };
 
@@ -377,7 +380,7 @@ const IndexPage = () => {
               
               <Button 
                 variant="ghost" 
-                onClick={() => router.push('/')}
+                onClick={() => router.push('/dashboard/student')}
                 className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -388,27 +391,45 @@ const IndexPage = () => {
             </div>
           </div>
 
-          <div className="flex justify-center mb-4">
-            <div className="flex space-x-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-              <Button
-                variant={activeTab === 'question' ? 'default' : 'ghost'}
+          <div className="flex justify-center mb-4 relative">
+            <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 relative w-full max-w-md">
+              {/* Sliding background */}
+              <div 
+                className={`absolute top-1 h-[calc(100%-8px)] bg-white dark:bg-gray-600 rounded-md shadow-sm transition-all duration-300 ease-in-out ${
+                  activeTab === 'question' 
+                    ? 'left-1 w-[calc(50%-4px)]' 
+                    : 'left-[calc(50%+4px)] w-[calc(50%-8px)]'
+                }`}
+              />
+              
+              <button
                 onClick={() => setActiveTab('question')}
-                className="px-4 py-2 rounded-lg"
+                className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${
+                  activeTab === 'question'
+                    ? 'text-gray-900 dark:text-white'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
               >
-                Question
-                {currentQuestion && (
-                  <span className="ml-2 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs">
-                    !
-                  </span>
-                )}
-              </Button>
-              <Button
-                variant={activeTab === 'chat' ? 'default' : 'ghost'}
+                <span className="relative">
+                  Question
+                  {currentQuestion && (
+                    <span className="absolute -right-5 -top-2 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs">
+                      !
+                    </span>
+                  )}
+                </span>
+              </button>
+              
+              <button
                 onClick={() => setActiveTab('chat')}
-                className="px-4 py-2 rounded-lg"
+                className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${
+                  activeTab === 'chat'
+                    ? 'text-gray-900 dark:text-white'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
               >
                 Chats
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -429,6 +450,7 @@ const IndexPage = () => {
                     setSelectedAnswer={setSelectedAnswer}
                     onCorrectAnswer={onCorrectAnswerHandler}
                     onClearQuestion={handleClearQuestion}
+                    fetchPoints={fetchPoints}
                   />
                 ) : (
                   <div className="min-h-full flex items-center justify-center">

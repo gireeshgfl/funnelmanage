@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Archive, RefreshCw, Plus, Edit2, Trash2, Power, ArrowRight } from 'lucide-react';
 import SessionFormModal from '@/components/session_management/SessionFormModal';
-import SessionList from '@/components/session_management/SessionList'; // Import the SessionList component
+import SessionList from '@/components/session_management/SessionList';
 import { 
   getSessions, 
   createSession, 
@@ -39,17 +39,32 @@ const SessionManagementPage = () => {
     setLoading(true);
     try {
       const [sessionsData, topicsData, participantsData] = await Promise.all([
-        getSessions(),
-        getTopics(),
-        getParticipants()
+        getSessions().catch(err => {
+          console.error('Error fetching sessions:', err);
+          if (err.message.includes('404') || err.message.includes('Not Found')) {
+            console.log('No sessions available for user');
+            return [];
+          }
+          throw err;
+        }),
+        getTopics().catch(err => {
+          console.error('Error fetching topics:', err);
+          return [];
+        }),
+        getParticipants().catch(err => {
+          console.error('Error fetching participants:', err);
+          return [];
+        })
       ]);
+      console.log('Topics Data:', topicsData);
       setSessions(sessionsData);
       setTopics(topicsData);
       setParticipants(participantsData);
-      setError('');
+      console.log('Topics State After Set:', topicsData);
+      setError(sessionsData.length === 0 ? 'No sessions available. Create a new session to get started.' : '');
     } catch (err) {
-      setError('Failed to fetch data. Please try again.');
-      console.error(err);
+      console.error('Unexpected Fetch Error:', err);
+      setError('Failed to fetch data: ' + err.message);
     } finally {
       setLoading(false);
     }

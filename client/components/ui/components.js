@@ -196,6 +196,56 @@ export const Button = ({
   );
 };
 
+// Card Component
+export const Card = ({
+  children,
+  className = '',
+  hoverEffect = false,
+  ...props
+}) => {
+  return (
+    <div
+      className={`rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden ${
+        hoverEffect ? 'hover:shadow-md transition-shadow duration-200' : ''
+      } ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+// Modal Component
+export const Modal = ({ 
+  isOpen, 
+  onClose, 
+  children,
+  className = '',
+  overlayClassName = '',
+  closeOnOverlayClick = true
+}) => {
+  if (!isOpen) return null;
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget && closeOnOverlayClick) {
+      onClose();
+    }
+  };
+
+  return (
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 ${overlayClassName}`}
+      onClick={handleOverlayClick}
+    >
+      <div 
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto ${className}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 // Export all components
 export default {
   Input,
@@ -203,4 +253,6 @@ export default {
   Dropdown,
   DropdownItem,
   Button,
+  Card,
+  Modal,
 };
