@@ -271,7 +271,7 @@ const SessionWorkspace = () => {
         <div className="w-60 h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
             <Users className="h-5 w-5 text-primary-500" />
-            <h2 className="text-lg font-semibold">Participants</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Participants</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
             <ParticipantsList currentSessionId={sessionId} />
@@ -282,7 +282,7 @@ const SessionWorkspace = () => {
         <div className="w-[35rem] h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
             <BookOpen className="h-5 w-5 text-primary-500" />
-            <h2 className="text-lg font-semibold">Question Bank</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Question Bank</h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <QuestionBank />
@@ -295,7 +295,7 @@ const SessionWorkspace = () => {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between items-center flex-shrink-0">
             <div className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5 text-primary-500" />
-              <h2 className="text-lg font-semibold">Session Workspace</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Session Workspace</h2>
             </div>
             
             <div className="relative group">
