@@ -48,5 +48,6 @@ app.prepare().then(() => {
     if (err) throw err;
     console.log('> Ready on https://localhost:3000');
     console.log('> Also accessible on https://192.168.1.65:3000');
+    console.log('> Also accessible on https://192.168.1.154:3000');
   });
 });
