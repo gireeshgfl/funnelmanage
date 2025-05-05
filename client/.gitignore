@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -13,7 +11,6 @@
 /.next/
 /out/
 
-# production
 /build
 
 # misc
@@ -36,4 +33,7 @@ yarn-error.log*
 next-env.d.ts
 
 # certificate files
-.cert/ openssl-san.cnf key.pem.bak cert.pem.bak
+.cert/
+openssl-san.cnf
+key.pem.bak
+cert.pem.bak
