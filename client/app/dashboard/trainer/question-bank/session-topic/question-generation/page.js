@@ -1,12 +1,12 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuestions } from '@/hooks/useQuestions';
 import { QuestionForm } from '@/components/question_generation/QuestionForm';
 import { QuestionList } from '@/components/question_generation/QuestionList';
 import { useQuestionOperations } from '@/hooks/useQuestionOperations';
 
-export default function QuestionPage() {
+function QuestionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicId = searchParams.get('topicId');
@@ -79,5 +79,13 @@ export default function QuestionPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function QuestionPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <QuestionPageContent />
+    </Suspense>
   );
 }
