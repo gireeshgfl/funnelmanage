@@ -37,3 +37,5 @@ next-env.d.ts
 openssl-san.cnf
 key.pem.bak
 cert.pem.bak
+
+certificates

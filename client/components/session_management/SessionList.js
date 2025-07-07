@@ -171,7 +171,7 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
             <div className="relative flex-grow">
               <input
                 type="text"
-                value={`http://localhost:3000/funnel-management/dashboard/student/${session._id}`}
+                value={`https://localhost:3000/funnel-management/dashboard/student/${session._id}`}
                 readOnly
                 className="w-full text-xs py-1.5 px-2 pr-10 rounded-md bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
               />

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Container, Header, Button, Loader, Table } from 'semantic-ui-react';
 
 const PointsData = () => {
     const [pointsData, setPointsData] = useState([]);
@@ -34,40 +33,57 @@ const PointsData = () => {
     };
 
     if (isLoading) {
-        return <Loader active>Loading points...</Loader>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <span className="ml-3 text-lg">Loading points...</span>
+            </div>
+        );
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return (
+            <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                Error: {error}
+            </div>
+        );
     }
 
     return (
-        <Container style={{ marginTop: '2em' }}>
-            <Header as='h1'>Student Points Data</Header>
-            <Button onClick={fetchPoints} primary>Refresh Points</Button>
-            <Table celled style={{ marginTop: '2em' }}>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell textAlign='center'>User Name</Table.HeaderCell>
-                        <Table.HeaderCell textAlign='center'>Points</Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {pointsData.length > 0 ? (
-                        pointsData.map((student, index) => (
-                            <Table.Row key={index}>
-                                <Table.Cell>{student.userName}</Table.Cell>
-                                <Table.Cell>{student.totalPoints}</Table.Cell>
-                            </Table.Row>
-                        ))
-                    ) : (
-                        <Table.Row>
-                            <Table.Cell colSpan="2" textAlign='center'>No Points Data Available</Table.Cell>
-                        </Table.Row>
-                    )}
-                </Table.Body>
-            </Table>
-        </Container>
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold mb-6">Student Points Data</h1>
+            <button 
+                onClick={fetchPoints} 
+                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded mb-6"
+            >
+                Refresh Points
+            </button>
+            
+            <div className="overflow-x-auto shadow-md rounded-lg">
+                <table className="min-w-full bg-white border border-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">User Name</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {pointsData.length > 0 ? (
+                            pointsData.map((student, index) => (
+                                <tr key={index}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center">{student.userName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center">{student.totalPoints}</td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="2" className="px-6 py-4 text-center text-gray-500">No Points Data Available</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     );
 };
 

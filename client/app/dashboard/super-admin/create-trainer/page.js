@@ -2,8 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Container, Header, Button, Form, Message } from 'semantic-ui-react';
-import 'semantic-ui-css/semantic.min.css';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -23,13 +21,14 @@ export default function SignUp() {
       name: Yup.string().required('Name is required'),
       email: Yup.string().email('Invalid email address').required('Email is required'),
       password: Yup.string().required('Password is required'),
-      phone: Yup.string().matches(/^[0-9]*$/, 'Phone number should only contain digits').max(10, 'Phone number should be 10 digits').min(10, 'Phone number should be 10 digits').required('Phone number is required'),
+      phone: Yup.string()
+        .matches(/^[0-9]*$/, 'Phone number should only contain digits')
+        .max(10, 'Phone number should be 10 digits')
+        .min(10, 'Phone number should be 10 digits')
+        .required('Phone number is required'),
     }),
     onSubmit: async (values) => {
-      // Hardcode role as 'trainer'
       values.role = 'trainer';
-
-      // Set status to 'Active'
       values.status = 'Active';
 
       setIsLoading(true);
@@ -42,7 +41,6 @@ export default function SignUp() {
           body: JSON.stringify(values),
         });
         if (response.ok) {
-          // Redirect the user to the desired page after successful sign up
           router.push('/super-admin/dashboard');
         } else {
           const errorData = await response.json();
@@ -58,73 +56,97 @@ export default function SignUp() {
   });
 
   return (
-     <Container text style={{ marginTop: '7em' }}>
-      <Header as="h1">Create Trainer</Header>
+    <div className="max-w-md mx-auto mt-28 p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6">Create Trainer</h1>
+      
       {serverErrorMessage && (
-        <Message negative>
-          <Message.Header>Error</Message.Header>
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <h3 className="font-bold">Error</h3>
           <p>{serverErrorMessage}</p>
-        </Message>
+        </div>
       )}
-      <Form onSubmit={formik.handleSubmit}>
-        <Form.Field>
-          <label>Name</label>
+
+      <form onSubmit={formik.handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Name
+          </label>
           <input
             id="name"
             name="name"
+            type="text"
             placeholder="Name"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             value={formik.values.name}
             onChange={formik.handleChange}
           />
           {formik.touched.name && formik.errors.name && (
-            <Message negative>{formik.errors.name}</Message>
+            <p className="mt-1 text-sm text-red-600">{formik.errors.name}</p>
           )}
-        </Form.Field>
-        <Form.Field>
-          <label>Email</label>
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
           <input
             id="email"
             name="email"
             type="email"
             placeholder="Email"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             value={formik.values.email}
             onChange={formik.handleChange}
           />
           {formik.touched.email && formik.errors.email && (
-            <Message negative>{formik.errors.email}</Message>
+            <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
           )}
-        </Form.Field>
-        <Form.Field>
-          <label>Password</label>
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
           <input
             id="password"
             name="password"
             type="password"
             placeholder="Password"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             value={formik.values.password}
             onChange={formik.handleChange}
           />
           {formik.touched.password && formik.errors.password && (
-            <Message negative>{formik.errors.password}</Message>
+            <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
           )}
-        </Form.Field>
-        <Form.Field>
-          <label>Phone</label>
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            Phone
+          </label>
           <input
             id="phone"
             name="phone"
+            type="text"
             placeholder="Phone number"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             value={formik.values.phone}
             onChange={formik.handleChange}
           />
           {formik.touched.phone && formik.errors.phone && (
-            <Message negative>{formik.errors.phone}</Message>
+            <p className="mt-1 text-sm text-red-600">{formik.errors.phone}</p>
           )}
-        </Form.Field>
-        <Button type="submit" loading={isLoading} disabled={isLoading}>
-          Create Trainer
-        </Button>
-      </Form>
-    </Container>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
+        >
+          {isLoading ? 'Creating...' : 'Create Trainer'}
+        </button>
+      </form>
+    </div>
   );
 }

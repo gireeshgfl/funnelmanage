@@ -1,7 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import 'semantic-ui-css/semantic.min.css';
-import { Button, Container, Header, Icon, Message, Table } from "semantic-ui-react";
 import { API_ROUTES } from '@/config';
 
 export default function Home() {
@@ -57,7 +55,6 @@ export default function Home() {
     try {
       console.log(`${currentStatus === 'Active' ? 'Deactivating' : 'Activating'} trainer with ID: ${trainerId}`);
   
-      // Prepare the updated trainer object with the new status
       const updatedTrainer = {
         _id: trainerId,
         status: currentStatus === 'Active' ? 'Deactivated' : 'Active',
@@ -75,11 +72,9 @@ export default function Home() {
         throw new Error(`${currentStatus === 'Active' ? 'Error deactivating' : 'Error activating'} trainer: ${response.statusText}`);
       }
   
-      // We expect the API to return at least a message.
       const result = await response.json();
       console.log(result.message);
   
-      // Update the local trainers state using the status from our updatedTrainer object.
       setTrainers((prevTrainers) =>
         prevTrainers.map((trainer) =>
           trainer._id === trainerId ? { ...trainer, status: updatedTrainer.status } : trainer
@@ -92,53 +87,68 @@ export default function Home() {
   };
   
   return (
-    <Container style={{ height: "100vh", display: "flex", alignItems: "center" }}>
-      <div style={{ width: "50vw" }}>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
         {error && (
-          <Message negative>
-            <Message.Header>Error</Message.Header>
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <h3 className="font-bold">Error</h3>
             <p>{error}</p>
-          </Message>
+          </div>
         )}
+        
         {isLoading ? (
-          <Header as="h3" icon textAlign="center">
-            <Icon name="circle notch" loading />
-            Loading trainers...
-          </Header>
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
+            <h3 className="text-lg font-medium">Loading trainers...</h3>
+          </div>
         ) : trainers.length > 0 ? (
-          <Table celled>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Name</Table.HeaderCell>
-                <Table.HeaderCell>ID</Table.HeaderCell>
-                <Table.HeaderCell>Actions</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {trainers.map((trainer) => (
-                <Table.Row key={trainer._id}>
-                  <Table.Cell>{trainer.username}</Table.Cell>
-                  <Table.Cell>{trainer._id}</Table.Cell>
-                  <Table.Cell>
-                    <Button icon="trash" color="red" onClick={() => handleDelete(trainer._id)} />
-                    <Button
-                      icon={trainer.status === 'Active' ? 'ban' : 'check'}
-                      color={trainer.status === 'Active' ? 'orange' : 'green'}
-                      onClick={() => handleToggleStatus(trainer._id, trainer.status)}
-                    >
-                      {trainer.status === 'Active' ? 'Deactivate' : 'Activate'}
-                    </Button>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {trainers.map((trainer) => (
+                  <tr key={trainer._id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{trainer.username}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{trainer._id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleDelete(trainer._id)}
+                          className="p-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(trainer._id, trainer.status)}
+                          className={`px-3 py-2 rounded text-white focus:outline-none focus:ring-2 ${
+                            trainer.status === 'Active' 
+                              ? 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500' 
+                              : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'
+                          }`}
+                        >
+                          {trainer.status === 'Active' ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <Message info>
-            <Message.Header>No trainers found</Message.Header>
-          </Message>
+          <div className="p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded">
+            <h3 className="font-bold">No trainers found</h3>
+          </div>
         )}
       </div>
-    </Container>
+    </div>
   );
 }
