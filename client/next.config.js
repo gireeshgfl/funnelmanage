@@ -33,7 +33,7 @@ const aliasConfig = rootDirs.reduce((acc, dir) => {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath:'/plugin',
+  // basePath:'/plugin',
   webpack: (config, { isServer }) => {
     // Ensure `config.externals` exists before modifying
     if (!isServer) {
