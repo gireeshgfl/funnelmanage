@@ -380,7 +380,7 @@ const IndexPage = () => {
               
               <Button 
                 variant="ghost" 
-                onClick={() => router.push('/dashboard/student')}
+                onClick={() => router.push('/funnel-management/dashboard/student')}
                 className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

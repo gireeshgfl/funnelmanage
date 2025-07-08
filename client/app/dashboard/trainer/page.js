@@ -38,7 +38,7 @@ const TrainerDashboard = () => {
       } catch (error) {
         if (error.response?.status === 401) {
           setError('Not authenticated');
-          router.push('/login');
+          router.push('/funnel-management/login');
         } else {
           console.error('Error fetching data:', error);
           setError('Failed to fetch data');
@@ -92,7 +92,7 @@ const TrainerDashboard = () => {
           </div>
           <div className="mt-4 md:mt-0">
             <button
-              onClick={() => navigateTo('/dashboard/trainer/sessions')}
+              onClick={() => navigateTo('/funnel-management/dashboard/trainer/sessions')}
               className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center space-x-2"
             >
               <Calendar className="h-5 w-5" />
@@ -105,7 +105,7 @@ const TrainerDashboard = () => {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <div 
-          onClick={() => navigateTo('/dashboard/trainer/sessions')}
+          onClick={() => navigateTo('/funnel-management/dashboard/trainer/sessions')}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
         >
           <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ const TrainerDashboard = () => {
         </div>
 
         <div 
-          onClick={() => navigateTo('/dashboard/trainer/question-bank')}
+          onClick={() => navigateTo('/funnel-management/dashboard/trainer/question-bank')}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
         >
           <div className="flex items-center justify-between">
@@ -135,7 +135,7 @@ const TrainerDashboard = () => {
         </div>
 
         <div 
-          onClick={() => navigateTo('/dashboard/trainer/funnels')}
+          onClick={() => navigateTo('/funnel-management/dashboard/trainer/funnels')}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
         >
           <div className="flex items-center justify-between">
@@ -150,7 +150,7 @@ const TrainerDashboard = () => {
         </div>
 
         <div 
-          onClick={() => navigateTo('/dashboard/trainer/offers-points')}
+          onClick={() => navigateTo('/funnel-management/dashboard/trainer/offers-points')}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
         >
           <div className="flex items-center justify-between">
@@ -165,7 +165,7 @@ const TrainerDashboard = () => {
         </div>
 
         <div 
-          onClick={() => navigateTo('/dashboard/trainer/students')}
+          onClick={() => navigateTo('/funnel-management/dashboard/trainer/students')}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
         >
           <div className="flex items-center justify-between">
@@ -186,28 +186,28 @@ const TrainerDashboard = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
-              onClick={() => navigateTo('/dashboard/trainer/sessions')}
+              onClick={() => navigateTo('/funnel-management/dashboard/trainer/sessions')}
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               <span className="font-medium text-gray-700 dark:text-gray-300">New Session</span>
             </button>
             <button
-              onClick={() => navigateTo('/dashboard/trainer/question-bank')}
+              onClick={() => navigateTo('/funnel-management/dashboard/trainer/question-bank')}
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <BookOpen className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               <span className="font-medium text-gray-700 dark:text-gray-300">Add Question</span>
             </button>
             <button
-              onClick={() => navigateTo('/dashboard/trainer/funnels')}
+              onClick={() => navigateTo('/funnel-management/dashboard/trainer/funnels')}
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <Filter className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               <span className="font-medium text-gray-700 dark:text-gray-300">Manage Funnel</span>
             </button>
             <button
-              onClick={() => navigateTo('/dashboard/trainer/rewards')}
+              onClick={() => navigateTo('/funnel-management/dashboard/trainer/rewards')}
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <Gift className="h-5 w-5 text-primary-600 dark:text-primary-400" />
@@ -221,7 +221,7 @@ const TrainerDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upcoming Sessions</h2>
             <button 
-              onClick={() => navigateTo('/dashboard/trainer/sessions')}
+              onClick={() => navigateTo('/funnel-management/dashboard/trainer/sessions')}
               className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
             >
               View All

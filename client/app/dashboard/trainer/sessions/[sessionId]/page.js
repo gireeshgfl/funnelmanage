@@ -122,7 +122,7 @@ const SessionWorkspace = () => {
   
       if (response.status === 200) {
         console.log('Session ended successfully!');
-        router.push('/dashboard/trainer/sessions');
+        router.push('/funnel-management/dashboard/trainer/sessions');
       } else {
         console.error('Failed to end session:', response.data);
         setError('Failed to end session');
@@ -190,7 +190,7 @@ const SessionWorkspace = () => {
               <div className="flex-shrink-0 flex items-center">
                 <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
                 <button 
-                  onClick={() => router.push('/dashboard/trainer')}
+                  onClick={() => router.push('/funnel-management/dashboard/trainer')}
                   className="ml-2 text-xl font-bold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 focus:outline-none"
                 >
                   Funnel Management

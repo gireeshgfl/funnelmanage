@@ -6,7 +6,7 @@ import { Copy, Edit, Archive, Trash2, Play, Power, Reply, Calendar, Tag, Message
 
 const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin, onActivate }) => {
   const copySessionUrl = (event, sessionId) => {
-    navigator.clipboard.writeText(`https://localhost:3000/funnel-management/dashboard/student/${sessionId}`);
+    navigator.clipboard.writeText(`https://eduvocate.in/funnel-management/funnel-management/dashboard/student/${sessionId}`);
     const button = event.currentTarget;
     const originalContent = button.innerHTML;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
