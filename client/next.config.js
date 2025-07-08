@@ -33,7 +33,7 @@ const aliasConfig = rootDirs.reduce((acc, dir) => {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/funnel-management/funnel-management',
+  basePath: '/funnel-management',
   assetPrefix: '/funnel-management/funnel-management',
   reactStrictMode: true,
   swcMinify: true, // basePath:'/plugin',
