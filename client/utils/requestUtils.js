@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 export async function extractServiceAndMethod(url) {
     const urlObj = typeof url === 'string' ? new URL(url) : url;
     const pathParts = urlObj.pathname.split('/').filter(Boolean);
-    const service = pathParts[2];
-    const method = pathParts[3];
+    const service = pathParts[3];
+    const method = pathParts[4];
     // console.log(service,method)    
     return { service, method };
 }
