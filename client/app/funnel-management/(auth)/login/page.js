@@ -17,7 +17,7 @@ export default function LoginPage() {
     const validRoles = ['trainer', 'student', 'super-admin'];
     
     if (role && validRoles.includes(role.toLowerCase())) {
-      router.replace(`/dashboard/${role.toLowerCase()}`);
+      router.replace(`/funnel-management/dashboard/${role.toLowerCase()}`);
     } else {
       router.replace('/unauthorized');
     }

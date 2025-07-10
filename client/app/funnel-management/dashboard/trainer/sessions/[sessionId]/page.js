@@ -122,7 +122,7 @@ const SessionWorkspace = () => {
   
       if (response.status === 200) {
         console.log('Session ended successfully!');
-        router.push('/dashboard/trainer/sessions');
+        router.push('/funnel-management/dashboard/trainer/sessions');
       } else {
         console.error('Failed to end session:', response.data);
         setError('Failed to end session');

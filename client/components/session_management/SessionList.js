@@ -6,7 +6,7 @@ import { Copy, Edit, Archive, Trash2, Play, Power, Reply, Calendar, Tag, Message
 
 const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin, onActivate }) => {
   const copySessionUrl = (event, sessionId) => {
-    navigator.clipboard.writeText(`https://eduvocate.in/funnel-management/funnel-management/dashboard/student/${sessionId}`);
+    navigator.clipboard.writeText(`https://eduvocate.in/funnel-management/dashboard/student/${sessionId}`);
     const button = event.currentTarget;
     const originalContent = button.innerHTML;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
@@ -171,7 +171,7 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
             <div className="relative flex-grow">
               <input
                 type="text"
-                value={`https://localhost:3000/funnel-management/dashboard/student/${session._id}`}
+                value={`https://eduvocate.in/funnel-management/dashboard/student/${session._id}`}
                 readOnly
                 className="w-full text-xs py-1.5 px-2 pr-10 rounded-md bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
               />
