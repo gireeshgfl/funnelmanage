@@ -81,7 +81,7 @@ export default function WelcomePage() {
             </div>
             <div className="flex items-center space-x-4">
             <Link 
-                href="/login"
+                href="/funnel-management/login"
                 className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900 hover:bg-primary-100 dark:hover:bg-primary-800 transition-colors"
               >
                 Sign In

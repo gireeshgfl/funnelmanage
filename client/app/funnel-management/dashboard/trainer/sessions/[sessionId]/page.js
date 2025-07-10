@@ -62,7 +62,7 @@ const SessionWorkspace = () => {
           setTrainerName(data.username.charAt(0).toUpperCase() + data.username.slice(1));
         } else {
           setError('Authentication required');
-          router.push('/login');
+          router.push('/funnel-management/login');
         }
       } catch (err) {
         console.error('Failed to load trainer data:', err);
@@ -101,7 +101,7 @@ const SessionWorkspace = () => {
   const handleSignout = async () => {
     try {
       await signout();
-      router.push('/login');
+      router.push('/funnel-management/login');
     } catch (error) {
       console.error('Signout failed:', error);
     }

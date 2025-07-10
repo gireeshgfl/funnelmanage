@@ -22,7 +22,7 @@ apiClient.interceptors.response.use(
         return apiClient(error.config);
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
-        window.location.href = "/login"; // Redirect to login if refresh fails
+        window.location.href = "/funnel-management/login"; // Redirect to login if refresh fails
         return Promise.reject(refreshError);
       }
     }

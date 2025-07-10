@@ -30,7 +30,7 @@ export default function TopicSelectionForm() {
           setUserId(data.user_id);
         } else {
           setFeedbackMessage('Not authenticated');
-          router.push('/login');
+          router.push('/funnel-management/login');
         }
       } catch (error) {
         console.error('Error fetching user info:', error);
