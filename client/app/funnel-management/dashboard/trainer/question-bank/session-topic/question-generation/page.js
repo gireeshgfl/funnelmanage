@@ -17,7 +17,7 @@ function QuestionPageContent() {
 
   const navigateToQuestionBank = () => {
     setFeedbackMessage('Session saved successfully!');
-    router.push('/funnel-management/dashboard/trainer/question-bank');
+    router.push('/dashboard/trainer/question-bank');
   };
 
   return (

@@ -108,7 +108,7 @@ function TopicDatabase() {
   };
 
   const handleViewQuestions = (topicId) => {
-    router.push(`/funnel-management/dashboard/trainer/question-bank/session-topic/question-generation?topicId=${topicId}`);
+    router.push(`/dashboard/trainer/question-bank/session-topic/question-generation?topicId=${topicId}`);
   };
 
   const filteredTopics = (topics || []).filter((topic) =>

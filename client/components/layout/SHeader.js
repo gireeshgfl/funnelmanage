@@ -29,7 +29,7 @@ export default function Header() {
               Home
             </a>
             <a 
-              href="/funnel-management/dashboard/student" 
+              href="/dashboard/student" 
               className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               Student Dashboard

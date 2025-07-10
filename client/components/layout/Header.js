@@ -51,7 +51,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
         {/* Logo/Brand */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           {!collapsed && (
-            <Link href="/funnel-management/dashboard/trainer" className="flex items-center space-x-2">
+            <Link href="/dashboard/trainer" className="flex items-center space-x-2">
               <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
               <span className="text-xl font-bold text-gray-900 dark:text-white">
                 Funnel Management
@@ -59,7 +59,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
             </Link>
           )}
           {collapsed && (
-            <Link href="/funnel-management/dashboard/trainer" className="flex justify-center w-full">
+            <Link href="/dashboard/trainer" className="flex justify-center w-full">
               <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
             </Link>
           )}
@@ -74,7 +74,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
         {/* Navigation Links */}
         <nav className="flex-1 px-2 py-4 space-y-1">
           <Link 
-            href="/funnel-management/dashboard/trainer/sessions" 
+            href="/dashboard/trainer/sessions" 
             className={`flex items-center ${
               collapsed ? 'justify-center' : 'px-3'
             } py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors`}
@@ -83,7 +83,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
             {!collapsed && <span className="ml-3">Sessions</span>}
           </Link>
           <Link 
-            href="/funnel-management/dashboard/trainer/question-bank" 
+            href="/dashboard/trainer/question-bank" 
             className={`flex items-center ${
               collapsed ? 'justify-center' : 'px-3'
             } py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors`}
@@ -92,7 +92,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
             {!collapsed && <span className="ml-3">Question Bank</span>}
           </Link>
           <Link 
-            href="/funnel-management/dashboard/trainer/funnels" 
+            href="/dashboard/trainer/funnels" 
             className={`flex items-center ${
               collapsed ? 'justify-center' : 'px-3'
             } py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors`}
@@ -101,7 +101,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
             {!collapsed && <span className="ml-3">Funnels</span>}
           </Link>
           <Link 
-            href="/funnel-management/dashboard/trainer/rewards" 
+            href="/dashboard/trainer/rewards" 
             className={`flex items-center ${
               collapsed ? 'justify-center' : 'px-3'
             } py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors`}
@@ -177,7 +177,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}></div>
           <div className="relative flex flex-col w-72 h-full bg-white dark:bg-gray-800 shadow-lg">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <Link href="/funnel-management/dashboard/trainer" className="flex items-center space-x-2">
+              <Link href="/dashboard/trainer" className="flex items-center space-x-2">
                 <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
                 <span className="text-xl font-bold text-gray-900 dark:text-white">
                   Funnel Management
@@ -193,7 +193,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
 
             <div className="flex-1 px-2 pt-2 pb-3 space-y-1 overflow-y-auto">
               <Link
-                href="/funnel-management/dashboard/trainer/sessions"
+                href="/dashboard/trainer/sessions"
                 className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -201,7 +201,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                 <span>Sessions</span>
               </Link>
               <Link
-                href="/funnel-management/dashboard/trainer/question-bank"
+                href="/dashboard/trainer/question-bank"
                 className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -209,7 +209,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                 <span>Question Bank</span>
               </Link>
               <Link
-                href="/funnel-management/dashboard/trainer/funnels"
+                href="/dashboard/trainer/funnels"
                 className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -217,7 +217,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                 <span>Funnels</span>
               </Link>
               <Link
-                href="/funnel-management/dashboard/trainer/rewards"
+                href="/dashboard/trainer/rewards"
                 className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-md"
                 onClick={() => setMobileMenuOpen(false)}
               >

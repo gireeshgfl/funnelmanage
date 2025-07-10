@@ -132,7 +132,7 @@ const SessionManagementPage = () => {
   };
 
   const handleJoinSession = (sessionId) => {
-    router.push(`/funnel-management/dashboard/trainer/sessions/${sessionId}`);
+    router.push(`/dashboard/trainer/sessions/${sessionId}`);
   };
 
   // Filter sessions based on the selected filter type
