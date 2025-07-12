@@ -2,7 +2,7 @@ from nameko.rpc import rpc
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from common.dependencies import MongoProvider, WorkerContextProvider
-from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO
+from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher
@@ -32,6 +32,10 @@ class SessionService:
     @property
     def broadcast_questions_dao(self):
         return BroadcastQuestionsDAO(self.mongo_provider)
+    
+    @property
+    def funnel_dao(self):
+        return FunnelDAO(self.mongo_provider)
 
 
     def dispatch_event(event_type):
@@ -401,3 +405,57 @@ class SessionService:
                 "data": [],
                 "status": 404
             }
+    
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def get_dashboard_overview(self, user_id, payload):
+        """
+        RPC method to return dashboard statistics:
+        - Upcoming Sessions (all future sessions regardless of status)
+        - Total Questions
+        - Funnels Created by Trainer
+        - Rewards (Points) Earned
+        """
+        # DAO access
+        session_dao = self.session_service_dao
+        question_dao = self.question_dao
+        funnel_dao = FunnelDAO(self.mongo_provider)
+        points_dao = self.points_dao
+
+        now = datetime.utcnow()
+
+        # --- 1. Upcoming Sessions (only future based on start_time) ---
+        upcoming_sessions = session_dao.find_many({
+            "created_by": ObjectId(user_id),
+            "start_time": { "$gte": now }
+        })
+        upcoming_count = len(list(upcoming_sessions))
+
+        # --- 2. Total Questions ---
+        question_count = question_dao.collection.count_documents({})
+
+        # --- 3. Funnels Created by User ---
+        funnels = funnel_dao.get_participants_created_by_user(user_id)
+        funnels_count = len(funnels)
+
+        # --- 4. Rewards Given (Points Earned) ---
+        total_points_result = points_dao.get_total_points_by_user(user_id)
+        points_earned = (
+            total_points_result[0]["totalPoints"]
+            if total_points_result else 0
+        )
+
+        return {
+            "message": "Dashboard overview fetched successfully",
+            "data": {
+                "upcomingSessions": upcoming_count,
+                "questions": question_count,
+                "funnels": funnels_count,
+                "rewardsGiven": points_earned
+            },
+            "status": 200
+        }
+
+

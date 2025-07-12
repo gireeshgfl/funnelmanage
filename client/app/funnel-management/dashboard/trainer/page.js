@@ -3,20 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { API_ROUTES } from '@/config';
-import { Calendar, BookOpen, Gift, Users, BarChart2, Filter } from 'lucide-react';
+import { Calendar, BookOpen, Gift, Filter } from 'lucide-react';
+import useDashboardStats from '@/hooks/useDashboardStats';
 
 const TrainerDashboard = () => {
   const router = useRouter();
   const [userName, setUserName] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    upcomingSessions: 0,
-    questions: 0,
-    rewardsGiven: 0,
-    students: 0,
-    funnels: 0,
-  });
+  const { stats, loading, error, loadStats } = useDashboardStats();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,30 +19,20 @@ const TrainerDashboard = () => {
           withCredentials: true,
         });
         setUserName(capitalizeFirstLetter(userResponse.data.username));
-
-        // Fetch stats (mock data - replace with actual API calls)
-        setStats({
-          upcomingSessions: 5,
-          questions: 42,
-          rewardsGiven: 18,
-          students: 127,
-          funnels: 3,
-        });
+        
+        // Load dashboard stats
+        await loadStats();
       } catch (error) {
         if (error.response?.status === 401) {
-          setError('Not authenticated');
           router.push('/funnel-management/login');
         } else {
           console.error('Error fetching data:', error);
-          setError('Failed to fetch data');
         }
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchData();
-  }, [router]);
+  }, [router, loadStats]);
 
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -103,7 +86,7 @@ const TrainerDashboard = () => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div 
           onClick={() => navigateTo('/funnel-management/dashboard/trainer/sessions')}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
@@ -160,21 +143,6 @@ const TrainerDashboard = () => {
             </div>
             <div className="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/30">
               <Gift className="h-6 w-6 text-primary-600 dark:text-primary-400" />
-            </div>
-          </div>
-        </div>
-
-        <div 
-          onClick={() => navigateTo('/funnel-management/dashboard/trainer/students')}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Students</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{stats.students}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/30">
-              <Users className="h-6 w-6 text-primary-600 dark:text-primary-400" />
             </div>
           </div>
         </div>
