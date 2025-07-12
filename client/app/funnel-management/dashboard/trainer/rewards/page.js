@@ -18,7 +18,7 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Offers Card */}
                 <div 
-                    onClick={() => handleCardClick('/offers')}
+                    onClick={() => handleCardClick('/funnel-management/dashboard/trainer/rewards/offers')}
                     className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-shadow duration-300"
                 >
                     <div className="p-6">
@@ -40,7 +40,7 @@ const Home = () => {
 
                 {/* Points Card */}
                 <div 
-                    onClick={() => handleCardClick('/funnel-management/dashboard/trainer/offers-points/points')}
+                    onClick={() => handleCardClick('/funnel-management/dashboard/trainer/rewards/points')}
                     className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-green-200 dark:border-green-700 hover:shadow-lg transition-shadow duration-300"
                 >
                     <div className="p-6">

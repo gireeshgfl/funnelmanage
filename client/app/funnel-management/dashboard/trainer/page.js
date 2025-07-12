@@ -150,7 +150,7 @@ const TrainerDashboard = () => {
         </div>
 
         <div 
-          onClick={() => navigateTo('/funnel-management/dashboard/trainer/offers-points')}
+          onClick={() => navigateTo('/funnel-management/dashboard/trainer/rewards')}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors"
         >
           <div className="flex items-center justify-between">
