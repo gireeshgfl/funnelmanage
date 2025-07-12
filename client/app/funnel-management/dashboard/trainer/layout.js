@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const Layout = ({ children }) => {
   const pathname = usePathname();
-  const isSessionWorkspace = pathname?.includes('/funnel-management/dashboard/trainer/sessions/');
+  const isSessionWorkspace = pathname?.match(/^\/funnel-management\/dashboard\/trainer\/sessions\/[^/]+/);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Initial state set to true
 
   return (
