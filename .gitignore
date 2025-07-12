@@ -23,9 +23,6 @@ ENV/
 .env.*
 *.env
 *.env.*
-*.key
-*.pem
-*.crt
 config.yaml
 
 # -----------------------------
