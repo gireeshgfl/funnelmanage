@@ -11,7 +11,7 @@ export const API_ROUTES = {
   // 1. Host Service
   // ===========================
   HOST: {
-    ENDPOINT: 'http://192.168.1.65:3001'
+    ENDPOINT: 'http://localhost:3001'
   },
   S3BUCKET: 'https://funnelmanagement.s3.ap-south-1.amazonaws.com/',
 
@@ -33,7 +33,7 @@ export const API_ROUTES = {
   // 3. WebSocket Service
   // ===========================
   WEBSOCKET: {
-    ENDPOINT: `${BASE_URL}/socket`,
+    ENDPOINT: `/api/v1/socket`,
   },
 
   // ===========================

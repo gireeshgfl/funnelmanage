@@ -28,8 +28,8 @@ export async function handleRequestComprehensive(request, schema) {
     // Parse URL
     const { pathname } = new URL(request.url);
     const pathParts = pathname.split('/').filter(Boolean);
-    const service = pathParts[2];
-    const method = pathParts[3];
+    const service = pathParts[3];
+    const method = pathParts[4];
 
     // Parse request body
     let body;
