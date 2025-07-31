@@ -36,7 +36,8 @@ const nextConfig = {
   assetPrefix: '/funnel-management',
   trailingSlash: true,
   reactStrictMode: true,
-  swcMinify: true, // basePath:'/plugin',
+  swcMinify: true,
+  
   webpack: (config, { isServer }) => {
     // Ensure `config.externals` exists before modifying
     if (!isServer) {
@@ -51,6 +52,16 @@ const nextConfig = {
     };
 
     return config;
+  },
+
+  // Rewrites to handle API base path
+  async rewrites() {
+    return [
+      {
+        source: '/funnel-management/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
   },
 
   // Fix: headers function structured properly

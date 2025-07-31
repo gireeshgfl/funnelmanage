@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { useParams } from 'next/navigation';
 import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter, Gift, Calendar, Menu } from 'lucide-react';
 import MCQCreation from '@/components/MCQCreation';
 import CouponPage from '@/components/CouponPage';
@@ -27,9 +28,9 @@ const SessionWorkspace = () => {
   const router = useRouter();
 
   // Extract session ID from URL
-  const sessionId = typeof window !== 'undefined' 
-    ? window.location.pathname.split('/').pop() 
-    : '';
+  const params = useParams();
+  const sessionId = params?.sessionId || '';
+
 
   useEffect(() => {
     // Check for saved theme preference or system preference

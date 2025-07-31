@@ -95,7 +95,9 @@ class SessionService:
     @get_rbac_check(required_roles=['trainer'])
     @serialize_result
     def get_sessions(self, user_id, payload):
+        print(f"[DEBUG] get_sessions called with user_id={user_id}, payload={payload}")
         result = self.session_service_dao.get_sessions_by_user(user_id)
+        print(f"[DEBUG] get_sessions result: {result}")
         if result:
             return {
                 "message": "Session(s) fetched successfully",

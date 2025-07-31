@@ -9,6 +9,7 @@ import { API_ROUTES } from '@/config';
 
 const ParticipantsList = ({ currentSessionId }) => {
   const [participants, setParticipants] = useState([]);
+  console.log(participants, "👥 Participants List");
   const { socket } = useContext(SocketContext);
 
   useEffect(() => {

@@ -11,7 +11,7 @@ const debug = (message, data = null) => {
       console.log(`[DEBUG] ${message}`, JSON.stringify(data, null, 2));
     } else {
       console.log(`[DEBUG] ${message}`);
-    }
+    }``
   }
 };
 
