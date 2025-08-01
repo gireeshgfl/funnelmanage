@@ -11,36 +11,46 @@ export default function useDashboardStats() {
     rewardsGiven: 0,
   });
 
-  const [loading, setLoading] = useState(true); // Start with loading true
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
 
   const loadStats = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(API_ROUTES.SESSION_SERVICE.GET_DASHBOARD_OVERVIEW);
-      
-      // Make sure to use the data from the response properly
-      setStats({
-        upcomingSessions: data.data?.upcomingSessions || 0,
-        questions: data.data?.questions || 0,
-        funnels: data.data?.funnels || 0,
-        rewardsGiven: data.data?.rewardsGiven || 0,
-      });
       setError(null);
+      setStatusCode(null);
+      
+      const response = await axios.get(API_ROUTES.SESSION_SERVICE.GET_DASHBOARD_OVERVIEW);
+      
+      if (response.status === 200) {
+        setStats({
+          upcomingSessions: response.data.data?.upcomingSessions || 0,
+          questions: response.data.data?.questions || 0,
+          funnels: response.data.data?.funnels || 0,
+          rewardsGiven: response.data.data?.rewardsGiven || 0,
+        });
+      } else {
+        setError(`Unexpected status code: ${response.status}`);
+        setStatusCode(response.status);
+      }
     } catch (err) {
-      console.error('Failed to fetch dashboard stats:', err);
-      setError(err.message || 'Failed to load stats');
-      // Optionally reset stats on error
-      setStats({
-        upcomingSessions: 0,
-        questions: 0,
-        funnels: 0,
-        rewardsGiven: 0,
-      });
+      const errorStatus = err.response?.status;
+      setStatusCode(errorStatus || 500);
+      
+      if (errorStatus === 401) {
+        setError('Unauthorized - Please login again');
+      } else if (errorStatus === 403) {
+        setError('Forbidden - You don\'t have permission');
+      } else if (errorStatus === 404) {
+        setError('Data not found');
+      } else {
+        setError(err.message || 'Failed to load dashboard stats');
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return { stats, loading, error, loadStats };
+  return { stats, loading, error, statusCode, loadStats };
 }

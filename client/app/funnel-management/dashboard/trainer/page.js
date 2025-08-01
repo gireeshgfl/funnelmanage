@@ -9,11 +9,13 @@ import useDashboardStats from '@/hooks/useDashboardStats';
 const TrainerDashboard = () => {
   const router = useRouter();
   const [userName, setUserName] = useState('');
-  const { stats, loading, error, loadStats } = useDashboardStats();
+  const [userLoading, setUserLoading] = useState(true);
+  const { stats, loading, error, statusCode, loadStats } = useDashboardStats();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setUserLoading(true);
         // Fetch user info
         const userResponse = await axios.get(API_ROUTES.AUTH_SERVICE.USER, {
           withCredentials: true,
@@ -28,6 +30,8 @@ const TrainerDashboard = () => {
         } else {
           console.error('Error fetching data:', error);
         }
+      } finally {
+        setUserLoading(false);
       }
     };
 
@@ -42,20 +46,54 @@ const TrainerDashboard = () => {
     router.push(path);
   };
 
-  if (loading) {
+  // Combined loading state for both user data and stats
+  const isLoading = userLoading || loading;
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
+    let errorMessage = error;
+    let redirectMessage = null;
+    
+    if (statusCode === 401) {
+      errorMessage = 'Your session has expired. Redirecting to login...';
+      setTimeout(() => router.push('/funnel-management/login'), 2000);
+      redirectMessage = 'You will be redirected shortly';
+    } else if (statusCode === 403) {
+      errorMessage = 'You don\'t have permission to view this dashboard';
+    } else if (statusCode === 404) {
+      errorMessage = 'Dashboard data not found';
+    } else if (statusCode === 500) {
+      errorMessage = 'Server error - Please try again later';
+    }
+
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded">
-          <p>{error}</p>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] space-y-4 p-4">
+        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-6 py-4 rounded-lg max-w-md w-full text-center">
+          <p className="font-medium mb-2">Error loading dashboard</p>
+          <p>{errorMessage}</p>
+          {redirectMessage && <p className="mt-2 text-sm">{redirectMessage}</p>}
         </div>
+        {statusCode !== 401 && (
+          <button
+            onClick={() => {
+              loadStats();
+              setUserLoading(true);
+            }}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg shadow-sm transition-colors"
+          >
+            Retry Loading Dashboard
+          </button>
+        )}
       </div>
     );
   }
