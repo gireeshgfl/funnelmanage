@@ -419,8 +419,9 @@ class SessionService:
         - Total Questions
         - Funnels Created by Trainer
         - Rewards (Points) Earned
+
+        Returns detailed status for each scenario.
         """
-        # DAO access
         session_dao = self.session_service_dao
         question_dao = self.question_dao
         funnel_dao = FunnelDAO(self.mongo_provider)
@@ -428,36 +429,91 @@ class SessionService:
 
         now = datetime.utcnow()
 
-        # --- 1. Upcoming Sessions (only future based on start_time) ---
-        upcoming_sessions = session_dao.find_many({
-            "created_by": ObjectId(user_id),
-            "start_time": { "$gte": now }
-        })
-        upcoming_count = len(list(upcoming_sessions))
+        # --- 1. Upcoming Sessions ---
+        try:
+            upcoming_sessions = session_dao.find_many({
+                "created_by": ObjectId(user_id),
+                "start_time": { "$gte": now }
+            })
+            upcoming_sessions_list = list(upcoming_sessions)
+            upcoming_count = len(upcoming_sessions_list)
+            upcoming_status = 200 if upcoming_count > 0 else 404
+            upcoming_message = (
+                "Upcoming sessions fetched successfully"
+                if upcoming_count > 0 else "No upcoming sessions found"
+            )
+        except Exception as e:
+            upcoming_count = 0
+            upcoming_status = 500
+            upcoming_message = f"Error fetching upcoming sessions: {str(e)}"
 
         # --- 2. Total Questions ---
-        question_count = question_dao.collection.count_documents({})
+        try:
+            question_count = question_dao.collection.count_documents({})
+            question_status = 200 if question_count > 0 else 404
+            question_message = (
+                "Questions fetched successfully"
+                if question_count > 0 else "No questions found"
+            )
+        except Exception as e:
+            question_count = 0
+            question_status = 500
+            question_message = f"Error fetching questions: {str(e)}"
 
         # --- 3. Funnels Created by User ---
-        funnels = funnel_dao.get_participants_created_by_user(user_id)
-        funnels_count = len(funnels)
+        try:
+            funnels = funnel_dao.get_participants_created_by_user(user_id)
+            funnels_count = len(funnels)
+            funnels_status = 200 if funnels_count > 0 else 404
+            funnels_message = (
+                "Funnels fetched successfully"
+                if funnels_count > 0 else "No funnels found"
+            )
+        except Exception as e:
+            funnels_count = 0
+            funnels_status = 500
+            funnels_message = f"Error fetching funnels: {str(e)}"
 
         # --- 4. Rewards Given (Points Earned) ---
-        total_points_result = points_dao.get_total_points_by_user(user_id)
-        points_earned = (
-            total_points_result[0]["totalPoints"]
-            if total_points_result else 0
-        )
+        try:
+            total_points_result = points_dao.get_total_points_by_user(user_id)
+            points_earned = (
+                total_points_result[0]["totalPoints"]
+                if total_points_result else 0
+            )
+            points_status = 200 if points_earned > 0 else 404
+            points_message = (
+                "Points fetched successfully"
+                if points_earned > 0 else "No points earned"
+            )
+        except Exception as e:
+            points_earned = 0
+            points_status = 500
+            points_message = f"Error fetching points: {str(e)}"
 
         return {
             "message": "Dashboard overview fetched successfully",
             "data": {
-                "upcomingSessions": upcoming_count,
-                "questions": question_count,
-                "funnels": funnels_count,
-                "rewardsGiven": points_earned
+                "upcomingSessions": {
+                    "count": upcoming_count,
+                    "status": upcoming_status,
+                    "message": upcoming_message
+                },
+                "questions": {
+                    "count": question_count,
+                    "status": question_status,
+                    "message": question_message
+                },
+                "funnels": {
+                    "count": funnels_count,
+                    "status": funnels_status,
+                    "message": funnels_message
+                },
+                "rewardsGiven": {
+                    "points": points_earned,
+                    "status": points_status,
+                    "message": points_message
+                }
             },
             "status": 200
         }
-
-
