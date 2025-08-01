@@ -49,7 +49,7 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 REDIS_TOKEN_KEY_PREFIX = "token:"
 
 # JWT Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "abc123")
+SECRET_KEY = os.getenv("SECRET_KEY", "bXw#9zL!pVtQ2xYd@KmF&Jc7Rb6Nh*X5AsEoUQ")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 # AWS Configuration

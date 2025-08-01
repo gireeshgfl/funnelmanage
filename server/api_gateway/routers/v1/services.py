@@ -1,9 +1,9 @@
 # ===============================================================================
 # GoFreeLab Proprietary
 # -------------------------------------------------------------------------------
-# Project Name    : Eduvocate
+# Project Name    : Funnel-Management
 # File Name       : services.py
-# Author          : ameen ahsan
+# Author          : Sabari Santhosh Pillai
 # Created Date    : 2025-02-24
 # Version         : 1.0
 # -------------------------------------------------------------------------------
