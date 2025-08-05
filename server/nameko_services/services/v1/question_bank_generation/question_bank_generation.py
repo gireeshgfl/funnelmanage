@@ -17,7 +17,7 @@ class QuestionService:
     mongo_provider = MongoProvider()
     dispatch = EventDispatcher()
     worker_ctx = WorkerContextProvider()
-    profile_rpc = RpcProxy('profile_service')  # Proxy for calling profile_service
+    profile_rpc = RpcProxy('profile_service_v1')  # Proxy for calling profile_service
 
     @property
     def question_dao(self):
