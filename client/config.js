@@ -52,7 +52,6 @@ export const API_ROUTES = {
     GET_PUSHED_QUESTIONS: `${BASE_URL}/session_service/get_pushed_questions`,
     GET_SESSION_STATUS: `${BASE_URL}/session_service/get_session_status`,
     GET_ACTIVE_SESSION_ID: `${BASE_URL}/session_service/get_active_session_id`,
-    GET_DASHBOARD_OVERVIEW: `${BASE_URL}/session_service/get_dashboard_overview`,
   },
 
   // ===========================
