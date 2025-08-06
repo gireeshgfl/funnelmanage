@@ -473,7 +473,7 @@ export default async function handler(req, res) {
       debug('Socket.IO server already running');
     }
 
-    res.status(200).json({ message: 'Socket.IO server is running.' });
+    res.status(200).json({ message: 'Funnel Socket.IO server is running.' });
   } catch (error) {
     console.error('Failed to initialize Socket.IO server:', error);
     res.status(500).json({ error: 'Internal Server Error' });
