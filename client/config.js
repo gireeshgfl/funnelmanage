@@ -33,7 +33,7 @@ export const API_ROUTES = {
   // 3. WebSocket Service
   // ===========================
   WEBSOCKET: {
-    ENDPOINT: `/api/socket`,
+    ENDPOINT: `/api/fv1/socket`,
   },
 
   // ===========================
