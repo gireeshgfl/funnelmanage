@@ -2,7 +2,6 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import io from 'socket.io-client';
-import { API_ROUTES } from '@/config';
 import { AuthContext } from './AuthContext';
 
 const SocketContext = createContext();
@@ -22,20 +21,22 @@ const SocketProvider = ({ children }) => {
     if (userId && role && username) {
       if (!socketInstance) {
         console.log('Initializing socket with user ID:', userId, 'role:', role, 'username:', username);
-        fetch(API_ROUTES.WEBSOCKET.ENDPOINT)
+
+        // Optional: if backend requires this for routing/warm-up
+        fetch('/funnel-management/api/fv1/socket')
           .then((response) => {
-            console.log('Websocket endpoint response:', response.status);
-            socketInstance = io(API_ROUTES.HOST.ENDPOINT, {
+            console.log('WebSocket endpoint response:', response.status);
+
+            socketInstance = io('wss://eduvocate.in', {
+              path: '/funnel-management/socket.io', // ✅ Corrected path
               transports: ['websocket'],
-              cors: {
-                origin: API_ROUTES.HOST.ENDPOINT,
-              },
               query: { userId, role, username },
               reconnectionAttempts: 5,
               reconnectionDelay: 1000,
               autoConnect: true,
             });
 
+            // Event Listeners
             socketInstance.on('connect', () => {
               console.log('Socket connected successfully:', socketInstance.id);
               setConnectionStatus('connected');
@@ -61,7 +62,7 @@ const SocketProvider = ({ children }) => {
             setSocket(socketInstance);
           })
           .catch((error) => {
-            console.error('Error fetching websocket endpoint:', error);
+            console.error('Error fetching WebSocket endpoint:', error);
             setConnectionStatus('error');
           });
       }
@@ -82,6 +83,8 @@ const SocketProvider = ({ children }) => {
         socketInstance.removeAllListeners();
         socketInstance.disconnect();
         socketInstance = null;
+        setSocket(null);
+        setConnectionStatus('disconnected');
       }
     };
   }, [userId, role, username]);
