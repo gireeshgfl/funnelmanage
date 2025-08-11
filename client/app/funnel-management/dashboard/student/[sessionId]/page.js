@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import ChatRoom from '@/components/ChatRoom';
@@ -60,7 +61,6 @@ const QuestionDisplay = ({
           }
         }
 
-        // Call fetchPoints after successful savePoints
         await fetchPoints();
   
         setTimeout(() => {
@@ -83,7 +83,6 @@ const QuestionDisplay = ({
             <div className="bg-primary-500 dark:bg-primary-600 px-4 py-3">
               <h3 className="text-lg font-bold text-white text-center">Submission Results</h3>
             </div>
-            
             <div className="p-6 space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0 p-2 rounded-full bg-green-100 dark:bg-green-900/50">
@@ -108,7 +107,6 @@ const QuestionDisplay = ({
                   </p>
                 </div>
               </div>
-        
               <div className="space-y-4">
                 <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Your Answer</p>
@@ -121,7 +119,6 @@ const QuestionDisplay = ({
                     )}
                   </p>
                 </div>
-        
                 {selectedAnswerText !== correctAnswerText && (
                   <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 shadow-sm border border-green-100 dark:border-green-800/50">
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Correct Answer</p>
@@ -177,7 +174,6 @@ const QuestionDisplay = ({
               <p className="text-lg font-medium">{question.questionText || question.question}</p>
             )}
           </div>
-
           <div className="grid grid-cols-2 gap-3 mb-6">
             {question.answers.map((answer, index) => (
               <div 
@@ -203,7 +199,6 @@ const QuestionDisplay = ({
               </div>
             ))}
           </div>
-
           <Button
             onClick={handleSubmit}
             variant="primary"
@@ -234,31 +229,45 @@ const IndexPage = () => {
   const { sessionId } = useParams();
   const { socket } = useContext(SocketContext);
 
+  const handleQuestion = (questionData, isMCQ = false) => {
+    console.log('Handling question:', questionData, 'isMCQ:', isMCQ);
+    const formattedQuestion = {
+      id: questionData.id || Date.now().toString(),
+      question: questionData.question || '',
+      questionText: isMCQ ? questionData.question : (questionData.questionText || questionData.question || ''),
+      questionType: isMCQ ? 'text' : (questionData.questionType || 'text'),
+      answers: Array.isArray(questionData.answers)
+        ? questionData.answers.map(answer => typeof answer === 'string' ? { text: answer } : answer)
+        : [],
+      answerMediaUrls: Array.isArray(questionData.answerMediaUrls) ? questionData.answerMediaUrls : [],
+      correctAnswerIndex: isMCQ ? questionData.correctAnswerIndex : undefined
+    };
+    setCurrentQuestion(formattedQuestion);
+    setSelectedAnswer(null);
+    setActiveTab('question');
+  };
+
   useEffect(() => {
     if (!socket) return;
 
-    const handlePushQuestion = (questionData) => {
-      const formattedQuestion = {
-        id: questionData.id || Date.now().toString(),
-        question: questionData.question || '',
-        questionText: questionData.questionText || '',
-        questionType: questionData.questionType || 'text',
-        answers: Array.isArray(questionData.answers)
-          ? questionData.answers.map(answer => typeof answer === 'string' ? { text: answer } : answer)
-          : [],
-        answerMediaUrls: Array.isArray(questionData.answerMediaUrls) ? questionData.answerMediaUrls : []
-      };
-    
-      setCurrentQuestion(formattedQuestion);
-      setSelectedAnswer(null);
-    };
+    socket.on('pushQuestion', (questionData) => {
+      console.log('Received pushQuestion:', questionData);
+      handleQuestion(questionData, false);
+    });
 
-    socket.on('pushQuestion', handlePushQuestion);
+    socket.on('broadcastMCQs', ({ mcqArray, sessionId: receivedSessionId }) => {
+      console.log('Received broadcastMCQs:', { mcqArray, sessionId: receivedSessionId });
+      if (receivedSessionId === sessionId && mcqArray.length > 0) {
+        // Handle the first MCQ (or extend to handle multiple if needed)
+        handleQuestion(mcqArray[0], true);
+      }
+    });
 
     return () => {
-      socket.off('pushQuestion', handlePushQuestion);
+      socket.off('pushQuestion');
+      socket.off('broadcastMCQs');
     };
-  }, [socket]);
+  }, [socket, sessionId]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -282,34 +291,30 @@ const IndexPage = () => {
     setSelectedAnswer(null);
   };
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const response = await fetch(`${API_ROUTES.AUTH_SERVICE.USER}`, {
-          credentials: 'include',
-        });
+  const fetchUserInfo = async () => {
+    try {
+      const response = await fetch(`${API_ROUTES.AUTH_SERVICE.USER}`, {
+        credentials: 'include',
+      });
 
-        if (response.ok) {
-          const data = await response.json();
-          setStudentUserName(capitalizeFirstLetter(data.username));
-          setStudentUserId(data.user_id);
-          await fetchPoints(data.user_id);
-        } else {
-          setError('Not authenticated');
-          router.push('/funnel-management/login');
-        }
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-        setError('Failed to fetch user information');
-      } finally {
-        setLoading(false);
+      if (response.ok) {
+        const data = await response.json();
+        setStudentUserName(capitalizeFirstLetter(data.username));
+        setStudentUserId(data.user_id);
+        await fetchPoints(data.user_id);
+      } else {
+        setError('Not authenticated');
+        router.push('/funnel-management/login');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      setError('Failed to fetch user information');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchUserInfo();
-  }, [router]);
-
-  const fetchPoints = async () => {
+  const fetchPoints = async (userId) => {
     try {
       const response = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_POINTS}`, {
         method: 'GET',
@@ -341,6 +346,10 @@ const IndexPage = () => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
+  useEffect(() => {
+    fetchUserInfo();
+  }, [router]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -363,13 +372,10 @@ const IndexPage = () => {
         isOpen={showCelebration} 
         confettiProps={{ colors: ['#f00', '#0f0', '#00f'] }} 
       />
-
-      {/* Main Content */}
       <div className="w-full max-w-6xl mx-auto p-4 flex-grow flex items-stretch h-full">
         <div className="w-full h-full bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 relative flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Welcome {studentUserName}</h2>
-            
             <div className="flex items-center space-x-4">
               <div className="flex items-center bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
@@ -377,7 +383,6 @@ const IndexPage = () => {
                 </svg>
                 <span className="font-medium">Reward Points: {pointsEarned}</span>
               </div>
-              
               <Button 
                 variant="ghost" 
                 onClick={() => router.push('/funnel-management/dashboard/student')}
@@ -390,10 +395,8 @@ const IndexPage = () => {
               </Button>
             </div>
           </div>
-
           <div className="flex justify-center mb-4 relative">
             <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 relative w-full max-w-md">
-              {/* Sliding background */}
               <div 
                 className={`absolute top-1 h-[calc(100%-8px)] bg-white dark:bg-gray-600 rounded-md shadow-sm transition-all duration-300 ease-in-out ${
                   activeTab === 'question' 
@@ -401,7 +404,6 @@ const IndexPage = () => {
                     : 'left-[calc(50%+4px)] w-[calc(50%-8px)]'
                 }`}
               />
-              
               <button
                 onClick={() => setActiveTab('question')}
                 className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${
@@ -419,7 +421,6 @@ const IndexPage = () => {
                   )}
                 </span>
               </button>
-              
               <button
                 onClick={() => setActiveTab('chat')}
                 className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${
@@ -432,7 +433,6 @@ const IndexPage = () => {
               </button>
             </div>
           </div>
-
           <div className="flex-grow flex flex-col overflow-hidden">
             {activeTab === 'question' ? (
               <div 
