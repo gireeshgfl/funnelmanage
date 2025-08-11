@@ -306,7 +306,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Date"
+                  label="Schedule Date"
                   id="date"
                   type="date"
                   value={date}
