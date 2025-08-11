@@ -71,7 +71,7 @@ const TrainerDashboard = () => {
               className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center space-x-2"
             >
               <Calendar className="h-5 w-5" />
-              <span>Create New Session</span>
+              <span>My Sessions</span>
             </button>
           </div>
         </div>
@@ -87,7 +87,7 @@ const TrainerDashboard = () => {
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <span className="font-medium text-gray-700 dark:text-gray-300">New Session</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">My Session</span>
             </button>
             <button
               onClick={() => navigateTo('/funnel-management/dashboard/trainer/question-bank')}
