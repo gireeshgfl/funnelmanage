@@ -2,7 +2,7 @@ from nameko.rpc import rpc
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from common.dependencies import MongoProvider, WorkerContextProvider
-from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO
+from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher
@@ -36,6 +36,10 @@ class SessionService:
     @property
     def funnel_dao(self):
         return FunnelDAO(self.mongo_provider)
+    
+    @property
+    def in_session_questions_dao(self):
+        return InSessionQuestionsDAO(self.mongo_provider)
 
 
     def dispatch_event(event_type):
@@ -407,3 +411,32 @@ class SessionService:
                 "data": [],
                 "status": 404
             }
+
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def save_mcq(self, user_id, data):
+        """
+        RPC method to save an MCQ question created during a session.
+        """
+        # Attach metadata
+        mcq_data = data.copy()
+        mcq_data["created_by"] = ObjectId(user_id)
+        mcq_data["created_at"] = datetime.utcnow()
+        mcq_data["type"] = "MCQ"
+
+        # Save to DB
+        result = self.in_session_questions_dao.create_mcq(mcq_data)
+
+        if result.get('_id'):
+            return {
+                "message": "MCQ saved successfully",
+                "status": 200
+            }
+        else:
+            return {
+                "message": "Failed to save MCQ",
+                "status": 500
+            }
+

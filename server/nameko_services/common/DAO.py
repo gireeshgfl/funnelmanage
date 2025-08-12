@@ -1017,4 +1017,24 @@ class FunnelDAO(BaseDAO):
 
         return result
 
+# ------------------------------
+# In-Session Questions DAO Module
+# Handles operations for questions created during a session.
+# ------------------------------
+class InSessionQuestionsDAO(BaseDAO):
+    def __init__(self, db_connection):
+        """
+        Initialize InSessionQuestionsDAO with the 'in_session_questions' collection.
+        """
+        super().__init__(db_connection, collection_name="in_session_questions")
+
+    def create_mcq(self, mcq_data):
+        """
+        Inserts a single MCQ into the collection.
+        Returns the inserted document with _id.
+        """
+        result = self.insert_one(mcq_data)
+        mcq_data["_id"] = result.inserted_id
+        return mcq_data
+
 

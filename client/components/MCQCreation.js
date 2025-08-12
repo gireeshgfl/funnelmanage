@@ -1,17 +1,35 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
 import { SocketContext } from '@/context/socketContext';
+import { API_ROUTES } from '@/config';
 import { Input, Button, Card } from '@components/ui/components';
 import { CheckCircle, Edit2, Trash2, Plus, Send } from 'lucide-react';
 import { List } from 'lucide-react';
 
-const MCQCreation = ({ pushMCQsToChat }) => {
-  const { socket } = useContext(SocketContext);
-  
+const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
+  const { socket, connectionStatus } = useContext(SocketContext);
   const [mcqQuestions, setMCQQuestions] = useState([]);
   const [questionText, setQuestionText] = useState('');
-  const [answers, setAnswers] = useState(['', '', '', '']); 
+  const [answers, setAnswers] = useState(['', '', '', '']);
+  const [answerPoints, setAnswerPoints] = useState([0, 0, 0, 0]); // New state for answer points
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
   const [editIndex, setEditIndex] = useState(null);
+  const [pushStatus, setPushStatus] = useState(null);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('mcqPushConfirmation', ({ success, message }) => {
+        console.log('MCQ Push Confirmation:', { success, message });
+        setPushStatus({ success, message });
+        if (success) {
+          setMCQQuestions([]);
+        }
+      });
+      return () => {
+        socket.off('mcqPushConfirmation');
+      };
+    }
+  }, [socket]);
 
   const handleQuestionChange = (e) => setQuestionText(e.target.value);
 
@@ -19,6 +37,13 @@ const MCQCreation = ({ pushMCQsToChat }) => {
     const newAnswers = [...answers];
     newAnswers[index] = e.target.value;
     setAnswers(newAnswers);
+  };
+
+  const handlePointsChange = (index, e) => {
+    const newPoints = [...answerPoints];
+    const value = parseInt(e.target.value) || 0;
+    newPoints[index] = value;
+    setAnswerPoints(newPoints);
   };
 
   const handleAddQuestion = () => {
@@ -31,9 +56,10 @@ const MCQCreation = ({ pushMCQsToChat }) => {
       question: questionText,
       answers: answers.map((text, i) => ({
         text,
-        isCorrect: i === correctAnswerIndex
+        points: answerPoints[i],
+        isCorrect: i === correctAnswerIndex,
       })),
-      correctAnswerIndex
+      correctAnswerIndex,
     };
 
     if (editIndex !== null) {
@@ -45,9 +71,9 @@ const MCQCreation = ({ pushMCQsToChat }) => {
       setMCQQuestions([...mcqQuestions, mcq]);
     }
 
-    // Reset form
     setQuestionText('');
     setAnswers(['', '', '', '']);
+    setAnswerPoints([0, 0, 0, 0]);
     setCorrectAnswerIndex(0);
   };
 
@@ -59,23 +85,57 @@ const MCQCreation = ({ pushMCQsToChat }) => {
     const q = mcqQuestions[index];
     setQuestionText(q.question);
     setAnswers(q.answers.map(a => a.text));
+    setAnswerPoints(q.answers.map(a => a.points || 0));
     setCorrectAnswerIndex(q.correctAnswerIndex);
     setEditIndex(index);
   };
 
-  const handlePushMCQs = () => {
+  const handlePushMCQs = async () => {
     if (!mcqQuestions.length) {
-      alert('No MCQ questions to send.'); 
+      alert('No MCQ questions to send.');
       return;
     }
 
-    if (pushMCQsToChat) {
-      pushMCQsToChat(mcqQuestions);
-    } else if (socket) {
-      socket.emit('pushMCQs', mcqQuestions);
+    if (connectionStatus !== 'connected') {
+      alert('Socket not connected. Please check your connection and try again.');
+      return;
     }
-    
-    setMCQQuestions([]);
+
+    try {
+      // Save MCQs via API
+      const response = await axios.post(
+        API_ROUTES.SESSION_SERVICE.SAVE_MCQ,
+        {
+          mcqArray: mcqQuestions,
+          sessionId,
+          trainerUserId,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true, // Include cookies for authentication
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        console.log('MCQs saved successfully:', response.data);
+        const savedMCQs = response.data.mcqArray || mcqQuestions; // Use saved MCQs with IDs if returned
+
+        // Push MCQs to chat
+        if (pushMCQsToChat) {
+          console.log('Emitting pushMCQs via pushMCQsToChat:', savedMCQs);
+          pushMCQsToChat(savedMCQs);
+        } else if (socket) {
+          console.log('Emitting pushMCQs directly:', savedMCQs);
+          socket.emit('pushMCQs', { mcqArray: savedMCQs, sessionId, socketId: socket.id });
+        }
+      } else {
+        throw new Error('Failed to save MCQs');
+      }
+    } catch (error) {
+      console.error('Error saving MCQs:', error);
+      alert('Failed to save MCQs. Please try again.');
+      setPushStatus({ success: false, message: 'Failed to save MCQs' });
+    }
   };
 
   return (
@@ -86,7 +146,6 @@ const MCQCreation = ({ pushMCQsToChat }) => {
           <Plus className="h-5 w-5 text-primary-500" />
           {editIndex !== null ? 'Edit Question' : 'Create New Question'}
         </h2>
-        
         <Input
           label="Question Text"
           value={questionText}
@@ -94,16 +153,29 @@ const MCQCreation = ({ pushMCQsToChat }) => {
           placeholder="Enter your question..."
           className="mb-4"
         />
-        
         <div className="space-y-4 mb-6">
           {answers.map((answer, i) => (
             <div key={i} className="space-y-2">
-              <Input
-                label={`Option ${i + 1}`}
-                value={answer}
-                onChange={(e) => handleAnswerChange(i, e)}
-                placeholder={`Enter option ${i + 1}`}
-              />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    label={`Option ${i + 1}`}
+                    value={answer}
+                    onChange={(e) => handleAnswerChange(i, e)}
+                    placeholder={`Enter option ${i + 1}`}
+                  />
+                </div>
+                <div className="w-24">
+                  <Input
+                    label="Points"
+                    type="number"
+                    value={answerPoints[i]}
+                    onChange={(e) => handlePointsChange(i, e)}
+                    placeholder="Points"
+                    min="0"
+                  />
+                </div>
+              </div>
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="radio"
@@ -119,7 +191,6 @@ const MCQCreation = ({ pushMCQsToChat }) => {
             </div>
           ))}
         </div>
-
         <Button
           onClick={handleAddQuestion}
           variant="primary"
@@ -140,13 +211,23 @@ const MCQCreation = ({ pushMCQsToChat }) => {
           <Button
             onClick={handlePushMCQs}
             variant="primary"
-            disabled={!mcqQuestions.length}
+            disabled={!mcqQuestions.length || connectionStatus !== 'connected'}
             icon={<Send size={18} />}
           >
             Push to Chat
           </Button>
         </div>
-
+        {pushStatus && (
+          <div
+            className={`mb-4 p-2 rounded-lg text-sm ${
+              pushStatus.success
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+            }`}
+          >
+            {pushStatus.message}
+          </div>
+        )}
         {mcqQuestions.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             No questions created yet
@@ -175,7 +256,6 @@ const MCQCreation = ({ pushMCQsToChat }) => {
                     />
                   </div>
                 </div>
-                
                 <ul className="space-y-2 mt-2">
                   {mcq.answers.map((ans, j) => (
                     <li key={j} className="flex items-center space-x-2">
@@ -185,7 +265,7 @@ const MCQCreation = ({ pushMCQsToChat }) => {
                         <div className="h-4 w-4 rounded-full border border-gray-300" />
                       )}
                       <span className={ans.isCorrect ? 'font-medium text-green-600' : ''}>
-                        {ans.text}
+                        {ans.text} {ans.points > 0 && <span className="text-sm text-gray-500 ml-2">({ans.points} pts)</span>}
                       </span>
                     </li>
                   ))}

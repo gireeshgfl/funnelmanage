@@ -1,4 +1,5 @@
 import "./globals.css";
+import { AuthProvider } from '@/context/AuthContext'; // Import AuthProvider
 
 export const metadata = {
   title: "Funnel Management",
@@ -23,7 +24,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="font-sans">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

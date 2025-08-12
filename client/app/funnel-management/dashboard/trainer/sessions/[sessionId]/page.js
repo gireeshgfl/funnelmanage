@@ -322,13 +322,13 @@ const SessionWorkspace = () => {
                       <List className="h-4 w-4 mr-3 text-primary-500" />
                       <span>Create MCQs</span>
                     </button>
-                    <button
+                    {/* <button
                       onClick={() => setActiveFeature('CouponPage')}
                       className="flex items-center w-full px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-b-lg"
                     >
                       <Award className="h-4 w-4 mr-3 text-primary-500" />
                       <span>Manage Coupons</span>
-                    </button>
+                    </button> */}
                   </div>
                 </>
               )}
@@ -341,7 +341,7 @@ const SessionWorkspace = () => {
               {/* Feature Content Area (when active) */}
               <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-gray-800">
                 {activeFeature === 'MCQCreation' && (
-                  <MCQCreation pushMCQsToChat={(mcqs) => handlePushContent('mcq', mcqs)} />
+                  <MCQCreation pushMCQsToChat={(mcqs) => handlePushContent('mcq', mcqs)} sessionId={sessionId}/>
                 )}
                 {activeFeature === 'CouponPage' && (
                   <CouponPage pushCouponsToChat={(coupons) => handlePushContent('coupon', coupons)} />

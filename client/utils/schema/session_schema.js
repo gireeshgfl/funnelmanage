@@ -111,3 +111,19 @@ export const funnelDataSchema = z.object({
   username: z.string().min(1, "username is required"),
   sessionId: z.string().length(24, "sessionId must be a 24-character string"),
 });
+
+const mcqAnswerSchema = z.object({
+  text: z.string().min(1, "Answer text is required"),
+  isCorrect: z.boolean()
+});
+
+const mcqItemSchema = z.object({
+  question: z.string().min(1, "Question is required"),
+  answers: z.array(mcqAnswerSchema).min(1, "At least one answer is required"),
+  correctAnswerIndex: z.number().int().min(0, "Correct answer index must be non-negative"),
+});
+
+export const mcqArraySchema = z.object({
+  mcqArray: z.array(mcqItemSchema).min(1, "At least one MCQ is required"),
+  sessionId: z.string().length(24, "Invalid session ID format"),
+});
