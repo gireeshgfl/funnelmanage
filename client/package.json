@@ -14,6 +14,7 @@
     "@lottiefiles/react-lottie-player": "^3.6.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
+    "amqplib": "^0.10.8",
     "aws-sdk": "^2.1671.0",
     "axios": "^1.7.9",
     "canvas-confetti": "^1.9.3",

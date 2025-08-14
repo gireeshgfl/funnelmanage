@@ -114,6 +114,7 @@ export const funnelDataSchema = z.object({
 
 const mcqAnswerSchema = z.object({
   text: z.string().min(1, "Answer text is required"),
+  points: z.number().min(0, "Points must be non-negative"),
   isCorrect: z.boolean()
 });
 

@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { Player } from "@lottiefiles/react-lottie-player";
+import dynamic from 'next/dynamic';
 import Fireworks from "../public/Firework.json";
+
+// Dynamically import the Lottie Player with SSR disabled
+const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then((mod) => mod.Player), {
+  ssr: false, // Disable server-side rendering
+});
 
 const CelebrationOverlay = ({ 
   isOpen, 

@@ -318,7 +318,7 @@ class SessionService:
             "pointsEarned": total_points,
             "studentId": user_id,
             "sessionId": session_id,
-            "status": 200  # This could be renamed to something like "code" to avoid duplicate key issues
+            "status": 200
         }
 
 

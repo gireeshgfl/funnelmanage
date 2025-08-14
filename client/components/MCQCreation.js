@@ -3,15 +3,14 @@ import axios from 'axios';
 import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
 import { Input, Button, Card } from '@components/ui/components';
-import { CheckCircle, Edit2, Trash2, Plus, Send } from 'lucide-react';
-import { List } from 'lucide-react';
+import { CheckCircle, Edit2, Trash2, Plus, Send, List } from 'lucide-react';
 
 const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
   const { socket, connectionStatus } = useContext(SocketContext);
   const [mcqQuestions, setMCQQuestions] = useState([]);
   const [questionText, setQuestionText] = useState('');
   const [answers, setAnswers] = useState(['', '', '', '']);
-  const [answerPoints, setAnswerPoints] = useState([0, 0, 0, 0]); // New state for answer points
+  const [answerPoints, setAnswerPoints] = useState([0, 0, 0, 0]);
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
   const [editIndex, setEditIndex] = useState(null);
   const [pushStatus, setPushStatus] = useState(null);
@@ -23,6 +22,11 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
         setPushStatus({ success, message });
         if (success) {
           setMCQQuestions([]);
+          setQuestionText('');
+          setAnswers(['', '', '', '']);
+          setAnswerPoints([0, 0, 0, 0]);
+          setCorrectAnswerIndex(0);
+          setEditIndex(null);
         }
       });
       return () => {
@@ -102,7 +106,6 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
     }
 
     try {
-      // Save MCQs via API
       const response = await axios.post(
         API_ROUTES.SESSION_SERVICE.SAVE_MCQ,
         {
@@ -112,15 +115,21 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
         },
         {
           headers: { 'Content-Type': 'application/json' },
-          withCredentials: true, // Include cookies for authentication
+          withCredentials: true,
         }
       );
 
       if (response.status === 200 || response.status === 201) {
         console.log('MCQs saved successfully:', response.data);
-        const savedMCQs = response.data.mcqArray || mcqQuestions; // Use saved MCQs with IDs if returned
+        const savedMCQs = response.data.mcqArray || mcqQuestions;
 
-        // Push MCQs to chat
+        setMCQQuestions([]);
+        setQuestionText('');
+        setAnswers(['', '', '', '']);
+        setAnswerPoints([0, 0, 0, 0]);
+        setCorrectAnswerIndex(0);
+        setEditIndex(null);
+
         if (pushMCQsToChat) {
           console.log('Emitting pushMCQs via pushMCQsToChat:', savedMCQs);
           pushMCQsToChat(savedMCQs);
@@ -140,7 +149,6 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
 
   return (
     <div className="space-y-6">
-      {/* MCQ Creation Form */}
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Plus className="h-5 w-5 text-primary-500" />
@@ -201,7 +209,6 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
         </Button>
       </Card>
 
-      {/* Questions List */}
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
