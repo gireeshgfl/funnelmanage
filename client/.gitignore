@@ -38,4 +38,4 @@ openssl-san.cnf
 key.pem.bak
 cert.pem.bak
 
-certificates
+/rabbitmq_messages.json

@@ -1,7 +1,7 @@
 from nameko.rpc import rpc
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
-from common.dependencies import MongoProvider, WorkerContextProvider
+from common.dependencies import MongoProvider, WorkerContextProvider, AmqpPublisher 
 from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO
 import logging
 from functools import wraps
@@ -16,6 +16,7 @@ class SessionService:
     mongo_provider = MongoProvider()
     dispatch = EventDispatcher()
     worker_ctx = WorkerContextProvider()
+    amqp_publisher = AmqpPublisher()
     
     @property
     def session_service_dao(self):
@@ -99,9 +100,7 @@ class SessionService:
     @get_rbac_check(required_roles=['trainer'])
     @serialize_result
     def get_sessions(self, user_id, payload):
-        print(f"[DEBUG] get_sessions called with user_id={user_id}, payload={payload}")
         result = self.session_service_dao.get_sessions_by_user(user_id)
-        print(f"[DEBUG] get_sessions result: {result}")
         if result:
             return {
                 "message": "Session(s) fetched successfully",
@@ -296,9 +295,7 @@ class SessionService:
                 "correctAnswerText": correct_answer_text
             }
         }
-
-
-
+    
     @rpc
     @error_handler
     @get_rbac_check(required_roles=['trainer', 'student'])
@@ -312,7 +309,8 @@ class SessionService:
         session_record = self.points_dao.get_session_by_user(user_id)
         session_id = session_record.get("sessionId") if session_record else None
 
-        return {
+        # Prepare response
+        response = {
             "status": "success",
             "message": "Points fetched successfully",
             "pointsEarned": total_points,
@@ -321,6 +319,22 @@ class SessionService:
             "status": 200
         }
 
+        # --- Publish the points to RabbitMQ ---
+        payload = {
+            "studentId": user_id,
+            "sessionId": session_id,
+            "pointsEarned": total_points,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        print(f"Publishing to RabbitMQ: {payload} (queue: 'points')")
+        success = self.amqp_publisher.publish(payload, queue_name="points")
+
+        if success:
+            print(f"Published points for student {user_id} to queue 'points'")
+        else:
+            print(f"Failed to publish points for student {user_id}")
+
+        return response
 
     @rpc
     @error_handler

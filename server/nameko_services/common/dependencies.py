@@ -8,9 +8,16 @@ from pydantic import BaseModel
 import logging
 from functools import wraps
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError,NetworkTimeout
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, stop_after_delay, wait_fixed
 import threading
 import boto3
+import pika
+import orjson
+import queue
+from pika.adapters.select_connection import SelectConnection
+from pika.exceptions import AMQPConnectionError
+from time import sleep
+
 
 
 # Initialize the logger
@@ -350,6 +357,106 @@ class S3Provider(DependencyProvider):
         """
         logger.info("S3Provider is stopping. Clearing S3 client.")
         self.client = None
+
+class AmqpPublisher(DependencyProvider):
+    def __init__(self):
+        self.connection = None
+        self.channel = None
+        self.logger = logging.getLogger(__name__)
+        self.amqp_uri = None
+        self.message_queue = queue.Queue()
+        self.running = False
+        self.thread = None
+
+    def setup(self):
+        self.amqp_uri = self.container.config.get('AMQP_URI', 'amqp://guest:guest@localhost:5672//')
+        self.running = True
+        self.thread = threading.Thread(target=self._run_ioloop, daemon=True)
+        self.thread.start()
+
+    @retry(
+        stop=stop_after_delay(300),  # Retry for 5 minutes
+        wait=wait_fixed(5),
+        retry=retry_if_exception_type(AMQPConnectionError),
+        before_sleep=lambda retry_state: logger.warning(
+            f"Retrying RabbitMQ connection (attempt {retry_state.attempt_number}): {retry_state.outcome.exception()}"
+        )
+    )
+    def _connect(self):
+        parameters = pika.URLParameters(self.amqp_uri)
+        self.connection = SelectConnection(
+            parameters,
+            on_open_callback=self._on_connection_open,
+            on_close_callback=self._on_connection_closed,
+            on_open_error_callback=self._on_connection_error
+        )
+        self.connection.ioloop.start()
+
+    def _run_ioloop(self):
+        while self.running:
+            try:
+                self._connect()
+            except Exception as e:
+                self.logger.error(f"RabbitMQ connection failed: {e}")
+                if self.running:
+                    sleep(5)
+
+    def _on_connection_open(self, connection):
+        self.connection = connection
+        self.connection.channel(on_open_callback=self._on_channel_open)
+
+    def _on_channel_open(self, channel):
+        self.channel = channel
+        self.channel.queue_declare(queue="points", durable=True)
+        self.logger.info("RabbitMQ connection and channel established")
+        self._process_queue()
+
+    def _on_connection_closed(self, connection, reason):
+        self.channel = None
+        if self.running:
+            self.logger.warning(f"Connection closed: {reason}. Reconnecting...")
+            self.connection.ioloop.call_later(5, self.connection.ioloop.start)
+
+    def _on_connection_error(self, connection, error):
+        self.logger.error(f"Connection error: {error}. Retrying...")
+        self.connection.ioloop.call_later(5, self.connection.ioloop.start)
+
+    def stop(self):
+        self.running = False
+        if self.connection and not self.connection.is_closed:
+            try:
+                self.connection.close()
+            except Exception as e:
+                self.logger.error(f"Error closing RabbitMQ connection: {e}")
+        if self.thread:
+            self.thread.join(timeout=5)
+        self.logger.info("RabbitMQ connection closed")
+
+    def get_dependency(self, worker_ctx):
+        service = worker_ctx.service
+        self.logger = getattr(service, 'logger', self.logger)
+        return self
+
+    def publish(self, payload, queue_name="points"):
+        serialized_payload = orjson.dumps(payload)
+        self.message_queue.put((serialized_payload, queue_name))
+        if self.channel and not self.channel.is_closed:
+            self._process_queue()
+        return True  # Optimistic success; failures logged in _process_queue
+
+    def _process_queue(self):
+        while not self.message_queue.empty() and self.channel and not self.channel.is_closed:
+            try:
+                serialized_payload, queue_name = self.message_queue.get()
+                self.channel.basic_publish(
+                    exchange="",
+                    routing_key=queue_name,
+                    body=serialized_payload,
+                    properties=pika.BasicProperties(delivery_mode=2)
+                )
+                self.message_queue.task_done()
+            except Exception as e:
+                self.logger.error(f"Failed to publish message to queue '{queue_name}': {e}")
 
 
 

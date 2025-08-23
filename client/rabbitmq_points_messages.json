@@ -1,0 +1,66 @@
+[
+  {
+    "queue": "points",
+    "timestamp": "2025-08-20T07:33:42.427Z",
+    "content": {
+      "studentId": "67f0b4550ecac230e2437b11",
+      "sessionId": "67e7ce39aa63446d44801ce3",
+      "pointsEarned": 10,
+      "timestamp": "2025-08-20T07:33:39.006389"
+    }
+  },
+  {
+    "queue": "points",
+    "timestamp": "2025-08-20T07:41:12.443Z",
+    "content": {
+      "studentId": "67f0b4550ecac230e2437b11",
+      "sessionId": "67e7ce39aa63446d44801ce3",
+      "pointsEarned": 10,
+      "timestamp": "2025-08-20T07:41:11.391685"
+    }
+  },
+  {
+    "queue": "points",
+    "timestamp": "2025-08-20T07:57:56.831Z",
+    "content": {
+      "studentId": "67f0b4550ecac230e2437b11",
+      "sessionId": "67e7ce39aa63446d44801ce3",
+      "pointsEarned": 10,
+      "timestamp": "2025-08-20T07:57:52.306221",
+      "messageId": "ac4af314-58e6-4836-b631-6876f9281ad3"
+    }
+  },
+  {
+    "queue": "points",
+    "timestamp": "2025-08-20T08:00:32.620Z",
+    "content": {
+      "studentId": "67f0b4550ecac230e2437b11",
+      "sessionId": "67e7ce39aa63446d44801ce3",
+      "pointsEarned": 10,
+      "timestamp": "2025-08-20T07:59:23.919145",
+      "messageId": "712a39f0-348c-461a-86d7-e17f559b1715"
+    }
+  },
+  {
+    "queue": "points",
+    "timestamp": "2025-08-20T08:00:36.841Z",
+    "content": {
+      "studentId": "67f0b4550ecac230e2437b11",
+      "sessionId": "67e7ce39aa63446d44801ce3",
+      "pointsEarned": 10,
+      "timestamp": "2025-08-20T08:00:33.307914",
+      "messageId": "00d58633-62ed-43a4-a115-9800c4b1fcd3"
+    }
+  },
+  {
+    "queue": "points",
+    "timestamp": "2025-08-20T08:26:51.919Z",
+    "content": {
+      "studentId": "67f0b4550ecac230e2437b11",
+      "sessionId": "67e7ce39aa63446d44801ce3",
+      "pointsEarned": 10,
+      "timestamp": "2025-08-20T08:26:49.881261",
+      "messageId": "ad94cbd5-1616-449b-b0ab-fbad43eeacd2"
+    }
+  }
+]
