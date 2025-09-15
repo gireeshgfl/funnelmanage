@@ -128,3 +128,8 @@ export const mcqArraySchema = z.object({
   mcqArray: z.array(mcqItemSchema).min(1, "At least one MCQ is required"),
   sessionId: z.string().length(24, "Invalid session ID format"),
 });
+
+export const participantEmailsSchema = z.object({
+  sessionId: z.string().length(24, "Invalid session ID format"),
+  emails: z.array(z.string().email("Invalid email address")).min(1, "At least one email is required"),
+});

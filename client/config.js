@@ -53,6 +53,8 @@ export const API_ROUTES = {
     GET_SESSION_STATUS: `${BASE_URL}/session_service/get_session_status`,
     GET_ACTIVE_SESSION_ID: `${BASE_URL}/session_service/get_active_session_id`,
     SAVE_MCQ: `${BASE_URL}/session_service/save_mcq`,
+    ADD_PARTICIPANTS: `${BASE_URL}/session_service/add_participants`,
+
   },
 
   // ===========================

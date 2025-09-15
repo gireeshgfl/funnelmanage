@@ -1,8 +1,8 @@
-from nameko.rpc import rpc
+from nameko.rpc import rpc, RpcProxy
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from common.dependencies import MongoProvider, WorkerContextProvider, AmqpPublisher 
-from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO
+from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO, UserDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher
@@ -17,6 +17,7 @@ class SessionService:
     dispatch = EventDispatcher()
     worker_ctx = WorkerContextProvider()
     amqp_publisher = AmqpPublisher()
+    auth_rpc = RpcProxy('auth_service_fun') 
     
     @property
     def session_service_dao(self):
@@ -41,6 +42,10 @@ class SessionService:
     @property
     def in_session_questions_dao(self):
         return InSessionQuestionsDAO(self.mongo_provider)
+    
+    @property
+    def user_dao(self):
+        return UserDAO(self.mongo_provider)
 
 
     def dispatch_event(event_type):
@@ -453,4 +458,52 @@ class SessionService:
                 "message": "Failed to save MCQ",
                 "status": 500
             }
+    
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def add_participants(self, user_id, data):
+        """
+        RPC method to add multiple participants into the system via UserDAO.
+        """
+
+        emails = data.get("emails", [])
+        session_id = data.get("sessionId")
+        roles = data.get("roles", [])
+
+        if not emails or not session_id:
+            return {
+                "message": "sessionId and at least one email are required",
+                "status": 400
+            }
+
+        participants = []
+        for email in emails:
+            participant_data = {
+                "sessionId": session_id,
+                "email": email,
+                "roles": ["student"],
+                "accountType": "temporary", 
+                "added_by": ObjectId(user_id),
+                "added_at": datetime.utcnow()
+            }
+            result = self.user_dao.create_user(participant_data)
+            if result.get("_id"):
+                participants.append(result)
+
+        if participants:
+            return {
+                "message": f"{len(participants)} participant(s) added successfully",
+                "data": participants,
+                "status": 200
+            }
+        else:
+            return {
+                "message": "Failed to add participants",
+                "status": 500
+            }
+
+
+
 

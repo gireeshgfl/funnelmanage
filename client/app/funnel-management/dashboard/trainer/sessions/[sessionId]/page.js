@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useParams } from 'next/navigation';
-import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter, Gift, Calendar, Menu } from 'lucide-react';
+import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter } from 'lucide-react';
 import MCQCreation from '@/components/MCQCreation';
+import AddParticipants from '@/components/AddParticipants'; // ADD THIS IMPORT
 import CouponPage from '@/components/CouponPage';
 import ChatRoom from '@/components/ChatRoom';
 import ParticipantsList from '@/components/ParticipantsList';
@@ -12,7 +13,6 @@ import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@hooks/useAuth';
-import Link from 'next/link';
 
 const SessionWorkspace = () => {
   const [activeFeature, setActiveFeature] = useState(null);
@@ -20,7 +20,6 @@ const SessionWorkspace = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isEndingSession, setIsEndingSession] = useState(false);
   const { socket } = useContext(SocketContext);
@@ -30,7 +29,6 @@ const SessionWorkspace = () => {
   // Extract session ID from URL
   const params = useParams();
   const sessionId = params?.sessionId || '';
-
 
   useEffect(() => {
     // Check for saved theme preference or system preference
@@ -222,7 +220,7 @@ const SessionWorkspace = () => {
                   </svg>
                 ) : (
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    <path d="M17.293 13.293A8 8 极 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
                   </svg>
                 )}
               </button>
@@ -243,7 +241,7 @@ const SessionWorkspace = () => {
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 极 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                 </button>
@@ -322,6 +320,13 @@ const SessionWorkspace = () => {
                       <List className="h-4 w-4 mr-3 text-primary-500" />
                       <span>Create MCQs</span>
                     </button>
+                    <button
+                      onClick={() => setActiveFeature('AddParticipants')}
+                      className="flex items-center w-full px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Users className="h-4 w-4 mr-3 text-primary-500" />
+                      <span>Add Participants</span>
+                    </button>
                     {/* <button
                       onClick={() => setActiveFeature('CouponPage')}
                       className="flex items-center w-full px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-b-lg"
@@ -342,6 +347,9 @@ const SessionWorkspace = () => {
               <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-gray-800">
                 {activeFeature === 'MCQCreation' && (
                   <MCQCreation pushMCQsToChat={(mcqs) => handlePushContent('mcq', mcqs)} sessionId={sessionId}/>
+                )}
+                {activeFeature === 'AddParticipants' && (
+                  <AddParticipants sessionId={sessionId} />
                 )}
                 {activeFeature === 'CouponPage' && (
                   <CouponPage pushCouponsToChat={(coupons) => handlePushContent('coupon', coupons)} />

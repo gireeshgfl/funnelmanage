@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { handleGetRequest } from '@utils/Gethandler';
 import { extractServiceAndMethod } from '@utils/requestUtils';
-import eventBus from '@/utils/eventBus';
 
 
 export async function GET(request, { params }) {
@@ -12,12 +11,6 @@ export async function GET(request, { params }) {
         
         const result = await handleGetRequest(service, method );
         if (result.status === 200) {
-
-            eventBus.emit('updateStudentPoints', {
-                points: result.pointsEarned,
-                studentId: result.studentId,
-                sessionId: result.sessionId
-            });
 
             return NextResponse.json(result);
         } else if (result.status === 400) {

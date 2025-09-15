@@ -48,9 +48,6 @@ export const useQuestionOperations = (fetchQuestions, setFeedbackMessage, topicI
       // Prepare the updated question data by adding the question ID.
       let questionData = { ...updatedQuestion, _id: questionId };
 
-      // Note: Media update logic has been removed. If the question includes a File object for media,
-      // you will need to handle it separately or ensure that updatedQuestion.question is not a File.
-
       const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.UPDATE_QUESTION}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
