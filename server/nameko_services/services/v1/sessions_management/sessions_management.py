@@ -503,6 +503,48 @@ class SessionService:
                 "message": "Failed to add participants",
                 "status": 500
             }
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['student'])
+    @serialize_result
+    def get_participant_sessions(self, user_id, data=None):
+        """
+        Fetch the session details assigned to a temporary participant.
+        """
+        print(f"Fetching assigned session for user_id: {user_id}")
+        session_id = self.user_dao.get_assigned_session(user_id)
+        print(f"Assigned session_id: {session_id}")
+
+        if not session_id:
+            print("No session assigned to this user.")
+            return {
+                "message": "No session assigned to this participant",
+                "data": [],
+                "status": 200
+            }
+
+        # Use SessionDAO to fetch session details
+        print(f"Fetching session details for session_id: {session_id}")
+        session = self.session_service_dao.find_one(
+            {"_id": ObjectId(session_id)},
+            projection={"sessionName": 1, "createdBy": 1}
+        )
+        print(f"Fetched session: {session}")
+
+        if session:
+            return {
+                "message": "Assigned session fetched successfully",
+                "data": [session],
+                "status": 200
+            }
+        else:
+            return {
+                "message": "Session not found for this participant",
+                "data": [],
+                "status": 200
+            }
+
+
 
 
 

@@ -201,6 +201,18 @@ class UserDAO(BaseDAO):
             "mentors": mentors,
             "trainers": trainers
         }
+    
+    def get_assigned_session(self, user_id):
+        """
+        Fetch the sessionId assigned to a user (temporary participant).
+        """
+        try:
+            user_obj_id = ObjectId(user_id)
+        except Exception:
+            return None
+
+        user = self.find_one({"_id": user_obj_id}, projection={"sessionId": 1})
+        return user.get("sessionId") if user else None
 
 
 # ------------------------------
