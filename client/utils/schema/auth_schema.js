@@ -1,4 +1,8 @@
-import { z } from 'zod';
+import { z } from "zod";
+
+export const EmailSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+});
 
 export const SignupSchema = z.object({
   username: z.string().min(1, { message: "Name is required" }),
@@ -20,5 +24,5 @@ export const GenerateOTPSchema = z.object({
 export const ChangePasswordSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   otp: z.string().min(4, { message: "OTP must be at least 4 characters long" }),
-  new_password: z.string().min(8, { message: "New password must be at least 8 characters long" })
+  new_password: z.string().min(8, { message: "New password must be at least 8 characters long" }),
 });

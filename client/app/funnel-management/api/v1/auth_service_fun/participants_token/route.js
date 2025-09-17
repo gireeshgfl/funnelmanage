@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { AuthPostRequest } from '@/utils/auth/authRequests';
 import { validateRequest } from '@/utils/validate';
 import { extractServiceAndMethod, parseAndValidateBody } from '@/utils/requestUtils';
-import { LoginSchema } from '@/utils/schema/auth_schema';
+import { EmailSchema } from '@/utils/schema/auth_schema';
 import { verifyToken } from '@/utils/auth/jwtUtils';
 import logger from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
@@ -21,7 +21,7 @@ export async function POST(request) {
     }
 
     body.role = role;
-    const validation = validateRequest(body, LoginSchema);
+    const validation = validateRequest(body, EmailSchema);
 
     if (!validation.success) {
       logger.error('Validation error:', validation.errors);

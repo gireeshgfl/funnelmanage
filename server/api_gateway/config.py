@@ -71,6 +71,7 @@ EXCLUDED_PATH_PATTERNS = [
     "/docs",
     "/*/get/auth_service_fun/register",
     "/*/get/auth_service_fun/signin",
+    "/*/get/auth_service_fun/participants_token",
     "/*/get/auth_service_fun/reset-password",
     "/*/get/auth_service_fun/refresh_token",
     "/*/get/auth_service_fun/generate_otp",

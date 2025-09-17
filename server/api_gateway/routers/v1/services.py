@@ -110,6 +110,12 @@ async def signin(service: str, request: Request):
     response = await rpc_call(service, "signin", data)
     return Response(content=orjson.dumps(response))
 
+@router.api_route("/get/{service}/participants_token", methods=["POST"])
+async def participants_token(service: str, request: Request):
+    data = await request.json()
+    response = await rpc_call(service, "participants_token", data)
+    return Response(content=orjson.dumps(response))
+
 # ---------------------------------------------------------------------------
 # Token-dependent Endpoints using our cookie_or_header_token dependency
 # ---------------------------------------------------------------------------

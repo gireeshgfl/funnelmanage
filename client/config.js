@@ -27,6 +27,7 @@ export const API_ROUTES = {
     REFRESH_TOKEN: `${BASE_URL}/auth_service_fun/refresh_token`,
     VERIFY: `${BASE_URL}/auth_service_fun/verify`,
     VERIFY_OTP_AND_CHANGE_PASSWORD: `${BASE_URL}/auth_service_fun/verify_otp_and_change_password`,
+    PARTICIPANTS_TOKEN: `${BASE_URL}/auth_service_fun/participants_token`,
   },
 
   // ===========================

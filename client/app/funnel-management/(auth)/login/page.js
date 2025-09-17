@@ -3,15 +3,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { API_ROUTES } from '@/config';
+import { useEmailOperations } from '@/hooks/useEmailOperations';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [participantEmail, setParticipantEmail] = useState(''); // New state for participant email
+  const [participantEmail, setParticipantEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('login'); // 'login' or 'participantAccess'
+  const [activeTab, setActiveTab] = useState('login');
   const router = useRouter();
+
+  // Use the email operations hook
+  const { sendEmail, loading: emailLoading, feedbackMessage } = useEmailOperations();
 
   const handleRoleBasedRedirect = (role) => {
     console.log('Redirecting with role:', role);
@@ -59,39 +63,36 @@ export default function LoginPage() {
   const handleParticipantAccessSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
     setActiveTab('participantAccess');
 
     try {
       console.log('Requesting participant access...');
-      // Replace with your actual participant access endpoint
-      const response = await axios.post(API_ROUTES.PARTICIPANT_ACCESS, {
-        email: participantEmail,
-      });
-
-      console.log('Participant access response:', response.data);
       
-      if (response.status === 200) {
+      // Use the hook to send the email
+      const response = await sendEmail(participantEmail);
+      
+      console.log('Participant access response:', response);
+      
+      if (response) {
         // Store the participant email and temporary session data
         localStorage.setItem('participantEmail', participantEmail);
-        localStorage.setItem('tempSession', JSON.stringify(response.data.session));
+        localStorage.setItem('tempSession', JSON.stringify(response.session));
         
         // Redirect to session page
-        if (response.data.redirectUrl) {
-          router.replace(response.data.redirectUrl);
+        if (response.redirectUrl) {
+          router.replace(response.redirectUrl);
         } else {
-          router.replace('/funnel-management/session/join');
+          router.replace('/funnel-management/dashboard/student/participants_sessions/');
         }
-      } else {
-        setError(response.data.message || 'Access request failed. Please try again.');
       }
     } catch (error) {
       console.error('Error during participant access:', error);
       setError(error.response?.data?.message || 'Unable to find sessions for this email. Please contact your trainer.');
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  // Display error for participant access if there's an error or non-success feedback message
+  const displayParticipantError = error || (activeTab === 'participantAccess' && feedbackMessage && !feedbackMessage.includes('success'));
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -191,18 +192,31 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Joining as a participant?
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-sm text-gray-60 dark:text-gray-400 mt-2">
               Enter your email to access your sessions
             </p>
           </div>
 
-          {error && activeTab === 'participantAccess' && (
+          {displayParticipantError && (
             <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 mb-4">
               <div className="flex">
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
                   <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                    <p>{error}</p>
+                    <p>{displayParticipantError}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {feedbackMessage && activeTab === 'participantAccess' && feedbackMessage.includes('success') && (
+            <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-4 mb-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800 dark:text-green-200">Success</h3>
+                  <div className="mt-2 text-sm text-green-700 dark:text-green-300">
+                    <p>{feedbackMessage}</p>
                   </div>
                 </div>
               </div>
@@ -230,10 +244,10 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading && activeTab === 'participantAccess'}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${isLoading && activeTab === 'participantAccess' ? 'opacity-75 cursor-not-allowed' : ''}`}
+                disabled={emailLoading && activeTab === 'participantAccess'}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${emailLoading && activeTab === 'participantAccess' ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
-                {isLoading && activeTab === 'participantAccess' ? (
+                {emailLoading && activeTab === 'participantAccess' ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

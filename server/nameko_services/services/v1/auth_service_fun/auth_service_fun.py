@@ -197,6 +197,44 @@ class AuthServiceV1:
                 return {'access_token': access_token, 'refresh_token': refresh_token, 'status': 200}
         
         return {'error': 'Invalid credentials', 'status': 401}
+    
+    @rpc
+    @error_handler 
+    def participants_token(self, data):
+        """
+        Generate tokens for participants with only email (no password check).
+        """
+        email = data.get("email")
+        print(f"participants_token called with email: {email}")
+        if not email:
+            print("No email provided in request data.")
+            return {"error": "Email is required", "status": 400}
+
+        user_data = self.user_db.find_user_by_email(email)
+        print(f"User data fetched for email {email}: {user_data}")
+        if not user_data:
+            print("User not found for provided email.")
+            return {"error": "User not found", "status": 404}
+
+        # Generate tokens without password verification
+        access_token = self._create_access_token(user_data)
+        refresh_token = self._create_refresh_token(user_data)
+        print(f"Generated access_token: {access_token}")
+        print(f"Generated refresh_token: {refresh_token}")
+
+        result = self._store_tokens(user_data["email"], access_token, refresh_token, str(user_data["_id"]))
+        print(f"Token store result: {result}")
+
+        if result.acknowledged:
+            print("Tokens stored successfully.")
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "status": 200,
+            }
+
+        print("Token creation failed during storage.")
+        return {"error": "Token creation failed", "status": 500}
 
     @rpc
     @error_handler
