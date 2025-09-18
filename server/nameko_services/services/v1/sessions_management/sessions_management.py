@@ -466,11 +466,11 @@ class SessionService:
     def add_participants(self, user_id, data):
         """
         RPC method to add multiple participants into the system via UserDAO.
+        Adds duplicate check: if email already exists, append new sessionId.
         """
 
         emails = data.get("emails", [])
         session_id = data.get("sessionId")
-        roles = data.get("roles", [])
 
         if not emails or not session_id:
             return {
@@ -479,70 +479,107 @@ class SessionService:
             }
 
         participants = []
-        for email in emails:
-            participant_data = {
-                "sessionId": session_id,
-                "email": email,
-                "roles": ["student"],
-                "accountType": "temporary", 
-                "added_by": ObjectId(user_id),
-                "added_at": datetime.utcnow()
-            }
-            result = self.user_dao.create_user(participant_data)
-            if result.get("_id"):
-                participants.append(result)
+        updated_participants = []
 
-        if participants:
+        for email in emails:
+            existing_user = self.user_dao.find_user_by_email(email)
+
+            if existing_user:
+                # Ensure backward compatibility if old schema has "sessionId"
+                if "sessionIds" not in existing_user:
+                    existing_user["sessionIds"] = []
+                    if "sessionId" in existing_user:
+                        existing_user["sessionIds"].append(existing_user["sessionId"])
+                        # migrate old field -> new array
+                        self.user_dao.update_one(
+                            {"_id": existing_user["_id"]},
+                            {
+                                "$set": {"sessionIds": existing_user["sessionIds"]},
+                                "$unset": {"sessionId": ""}
+                            }
+                        )
+
+                # Add new session if not already present
+                self.user_dao.update_one(
+                    {"_id": existing_user["_id"]},
+                    {"$addToSet": {"sessionIds": session_id}}
+                )
+                if session_id not in existing_user["sessionIds"]:
+                    existing_user["sessionIds"].append(session_id)
+
+                updated_participants.append(existing_user)
+
+            else:
+                participant_data = {
+                    "sessionIds": [session_id],
+                    "email": email,
+                    "roles": ["student"],
+                    "accountType": "temporary",
+                    "added_by": ObjectId(user_id),
+                    "added_at": datetime.utcnow()
+                }
+                result = self.user_dao.create_user(participant_data)
+                if result.get("_id"):
+                    participants.append(result)
+
+        if participants or updated_participants:
             return {
-                "message": f"{len(participants)} participant(s) added successfully",
-                "data": participants,
+                "message": (
+                    f"{len(participants)} new participant(s) added, "
+                    f"{len(updated_participants)} existing participant(s) updated"
+                ),
+                "data": {
+                    "new": participants,
+                    "updated": updated_participants
+                },
                 "status": 200
             }
-        else:
-            return {
-                "message": "Failed to add participants",
-                "status": 500
-            }
+
+        return {
+            "message": "No participants were added or updated",
+            "status": 500
+        }
+
+
     @rpc
     @error_handler
     @rbac_check(required_roles=['student'])
     @serialize_result
     def get_participant_sessions(self, user_id, data=None):
         """
-        Fetch the session details assigned to a temporary participant.
+        Fetch all session details assigned to a temporary participant.
         """
-        print(f"Fetching assigned session for user_id: {user_id}")
-        session_id = self.user_dao.get_assigned_session(user_id)
-        print(f"Assigned session_id: {session_id}")
 
-        if not session_id:
-            print("No session assigned to this user.")
+        session_ids = self.user_dao.get_assigned_sessions(user_id)
+
+        if not session_ids:
             return {
-                "message": "No session assigned to this participant",
+                "message": "No sessions assigned to this participant",
                 "data": [],
                 "status": 200
             }
 
-        # Use SessionDAO to fetch session details
-        print(f"Fetching session details for session_id: {session_id}")
-        session = self.session_service_dao.find_one(
-            {"_id": ObjectId(session_id)},
+        # Ensure ObjectIds (in case sessionIds are stored as strings)
+        session_obj_ids = [ObjectId(sid) for sid in session_ids if ObjectId.is_valid(sid)]
+
+        sessions = self.session_service_dao.find_many(
+            {"_id": {"$in": session_obj_ids}},
             projection={"sessionName": 1, "createdBy": 1}
         )
-        print(f"Fetched session: {session}")
 
-        if session:
+        if sessions:
             return {
-                "message": "Assigned session fetched successfully",
-                "data": [session],
+                "message": "Assigned sessions fetched successfully",
+                "data": sessions,
                 "status": 200
             }
         else:
             return {
-                "message": "Session not found for this participant",
+                "message": "No valid sessions found for this participant",
                 "data": [],
                 "status": 200
             }
+
 
 
 

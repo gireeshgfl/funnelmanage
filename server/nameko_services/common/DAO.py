@@ -203,9 +203,6 @@ class UserDAO(BaseDAO):
         }
     
     def get_assigned_session(self, user_id):
-        """
-        Fetch the sessionId assigned to a user (temporary participant).
-        """
         try:
             user_obj_id = ObjectId(user_id)
         except Exception:
@@ -213,6 +210,22 @@ class UserDAO(BaseDAO):
 
         user = self.find_one({"_id": user_obj_id}, projection={"sessionId": 1})
         return user.get("sessionId") if user else None
+    
+    def add_session_to_user(self, user_id, session_id):
+        return self.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$addToSet': {'sessionIds': session_id}}
+        )
+
+    def get_assigned_sessions(self, user_id):
+        try:
+            user_obj_id = ObjectId(user_id)
+        except Exception:
+            return []
+
+        user = self.find_one({"_id": user_obj_id}, projection={"sessionIds": 1})
+        return user.get("sessionIds", []) if user else []
+
 
 
 # ------------------------------
