@@ -4,6 +4,10 @@ const API_VERSION = 'v1';
 // Base URL for the API
 const BASE_URL = `/funnel-management/api/${API_VERSION}`;
 
+// Environment variables
+const HOST_ENDPOINT = process.env.NEXT_PUBLIC_HOST_ENDPOINT 
+const S3_BUCKET = process.env.NEXT_PUBLIC_S3_BUCKET 
+
 // Exported object containing all API routes organized by service
 export const API_ROUTES = {
 
@@ -11,9 +15,9 @@ export const API_ROUTES = {
   // 1. Host Service
   // ===========================
   HOST: {
-    ENDPOINT: 'http://localhost:3001'
+    ENDPOINT: HOST_ENDPOINT
   },
-  S3BUCKET: 'https://funnelmanagement.s3.ap-south-1.amazonaws.com/',
+  S3BUCKET: S3_BUCKET,
 
   // ===========================
   // 2. Authentication Service
