@@ -28,7 +28,7 @@ const SocketProvider = ({ children }) => {
             console.log('WebSocket endpoint response:', response.status);
 
             socketInstance = io('wss://eduvocate.in', {
-              path: '/funnel-management/socket.io', // ✅ Corrected path
+              path: '/socket.io',
               transports: ['websocket'],
               query: { userId, role, username },
               reconnectionAttempts: 5,
