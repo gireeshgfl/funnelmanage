@@ -33,7 +33,8 @@ const aliasConfig = rootDirs.reduce((acc, dir) => {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  assetPrefix: '/funnel-management',
+  basePath: '/funnel-management',        // ✅ Add base path
+  assetPrefix: '/funnel-management',     // ✅ Keep asset prefix consistent
   trailingSlash: true,
   reactStrictMode: true,
   swcMinify: true,
@@ -64,43 +65,28 @@ const nextConfig = {
     ];
   },
 
-  // Fix: headers function structured properly
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true',
-          },
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*', // Ensure CORS allows all origins (Modify as per security needs)
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
         ],
       },
     ];
   },
 
-  // Environment variables exposed to the client
   env: {
-    // NEXT_PUBLIC_SECRET_KEY: process.env.NEXT_PUBLIC_SECRET_KEY, // Ensure client-safe exposure
+    // NEXT_PUBLIC_SECRET_KEY: process.env.NEXT_PUBLIC_SECRET_KEY,
   },
 
   eslint: {
     ignoreDuringBuilds: true,
   },
 
-  // Image optimization for remote patterns
   images: {
     remotePatterns: [
       {
