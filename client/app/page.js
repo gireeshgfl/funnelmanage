@@ -29,10 +29,10 @@ export default function WelcomePage() {
     if (!loading && user) {
       const role = user.role; // Role from AuthContext (from API)
       if (['trainer', 'student', 'super-admin'].includes(role)) {
-        router.push(`/funnel-management/dashboard/${role}`);
+        router.push(`/dashboard/${role}`);
       } else {
         // Handle unknown roles
-        router.push('/funnel-management/unauthorized');
+        router.push('/unauthorized');
       }
     }
   }, [user, loading, router]);
@@ -106,7 +106,7 @@ export default function WelcomePage() {
             <div className="flex items-center space-x-4">
               {!user && (
                 <Link
-                  href="/funnel-management/login"
+                  href="/login"
                   className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900 hover:bg-primary-100 dark:hover:bg-primary-800 transition-colors"
                 >
                   Sign In

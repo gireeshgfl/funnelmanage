@@ -8,14 +8,14 @@ export default function QuestionBank() {
 
   const cardLinks = [
     { 
-      path: '/funnel-management/dashboard/trainer/question-bank/session-topic', 
+      path: '/dashboard/trainer/question-bank/session-topic', 
       title: 'Question Creation',
       description: 'Crafting customized learning materials using multimedia elements to engage learners effectively.',
       icon: <PlusCircle className="h-8 w-8 text-primary-500" />,
       category: 'Educational Content Creation'
     },
     { 
-      path: '/funnel-management/dashboard/trainer/question-bank/question-database', 
+      path: '/dashboard/trainer/question-bank/question-database', 
       title: 'Question Database',
       description: 'Organizing and storing educational materials for easy access and distribution.',
       icon: <Database className="h-8 w-8 text-primary-500" />,

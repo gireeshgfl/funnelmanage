@@ -16,27 +16,27 @@ const DashboardPage = () => {
 
       <div className="flex justify-center mt-12">
         <div className="flex flex-wrap justify-center gap-4">
-          <Link href="/funnel-management/dashboard/super-admin/trainers" passHref>
+          <Link href="/dashboard/super-admin/trainers" passHref>
             <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
               Trainers
             </button>
           </Link>
-          <Link href="/funnel-management/dashboard/super-admin/sub-admin" passHref>
+          <Link href="/dashboard/super-admin/sub-admin" passHref>
             <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
               Sub-Admin
             </button>
           </Link>
-          <Link href="/funnel-management/dashboard/super-admin/trainer-auth" passHref>
+          <Link href="/dashboard/super-admin/trainer-auth" passHref>
             <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
               New-Request
             </button>
           </Link>
-          <Link href="/funnel-management/dashboard/super-admin/create-trainer" passHref>
+          <Link href="/dashboard/super-admin/create-trainer" passHref>
             <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
               Create-Trainer
             </button>
           </Link>
-          <Link href="/funnel-management/dashboard/super-admin/settings" passHref>
+          <Link href="/dashboard/super-admin/settings" passHref>
             <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
               Settings
             </button>

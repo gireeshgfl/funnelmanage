@@ -61,7 +61,7 @@ const SessionWorkspace = () => {
           setTrainerName(data.username.charAt(0).toUpperCase() + data.username.slice(1));
         } else {
           setError('Authentication required');
-          router.push('/funnel-management/login');
+          router.push('/login');
         }
       } catch (err) {
         console.error('Failed to load trainer data:', err);
@@ -100,7 +100,7 @@ const SessionWorkspace = () => {
   const handleSignout = async () => {
     try {
       await signout();
-      router.push('/funnel-management/login');
+      router.push('/login');
     } catch (error) {
       console.error('Signout failed:', error);
     }
@@ -121,7 +121,7 @@ const SessionWorkspace = () => {
   
       if (response.status === 200) {
         console.log('Session ended successfully!');
-        router.push('/funnel-management/dashboard/trainer/sessions');
+        router.push('/dashboard/trainer/sessions');
       } else {
         console.error('Failed to end session:', response.data);
         setError('Failed to end session');

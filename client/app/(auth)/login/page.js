@@ -23,7 +23,7 @@ export default function LoginPage() {
     const validRoles = ['trainer', 'student', 'super-admin'];
     
     if (role && validRoles.includes(role.toLowerCase())) {
-      router.replace(`/funnel-management/dashboard/${role.toLowerCase()}`);
+      router.replace(`/dashboard/${role.toLowerCase()}`);
     } else {
       router.replace('/unauthorized');
     }
@@ -82,7 +82,7 @@ export default function LoginPage() {
         if (response.redirectUrl) {
           router.replace(response.redirectUrl);
         } else {
-          router.replace('/funnel-management/dashboard/student/participants_sessions/');
+          router.replace('/dashboard/student/participants_sessions/');
         }
       }
     } catch (error) {

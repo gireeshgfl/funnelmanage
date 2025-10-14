@@ -304,7 +304,7 @@ const IndexPage = () => {
         await fetchPoints(data.user_id);
       } else {
         setError('Not authenticated');
-        router.push('/funnel-management/login');
+        router.push('/login');
       }
     } catch (error) {
       console.error('Error fetching user info:', error);
@@ -385,7 +385,7 @@ const IndexPage = () => {
               </div>
               <Button 
                 variant="ghost" 
-                onClick={() => router.push('/funnel-management/dashboard/student')}
+                onClick={() => router.push('/dashboard/student')}
                 className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

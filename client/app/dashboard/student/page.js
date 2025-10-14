@@ -22,7 +22,7 @@ const StudentDashboard = () => {
           setUserName(capitalizeFirstLetter(data?.username || 'untitled'));
         } else {
           setError('Not authenticated');
-          router.push('/funnel-management/login');
+          router.push('/login');
         } 
       } catch (error) {
         console.error('Error fetching user info:', error);
@@ -88,7 +88,7 @@ const StudentDashboard = () => {
           variant="primary"
           size="large"
           className="w-full"
-          onClick={() => handleButtonClick('/funnel-management/dashboard/student/coupons')}
+          onClick={() => handleButtonClick('/dashboard/student/coupons')}
         >
           My Coupons
         </Button>
@@ -97,7 +97,7 @@ const StudentDashboard = () => {
           variant="primary"
           size="large"
           className="w-full"
-          onClick={() => handleButtonClick('/funnel-management/dashboard/student/practice-tests')}
+          onClick={() => handleButtonClick('/dashboard/student/practice-tests')}
         >
           Credit Store
         </Button>
@@ -106,7 +106,7 @@ const StudentDashboard = () => {
           variant="primary"
           size="large"
           className="w-full"
-          onClick={() => handleButtonClick('/funnel-management/dashboard/student/progress-report')}
+          onClick={() => handleButtonClick('/dashboard/student/progress-report')}
         >
           Progress Report
         </Button>

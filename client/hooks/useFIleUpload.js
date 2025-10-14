@@ -55,8 +55,8 @@ const useFileUpload = () => {
       console.log("[useFileUpload] Payload for upload:", payload);
 
       const endpoint = existingFileKey
-        ? '/funnel-management/api/v1/media_service/replace_course_image'
-        : '/funnel-management/api/v1/media_service/upload';
+        ? '/api/v1/media_service/replace_course_image'
+        : '/api/v1/media_service/upload';
 
       console.log("[useFileUpload] Sending POST request to:", endpoint);
 
@@ -106,7 +106,7 @@ const useFileUpload = () => {
           if (file.type.startsWith('video/')) {
             try {
               const hlsResponse = await axios.post(
-                '/funnel-management/api/v1/video_service/convert_to_hls',
+                '/api/v1/video_service/convert_to_hls',
                 {
                   videoName: file.name,
                   key,

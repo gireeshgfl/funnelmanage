@@ -30,7 +30,7 @@ export default function TopicSelectionForm() {
           setUserId(data.user_id);
         } else {
           setFeedbackMessage('Not authenticated');
-          router.push('/funnel-management/login');
+          router.push('/login');
         }
       } catch (error) {
         console.error('Error fetching user info:', error);
@@ -107,7 +107,7 @@ export default function TopicSelectionForm() {
       setIsCustomTopic(false);
       setFeedbackMessage('Form submitted successfully!');
       
-      router.push(`/funnel-management/dashboard/trainer/question-bank/session-topic/question-generation?topic=${selectedTopic}&topicId=${objectId}`);
+      router.push(`/dashboard/trainer/question-bank/session-topic/question-generation?topic=${selectedTopic}&topicId=${objectId}`);
     } catch (error) {
       console.error('Error submitting form:', error);
       setFeedbackMessage('Failed to submit form. Please try again.');
