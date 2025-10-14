@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 
 const Layout = ({ children }) => {
   const pathname = usePathname();
-  const isSessionWorkspace = pathname?.match(/^\/funnel-management\/dashboard\/trainer\/sessions\/[^/]+/);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Initial state set to true
+  const isSessionWorkspace = pathname?.match(/dashboard\/trainer\/sessions\/[^/]+/);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); 
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">

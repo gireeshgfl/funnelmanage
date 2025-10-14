@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useParams } from 'next/navigation';
 import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter } from 'lucide-react';
 import MCQCreation from '@/components/MCQCreation';
-import AddParticipants from '@/components/AddParticipants'; // ADD THIS IMPORT
+import AddParticipants from '@/components/AddParticipants';
 import CouponPage from '@/components/CouponPage';
 import ChatRoom from '@/components/ChatRoom';
 import ParticipantsList from '@/components/ParticipantsList';
