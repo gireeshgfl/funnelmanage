@@ -21,7 +21,7 @@ export async function handleRequestComprehensive(request, schema) {
     }
     // Validate session cookie
     const cookieStore = await cookies();
-    const sessionCookie = cookieStore().get('accessToken');
+    const sessionCookie = cookieStore.get('accessToken');
     if (!sessionCookie) {
       return NextResponse.json({ error: 'Unauthorized: No session cookie found' }, { status: 401 });
     }

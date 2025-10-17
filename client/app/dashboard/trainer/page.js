@@ -4,11 +4,86 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { API_ROUTES } from '@/config';
 import { Calendar, BookOpen, Gift, Filter } from 'lucide-react';
+import { getSessions } from '@/hooks/session_management/sessionService';
 
 const TrainerDashboard = () => {
   const router = useRouter();
   const [userName, setUserName] = useState('');
   const [userLoading, setUserLoading] = useState(true);
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionsError, setSessionsError] = useState('');
+
+  // Helper functions defined at the top level of component
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  // Check if session date is in the future
+  const isFutureSession = (dateString) => {
+    if (!dateString) return false;
+    const sessionDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare dates only
+    return sessionDate >= today;
+  };
+
+  // Format date for display
+  const formatSessionDate = (session) => {
+    if (!session.date) return 'Date not set';
+    
+    try {
+      const date = new Date(session.date);
+      const time = session.time || '00:00';
+      
+      // Parse time if available
+      const [hours, minutes] = time.split(':').map(Number);
+      date.setHours(hours || 0, minutes || 0, 0, 0);
+
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Check if it's today
+      if (date.toDateString() === now.toDateString()) {
+        return `Today, ${date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true 
+        })}`;
+      }
+      
+      // Check if it's tomorrow
+      if (date.toDateString() === tomorrow.toDateString()) {
+        return `Tomorrow, ${date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true 
+        })}`;
+      }
+      
+      // For other dates
+      return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
+  // Get question count for display
+  const getQuestionCount = (session) => {
+    return session.questions ? session.questions.length : 0;
+  };
+
+  const navigateTo = (path) => {
+    router.push(path);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,13 +108,37 @@ const TrainerDashboard = () => {
     fetchData();
   }, [router]);
 
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        setSessionsLoading(true);
+        setSessionsError('');
+        const sessionsData = await getSessions();
+        setSessions(sessionsData || []);
+      } catch (error) {
+        console.error('Error fetching sessions:', error);
+        setSessionsError('Failed to load upcoming sessions');
+        setSessions([]);
+      } finally {
+        setSessionsLoading(false);
+      }
+    };
 
-  const navigateTo = (path) => {
-    router.push(path);
-  };
+    fetchSessions();
+  }, []);
+
+  // Filter and sort sessions to show only active upcoming ones, limited to 3
+  const upcomingSessions = sessions
+    .filter(session => {
+      // Show only active sessions that are not archived
+      const isActive = session.status === "Activate";
+      const isNotArchived = session.archived !== "True";
+      const hasFutureDate = isFutureSession(session.date);
+      
+      return isActive && isNotArchived && hasFutureDate;
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date)) // Sort by date ascending
+    .slice(0, 3); // Limit to 3 sessions
 
   if (userLoading) {
     return (
@@ -124,20 +223,59 @@ const TrainerDashboard = () => {
               View All
             </button>
           </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((session) => (
-              <div key={session} className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors cursor-pointer">
-                <div className="p-2 rounded-lg bg-primary-50 dark:bg-primary-900/30 mr-3">
-                  <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+          
+          {sessionsLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500"></div>
+              <span className="ml-2 text-gray-600 dark:text-gray-400">Loading sessions...</span>
+            </div>
+          ) : sessionsError ? (
+            <div className="text-center py-4 text-red-500 dark:text-red-400">
+              {sessionsError}
+            </div>
+          ) : upcomingSessions.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">No upcoming sessions</p>
+              <button
+                onClick={() => navigateTo('/dashboard/trainer/sessions')}
+                className="mt-2 text-primary-600 dark:text-primary-400 hover:underline text-sm"
+              >
+                Create your first session
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {upcomingSessions.map((session) => (
+                <div 
+                  key={session._id} 
+                  className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors cursor-pointer"
+                  onClick={() => navigateTo('/dashboard/trainer/sessions')}
+                >
+                  <div className="p-2 rounded-lg bg-primary-50 dark:bg-primary-900/30 mr-3">
+                    <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900 dark:text-white">
+                      {session.sessionName || `Training Session`}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {formatSessionDate(session)}
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      Topic: {session.topic || 'No topic specified'}
+                    </p>
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
+                    <div>{getQuestionCount(session)} questions</div>
+                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      {session.status === "Activate" ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900 dark:text-white">Training Session #{session}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Tomorrow, 10:00 AM - 12:00 PM</p>
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">12 students</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
