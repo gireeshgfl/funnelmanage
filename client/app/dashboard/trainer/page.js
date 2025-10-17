@@ -19,13 +19,23 @@ const TrainerDashboard = () => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
-  // Check if session date is in the future
-  const isFutureSession = (dateString) => {
-    if (!dateString) return false;
-    const sessionDate = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to compare dates only
-    return sessionDate >= today;
+  // Check if session date/time is in the future
+  const isFutureSession = (session) => {
+    if (!session.date) return false;
+    
+    try {
+      const sessionDate = new Date(session.date);
+      const time = session.time || '00:00';
+      
+      // Parse time if available
+      const [hours, minutes] = time.split(':').map(Number);
+      sessionDate.setHours(hours || 0, minutes || 0, 0, 0);
+
+      const now = new Date();
+      return sessionDate >= now;
+    } catch (error) {
+      return false;
+    }
   };
 
   // Format date for display
@@ -127,17 +137,15 @@ const TrainerDashboard = () => {
     fetchSessions();
   }, []);
 
-  // Filter and sort sessions to show only active upcoming ones, limited to 3
+  // Filter and sort sessions to show only future ones based on date/time only
   const upcomingSessions = sessions
-    .filter(session => {
-      // Show only active sessions that are not archived
-      const isActive = session.status === "Activate";
-      const isNotArchived = session.archived !== "True";
-      const hasFutureDate = isFutureSession(session.date);
-      
-      return isActive && isNotArchived && hasFutureDate;
+    .filter(session => isFutureSession(session))
+    .sort((a, b) => {
+      // Sort by date and time
+      const dateA = new Date(a.date + ' ' + (a.time || '00:00'));
+      const dateB = new Date(b.date + ' ' + (b.time || '00:00'));
+      return dateA - dateB;
     })
-    .sort((a, b) => new Date(a.date) - new Date(b.date)) // Sort by date ascending
     .slice(0, 3); // Limit to 3 sessions
 
   if (userLoading) {
@@ -237,11 +245,14 @@ const TrainerDashboard = () => {
             <div className="text-center py-8">
               <Calendar className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
               <p className="text-gray-500 dark:text-gray-400">No upcoming sessions</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                All your sessions are in the past
+              </p>
               <button
                 onClick={() => navigateTo('/dashboard/trainer/sessions')}
                 className="mt-2 text-primary-600 dark:text-primary-400 hover:underline text-sm"
               >
-                Create your first session
+                Create New Session
               </button>
             </div>
           ) : (
@@ -268,7 +279,11 @@ const TrainerDashboard = () => {
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
                     <div>{getQuestionCount(session)} questions</div>
-                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    <div className={`text-xs mt-1 ${
+                      session.status === "Activate" 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-orange-600 dark:text-orange-400'
+                    }`}>
                       {session.status === "Activate" ? 'Active' : 'Inactive'}
                     </div>
                   </div>
