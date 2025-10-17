@@ -55,16 +55,6 @@ const nextConfig = {
     return config;
   },
 
-  // Rewrites to handle API base path
-  async rewrites() {
-    return [
-      {
-        source: '/funnel-management/api/:path*',
-        destination: '/api/:path*',
-      },
-    ];
-  },
-
   async headers() {
     return [
       {
