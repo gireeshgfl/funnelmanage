@@ -5,7 +5,7 @@ export const metadata = {
   title: "Funnel Management",
   description: "Efficiently manage and streamline student assessments with our Funnel Management system. Conduct exams, evaluate performance, and filter top candidates for selection, training, or advancement.",
   icons: {
-    icon: "/favicon.png",
+    icon: "/funnel-management/favicon.png",
   },
 };
 
