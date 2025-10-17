@@ -118,7 +118,6 @@ class QuestionService:
         Only the creator (or an admin) may delete the question.
         """
         question_id = payload.get("query_params", {}).get('id')
-        print(question_id)
         question = self.question_dao.get_question_by_id(question_id)
         
         if not question or str(question.get('created_by')) != user_id:
@@ -315,11 +314,6 @@ class QuestionService:
                     students.append(participant)
                 else:
                     others.append(participant)
-
-            # Log the separated lists
-            logger.info(f"Trainers: {trainers}")
-            logger.info(f"Students: {students}")
-            logger.info(f"Others: {others}")
 
             # Return response in requested format
             return {
