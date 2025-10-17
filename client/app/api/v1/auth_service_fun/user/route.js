@@ -9,13 +9,11 @@ export async function GET(request) {
 
   try {
     const decoded = await verifyToken(token);
-    console.log(decoded.status)
     return NextResponse.json({
       user_id: decoded.user_id,
       username: decoded.sub,
       email: decoded.email,
       role: decoded.roles[0],
-      status: decoded.status
     });
   } catch (error) {
     console.error('Error verifying token:', error);

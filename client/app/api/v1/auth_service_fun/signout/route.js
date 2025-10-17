@@ -8,8 +8,8 @@ export async function DELETE(request) {
   try {
     const url = new URL(request.url);
     const { service, method } = await extractServiceAndMethod(url);
-
-    const cookieStore = cookies();
+    
+    const cookieStore = await cookies();
     const refreshToken = cookieStore.get('refreshToken');  // Get the refresh token from cookies
     if (!refreshToken) {
       return NextResponse.json({ message: 'Refresh token not found', status: 400 }, { status: 400 });
