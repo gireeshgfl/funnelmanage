@@ -15,7 +15,8 @@ import logger from '@lib/logger'; // Adjust the path as necessary
  */
 export async function handlePost(body = null,service, method,queryParams = null) {
   try {
-    const sessionCookie = cookies().get('accessToken');
+    const cookieStore = await cookies(); 
+    const sessionCookie = cookieStore().get('accessToken');
     if (!sessionCookie) {
       logger.error('Unauthorized: No session cookie found');
       return NextResponse.json(

@@ -20,7 +20,8 @@ export async function handleRequestComprehensive(request, schema) {
       return NextResponse.json({ error: "Schema is not provided" }, { status: 500 });
     }
     // Validate session cookie
-    const sessionCookie = cookies().get('accessToken');
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore().get('accessToken');
     if (!sessionCookie) {
       return NextResponse.json({ error: 'Unauthorized: No session cookie found' }, { status: 401 });
     }
