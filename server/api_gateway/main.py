@@ -76,6 +76,11 @@ async def favicon():
 async def authorization_middleware(request: Request, call_next):
     logger.debug("Request received: %s %s, Headers: %s", request.method, request.url.path, dict(request.headers))
 
+    # Print the full URL
+    full_url = str(request.url)
+    logger.debug("Full URL: %s", full_url)
+    print(full_url)
+
     if request.url.path == "/favicon.ico":
         logger.debug("Skipping middleware for favicon")
         return await call_next(request)
