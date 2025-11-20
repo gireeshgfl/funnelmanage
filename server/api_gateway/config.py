@@ -7,7 +7,6 @@ load_dotenv()
 # AMQP Configuration
 CONFIG = {
     'AMQP_URI': os.getenv('AMQP_URI', 'amqp://guest:guest@localhost'),
-    'rpc_exchange': os.getenv('RPC_EXCHANGE', 'funnel_management_rpc')
 }
 
 # Active API Versions
