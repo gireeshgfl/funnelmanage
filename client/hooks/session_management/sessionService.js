@@ -2,6 +2,11 @@ import { API_ROUTES } from '@/config';
 
 export const getSessions = async () => {
   const response = await fetch(API_ROUTES.SESSION_SERVICE.GET_SESSIONS, { cache: 'no-store' });
+
+  if (response.status === 204) {
+    return [];
+  }
+
   if (!response.ok) {
     throw new Error(`Error fetching sessions: ${response.statusText}`);
   }

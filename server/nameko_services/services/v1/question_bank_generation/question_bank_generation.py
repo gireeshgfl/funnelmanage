@@ -232,7 +232,7 @@ class QuestionService:
             topic['_id'] = str(topic['_id'])
         
         if not topics:
-            return {'message': "No topics found", 'data': None, 'status': 200}
+            return {'message': "No topics found", 'data': [], 'status': 200}
         
         return {'message': "Topics fetched successfully", 'data': topics, 'status': 200}
 

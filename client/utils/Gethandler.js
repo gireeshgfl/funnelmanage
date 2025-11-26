@@ -32,6 +32,10 @@ export async function handleGetRequest(service, method, queryParams = null) {
       return NextResponse.json({ error: errorData.message || 'An error occurred' }, { status: response.status });
     }
 
+    if (response.status === 204) {
+      return { status: 204 };
+    }
+
     const responseData = await response.json();
     return responseData;
 
@@ -69,6 +73,10 @@ export async function handleDeleteRequest(service, method, queryParams = null) {
     if (response.status === 401) {
       const errorData = await response.json();
       return NextResponse.json({ error: errorData.message || 'An error occurred' }, { status: response.status });
+    }
+
+    if (response.status === 204) {
+      return { status: 204 };
     }
 
     const responseData = await response.json();
