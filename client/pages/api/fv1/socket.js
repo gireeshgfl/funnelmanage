@@ -45,6 +45,7 @@ export default async function handler(req, res) {
   try {
     if (!res.socket.server.io) {
       debug('Initializing Socket.IO server...');
+      debug(`Socket Path: /socket.io`);
 
       const io = new Server(res.socket.server, {
         cors: {
@@ -52,8 +53,26 @@ export default async function handler(req, res) {
           methods: ['GET', 'POST'],
         },
         path: '/socket.io',
+        addTrailingSlash: false,
       });
       res.socket.server.io = io;
+
+      // Debug engine events
+      io.engine.on("connection", (rawSocket) => {
+        debug(`🔌 ENGINE CONNECTION: ${rawSocket.id} (transport: ${rawSocket.transport.name})`);
+
+        rawSocket.on("close", (reason) => {
+          debug(`🔌 ENGINE CLOSE: ${rawSocket.id} (reason: ${reason})`);
+        });
+      });
+
+      io.engine.on("initial_headers", (headers, req) => {
+        debug(`🔌 ENGINE HEADERS: ${req.url}`);
+      });
+
+      io.engine.on("connection_error", (err) => {
+        debug(`🔌 ENGINE ERROR: ${err.code} - ${err.message}`);
+      });
 
       // Debug all outgoing socket emissions
       const originalEmit = io.emit;
