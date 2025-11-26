@@ -22,15 +22,13 @@ export const Input = React.forwardRef(({
         type={type}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition duration-150 ${
-          error
+        className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition duration-150 ${error
             ? 'border-red-500 dark:border-red-400'
             : 'border-gray-300 dark:border-gray-600'
-        } ${
-          disabled
+          } ${disabled
             ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-70'
             : 'bg-white dark:bg-gray-800'
-        } text-gray-900 dark:text-gray-100`}
+          } text-gray-900 dark:text-gray-100`}
         {...props}
       />
       {error && (
@@ -62,15 +60,13 @@ export const Select = React.forwardRef(({
       <select
         ref={ref}
         disabled={disabled}
-        className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition duration-150 ${
-          error
+        className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition duration-150 ${error
             ? 'border-red-500 dark:border-red-400'
             : 'border-gray-300 dark:border-gray-600'
-        } ${
-          disabled
+          } ${disabled
             ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-70'
             : 'bg-white dark:bg-gray-800'
-        } text-gray-900 dark:text-gray-100`}
+          } text-gray-900 dark:text-gray-100`}
         {...props}
       >
         <option value="">{placeholder}</option>
@@ -158,6 +154,7 @@ export const Button = ({
   variant = 'primary',
   size = 'medium',
   disabled = false,
+  loading = false,
   fullWidth = false,
   onClick,
   type = 'button',
@@ -179,16 +176,16 @@ export const Button = ({
     large: 'px-6 py-3 text-lg',
   };
 
+  const isDisabled = disabled || loading;
+
   return (
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`rounded-lg font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-        variantClasses[variant]
-      } ${sizeClasses[size]} ${
-        disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
-      } ${fullWidth ? 'w-full' : ''} ${className}`}
+      disabled={isDisabled}
+      className={`rounded-lg font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${variantClasses[variant]
+        } ${sizeClasses[size]} ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+        } ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
     >
       {children}
@@ -205,9 +202,8 @@ export const Card = ({
 }) => {
   return (
     <div
-      className={`rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden ${
-        hoverEffect ? 'hover:shadow-md transition-shadow duration-200' : ''
-      } ${className}`}
+      className={`rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden ${hoverEffect ? 'hover:shadow-md transition-shadow duration-200' : ''
+        } ${className}`}
       {...props}
     >
       {children}
@@ -216,9 +212,9 @@ export const Card = ({
 };
 
 // Modal Component
-export const Modal = ({ 
-  isOpen, 
-  onClose, 
+export const Modal = ({
+  isOpen,
+  onClose,
   children,
   className = '',
   overlayClassName = '',
@@ -233,11 +229,11 @@ export const Modal = ({
   };
 
   return (
-    <div 
+    <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 ${overlayClassName}`}
       onClick={handleOverlayClick}
     >
-      <div 
+      <div
         className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto ${className}`}
       >
         {children}
