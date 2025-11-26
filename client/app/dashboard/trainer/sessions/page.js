@@ -1,17 +1,17 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Archive, RefreshCw, Plus, Edit2, Trash2, Power, ArrowRight } from 'lucide-react';
+import { Calendar, Archive, Plus, Edit2, Trash2, Power, ArrowRight } from 'lucide-react';
 import SessionFormModal from '@/components/session_management/SessionFormModal';
 import SessionList from '@/components/session_management/SessionList';
-import { 
-  getSessions, 
-  createSession, 
-  updateSession, 
-  deleteSession, 
-  archiveSession, 
-  unarchiveSession, 
-  activateSession 
+import {
+  getSessions,
+  createSession,
+  updateSession,
+  deleteSession,
+  archiveSession,
+  unarchiveSession,
+  activateSession
 } from '@/hooks/session_management/sessionService';
 import { useFunnel } from '@/hooks/useFunnel';
 import { getTopics } from '@/hooks/session_management/topicService';
@@ -147,15 +147,13 @@ const SessionManagementPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Session Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
           {filterType !== 'active' && (
             <p className="text-gray-600 dark:text-gray-400 mt-1">
               Archived sessions
             </p>
           )}
-          </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={() => {
@@ -168,7 +166,7 @@ const SessionManagementPage = () => {
             <Plus className="h-5 w-5" />
             <span>New Session</span>
           </button>
-          
+
           <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <button
               onClick={() => setFilterType('active')}
@@ -189,14 +187,8 @@ const SessionManagementPage = () => {
               </div>
             </button>
           </div>
-          
-          <button
-            onClick={fetchData}
-            className="flex items-center justify-center p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className="h-5 w-5" />
-          </button>
+
+
         </div>
       </div>
 
