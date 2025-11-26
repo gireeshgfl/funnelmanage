@@ -221,6 +221,7 @@ const IndexPage = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
   const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [questionQueue, setQuestionQueue] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const chatContainerRef = useRef(null);
   const questionContainerRef = useRef(null);
@@ -228,9 +229,8 @@ const IndexPage = () => {
   const { sessionId } = useParams();
   const { socket } = useContext(SocketContext);
 
-  const handleQuestion = (questionData, isMCQ = false) => {
-    console.log('Handling question:', questionData, 'isMCQ:', isMCQ);
-    const formattedQuestion = {
+  const formatQuestion = (questionData, isMCQ = false) => {
+    return {
       id: questionData.id || Date.now().toString(),
       question: questionData.question || '',
       questionText: isMCQ ? questionData.question : (questionData.questionText || questionData.question || ''),
@@ -241,8 +241,12 @@ const IndexPage = () => {
       answerMediaUrls: Array.isArray(questionData.answerMediaUrls) ? questionData.answerMediaUrls : [],
       correctAnswerIndex: isMCQ ? questionData.correctAnswerIndex : undefined
     };
-    setCurrentQuestion(formattedQuestion);
-    setSelectedAnswer(null);
+  };
+
+  const addToQueue = (questionData, isMCQ = false) => {
+    console.log('Adding to queue:', questionData, 'isMCQ:', isMCQ);
+    const formatted = formatQuestion(questionData, isMCQ);
+    setQuestionQueue(prev => [...prev, formatted]);
     setActiveTab('question');
   };
 
@@ -255,14 +259,13 @@ const IndexPage = () => {
 
     socket.on('pushQuestion', (questionData) => {
       console.log('Received pushQuestion:', questionData);
-      handleQuestion(questionData, false);
+      addToQueue(questionData, false);
     });
 
     socket.on('broadcastMCQs', ({ mcqArray, sessionId: receivedSessionId }) => {
       console.log('Received broadcastMCQs:', { mcqArray, sessionId: receivedSessionId });
       if (receivedSessionId === sessionId && mcqArray.length > 0) {
-        // Handle the first MCQ (or extend to handle multiple if needed)
-        handleQuestion(mcqArray[0], true);
+        mcqArray.forEach(mcq => addToQueue(mcq, true));
       }
     });
 
@@ -271,6 +274,15 @@ const IndexPage = () => {
       socket.off('broadcastMCQs');
     };
   }, [socket, sessionId]);
+
+  useEffect(() => {
+    if (!currentQuestion && questionQueue.length > 0) {
+      const nextQuestion = questionQueue[0];
+      setCurrentQuestion(nextQuestion);
+      setQuestionQueue(prev => prev.slice(1));
+      setSelectedAnswer(null);
+    }
+  }, [currentQuestion, questionQueue]);
 
   // Sync points when socket becomes available
   useEffect(() => {
@@ -423,9 +435,9 @@ const IndexPage = () => {
               >
                 <span className="relative">
                   Question
-                  {currentQuestion && (
+                  {(currentQuestion || questionQueue.length > 0) && (
                     <span className="absolute -right-5 -top-2 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs">
-                      !
+                      {questionQueue.length + (currentQuestion ? 1 : 0)}
                     </span>
                   )}
                 </span>
