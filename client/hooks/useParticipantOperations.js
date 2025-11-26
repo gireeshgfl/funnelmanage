@@ -1,6 +1,6 @@
 // In useParticipantOperations.js
 import { useState, useCallback } from "react";
-import axios from "axios";
+import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from "@/config";
 
 export function useSessionParticipantOperations(sessionId) {
@@ -25,13 +25,13 @@ export function useSessionParticipantOperations(sessionId) {
         setLoading(true);
         setFeedbackMessage("");
 
-        const res = await axios.post(
+        const res = await apiClient.post(
           API_ROUTES.SESSION_SERVICE.ADD_PARTICIPANTS,
-          { 
+          {
             sessionId,
             emails
           },
-          { 
+          {
             headers: { "Content-Type": "application/json" },
             withCredentials: true
           }

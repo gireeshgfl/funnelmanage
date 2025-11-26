@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import apiClient from '@/utils/axiosinterceptor';
 import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
 import { Input, Button, Card } from '@components/ui/components';
@@ -106,7 +106,7 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
     }
 
     try {
-      const response = await axios.post(
+      const response = await apiClient.post(
         API_ROUTES.SESSION_SERVICE.SAVE_MCQ,
         {
           mcqArray: mcqQuestions,
@@ -226,11 +226,10 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
         </div>
         {pushStatus && (
           <div
-            className={`mb-4 p-2 rounded-lg text-sm ${
-              pushStatus.success
+            className={`mb-4 p-2 rounded-lg text-sm ${pushStatus.success
                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                 : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-            }`}
+              }`}
           >
             {pushStatus.message}
           </div>
