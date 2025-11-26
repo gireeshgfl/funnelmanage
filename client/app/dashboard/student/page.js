@@ -97,7 +97,7 @@ const StudentDashboard = () => {
           variant="primary"
           size="large"
           className="w-full"
-          onClick={() => handleButtonClick('/dashboard/student/practice-tests')}
+          onClick={() => handleButtonClick('/dashboard/student/credits')}
         >
           Credit Store
         </Button>
