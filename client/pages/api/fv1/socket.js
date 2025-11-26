@@ -53,7 +53,6 @@ export default async function handler(req, res) {
           methods: ['GET', 'POST'],
         },
         path: '/socket.io',
-        addTrailingSlash: false,
       });
       res.socket.server.io = io;
 
