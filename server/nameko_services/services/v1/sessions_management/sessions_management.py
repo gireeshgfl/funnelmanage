@@ -115,7 +115,7 @@ class SessionService:
         else:
             response = {
                 "message": "Session not found",
-                "status": 404
+                "status": 204
             }
         print(f"get_sessions response: {response}")
         return response
