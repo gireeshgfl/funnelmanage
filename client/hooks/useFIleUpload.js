@@ -15,6 +15,7 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import { API_ROUTES } from '@/config';
 
 const useFileUpload = () => {
   const [uploading, setUploading] = useState(false);
@@ -55,8 +56,8 @@ const useFileUpload = () => {
       console.log("[useFileUpload] Payload for upload:", payload);
 
       const endpoint = existingFileKey
-        ? '/api/v1/media_service/replace_course_image'
-        : '/api/v1/media_service/upload';
+        ? API_ROUTES.MEDIA_SERVICE.REPLACE_COURSE_IMAGE
+        : API_ROUTES.MEDIA_SERVICE.UPLOAD;
 
       console.log("[useFileUpload] Sending POST request to:", endpoint);
 
@@ -106,7 +107,7 @@ const useFileUpload = () => {
           if (file.type.startsWith('video/')) {
             try {
               const hlsResponse = await axios.post(
-                '/api/v1/video_service/convert_to_hls',
+                API_ROUTES.VIDEO_SERVICE.CONVERT_TO_HLS,
                 {
                   videoName: file.name,
                   key,

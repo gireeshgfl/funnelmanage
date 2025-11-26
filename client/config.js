@@ -103,4 +103,19 @@ export const API_ROUTES = {
     GET_PARTICIPANTS: `${BASE_URL}/funnel_service/get_participants/`,
     FUNNELLING: `${BASE_URL}/funnel_service/funnelling/`,
   },
+
+  // ===========================
+  // 9. Media Service
+  // ===========================
+  MEDIA_SERVICE: {
+    UPLOAD: `${BASE_URL}/media_service/upload/`,
+    REPLACE_COURSE_IMAGE: `${BASE_URL}/media_service/replace_course_image/`,
+  },
+
+  // ===========================
+  // 10. Video Service
+  // ===========================
+  VIDEO_SERVICE: {
+    CONVERT_TO_HLS: `${BASE_URL}/video_service/convert_to_hls/`,
+  },
 };
