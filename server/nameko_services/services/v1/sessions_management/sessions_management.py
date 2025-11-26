@@ -9,7 +9,7 @@ from nameko.events import EventDispatcher
 from datetime import datetime
 from bson.objectid import ObjectId
 
-logger = setup_logging('session_service', log_level=logging.ERROR)
+logger = setup_logging('session_service', log_level=logging.INFO)
 
 class SessionService:
     name = 'session_service'
@@ -107,16 +107,18 @@ class SessionService:
     def get_sessions(self, user_id, payload):
         result = self.session_service_dao.get_sessions_by_user(user_id)
         if result:
-            return {
+            response = {
                 "message": "Session(s) fetched successfully",
                 "data": result,
                 "status": 200
             }
         else:
-            return {
+            response = {
                 "message": "Session not found",
                 "status": 404
             }
+        print(f"get_sessions response: {response}")
+        return response
 
     @rpc
     @error_handler
