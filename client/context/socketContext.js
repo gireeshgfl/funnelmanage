@@ -23,7 +23,7 @@ const SocketProvider = ({ children }) => {
         console.log('Initializing socket with user ID:', userId, 'role:', role, 'username:', username);
 
         // Optional: if backend requires this for routing/warm-up
-        fetch('/funnel-management/api/fv1/socket')
+        fetch('/funnel-management/api/fv1/socket/')
           .then((response) => {
             console.log('WebSocket endpoint response:', response.status);
 
