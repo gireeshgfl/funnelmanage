@@ -11,7 +11,7 @@ const debug = (message, data = null) => {
       console.log(`[DEBUG] ${message}`, JSON.stringify(data, null, 2));
     } else {
       console.log(`[DEBUG] ${message}`);
-    }``
+    } ``
   }
 };
 
@@ -23,11 +23,11 @@ const emittedEvents = {
       emittedEvents[key] = 0;
     }
     emittedEvents[key]++;
-    
+
     if (emittedEvents[key] > 1) {
       console.warn(`⚠️ DUPLICATE EVENT: ${key} emitted ${emittedEvents[key]} times`);
     }
-    
+
     return emittedEvents[key];
   },
   reset: () => {
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
 
       // Debug all outgoing socket emissions
       const originalEmit = io.emit;
-      io.emit = function(eventName, ...args) {
+      io.emit = function (eventName, ...args) {
         debug(`🔴 SOCKET GLOBAL EMIT: ${eventName}`);
         return originalEmit.apply(this, [eventName, ...args]);
       };
@@ -66,15 +66,15 @@ export default async function handler(req, res) {
         try {
           // Patch socket.emit for debugging
           const originalSocketEmit = socket.emit;
-          socket.emit = function(eventName, ...args) {
-            debug(`🟠 SOCKET DIRECT EMIT (${socket.id}): ${eventName}`, 
-                  args[0] ? args[0] : 'No data');
+          socket.emit = function (eventName, ...args) {
+            debug(`🟠 SOCKET DIRECT EMIT (${socket.id}): ${eventName}`,
+              args[0] ? args[0] : 'No data');
             return originalSocketEmit.apply(this, [eventName, ...args]);
           };
 
           // Patch socket.to/in for debugging
           const originalTo = socket.to;
-          socket.to = function(room) {
+          socket.to = function (room) {
             debug(`🟡 SOCKET TO ROOM (${socket.id}): ${room}`);
             return originalTo.apply(this, [room]);
           };
@@ -98,10 +98,10 @@ export default async function handler(req, res) {
           // Send initial participants list to new user only
           debug(`Sending initialParticipants to new user ${userId}`);
           socket.emit('initialParticipants', Object.values(participants));
-          
+
           // Initialize session tracking for this user
           socket.hasJoinedSession = false;
-          
+
           // Don't emit userJoined until they join a session
           // We'll do this only when they set a sessionId
 
@@ -109,28 +109,28 @@ export default async function handler(req, res) {
           socket.on('setSessionId', (data) => {
             const { sessionId } = data;
             debug(`Received setSessionId from socket ${socket.id}: ${sessionId}`);
-          
+
             // Check if the user is already in the requested session
             if (socket.sessionId === sessionId) {
               debug(`User ${userId} is already in session ${sessionId}, ignoring.`);
               return;
             }
-          
+
             // If user already in a session, leave it first
             if (socket.sessionId) {
               debug(`User ${userId} leaving previous session ${socket.sessionId}`);
               socket.leave(socket.sessionId);
             }
-          
+
             socket.sessionId = sessionId;
             socket.join(sessionId);
-          
+
             // Update participant's sessionId
             if (participants[socket.userId]) {
               participants[socket.userId].sessionId = sessionId;
             }
             debug(`Socket ${socket.id} joined room ${sessionId}`);
-          
+
             if (!socket.hasJoinedSession) {
               debug(`First time session join for ${userId}, emitting userJoined via eventBus`);
               socket.hasJoinedSession = true;
@@ -153,7 +153,7 @@ export default async function handler(req, res) {
           socket.on('updateEmojis', (data) => {
             const { emojis } = data;
             debug(`Received updateEmojis from ${userId}:`, emojis);
-            
+
             if (participants[socket.userId]) {
               // Update local state with complete participant data
               participants[socket.userId] = {
@@ -161,10 +161,10 @@ export default async function handler(req, res) {
                 emojis: Array.isArray(emojis) ? emojis : [emojis].filter(Boolean),
                 sessionId: socket.sessionId // Ensure sessionId is included
               };
-              
+
               // Broadcast via eventBus with complete participant data
               debug(`Broadcasting updateEmojis via eventBus for ${userId}`);
-              eventBus.emit('updateEmojis', { 
+              eventBus.emit('updateEmojis', {
                 ...participants[socket.userId], // Include all participant properties
                 socketId: socket.id
               });
@@ -175,16 +175,16 @@ export default async function handler(req, res) {
           socket.on('updateStudentPoints', (data) => {
             const { points } = data;
             debug(`Received updateStudentPoints from ${userId}: ${points}`);
-            
+
             if (participants[socket.userId]) {
               // Update local state first
               participants[socket.userId].points = points;
-              
+
               // Then broadcast via eventBus
               debug(`Broadcasting updateStudentPoints via eventBus for ${userId}`);
-              eventBus.emit('updateStudentPoints', { 
-                studentId: socket.userId, 
-                points, 
+              eventBus.emit('updateStudentPoints', {
+                studentId: socket.userId,
+                points,
                 sessionId: socket.sessionId,
                 socketId: socket.id
               });
@@ -195,7 +195,7 @@ export default async function handler(req, res) {
           socket.on('clearAllEmojis', () => {
             const room = socket.sessionId;
             debug(`Received clearAllEmojis from socket ${socket.id} for room: ${room}`);
-            
+
             if (room) {
               // Clear emojis for every participant in the same room
               Object.keys(participants).forEach((uid) => {
@@ -203,15 +203,15 @@ export default async function handler(req, res) {
                   participants[uid].emojis = [];
                 }
               });
-              
+
               // Emit via eventBus with originating socketId
               debug(`Broadcasting clearAllEmojis via eventBus for room ${room}`);
-              eventBus.emit('clearAllEmojis', { 
+              eventBus.emit('clearAllEmojis', {
                 sessionId: room,
                 socketId: socket.id,
                 participants: Object.values(participants)
-                    .filter(p => p.sessionId === room)
-                    .map(p => ({userId: p.userId}))
+                  .filter(p => p.sessionId === room)
+                  .map(p => ({ userId: p.userId }))
               });
             }
           });
@@ -220,28 +220,28 @@ export default async function handler(req, res) {
           socket.on('disconnect', (reason) => {
             debug(`User disconnected: ${userId}. Reason: ${reason}`);
             const sessionId = socket.sessionId || (participants[userId] && participants[userId].sessionId);
-            
+
             debug(`Broadcasting userLeft via eventBus for ${userId}`);
-            eventBus.emit('userLeft', { 
-              userId, 
-              sessionId, 
-              socketId: socket.id 
+            eventBus.emit('userLeft', {
+              userId,
+              sessionId,
+              socketId: socket.id
             });
-            
+
             delete participants[userId];
           });
-          
+
           // Handle chat messages
           socket.on('chatmessage', (data) => {
             debug(`Received chat message from ${userId}:`, data);
             const room = data.sessionId || socket.sessionId;
-            
+
             if (room) {
               debug(`Broadcasting chatmessage via eventBus for room ${room}`);
-              eventBus.emit('chatmessage', { 
-                ...data, 
-                sessionId: room, 
-                socketId: socket.id 
+              eventBus.emit('chatmessage', {
+                ...data,
+                sessionId: room,
+                socketId: socket.id
               });
             } else {
               console.warn('No sessionId provided for chat message.');
@@ -250,28 +250,28 @@ export default async function handler(req, res) {
 
           socket.on('pushMCQs', (mcqArray) => {
             debug(`MCQs received from ${userId}`);
-            eventBus.emit('pushMCQs', { 
-              mcqArray, 
-              sessionId: socket.sessionId, 
-              socketId: socket.id 
+            eventBus.emit('pushMCQs', {
+              mcqArray,
+              sessionId: socket.sessionId,
+              socketId: socket.id
             });
           });
 
           socket.on('pushQuestion', (questionData) => {
             debug(`Question received from ${userId}`);
-            eventBus.emit('pushQuestion', { 
-              questionData, 
-              sessionId: socket.sessionId, 
-              socketId: socket.id 
+            eventBus.emit('pushQuestion', {
+              questionData,
+              sessionId: socket.sessionId,
+              socketId: socket.id
             });
           });
 
           socket.on('pushCoupons', (coupons) => {
             debug(`Coupons received from ${socket.userId}`);
-            eventBus.emit('pushCoupons', { 
-              coupons, 
-              sessionId: socket.sessionId, 
-              socketId: socket.id 
+            eventBus.emit('pushCoupons', {
+              coupons,
+              sessionId: socket.sessionId,
+              socketId: socket.id
             });
           });
 
@@ -287,7 +287,7 @@ export default async function handler(req, res) {
 
       // Patch eventBus.emit for debugging
       const originalEventBusEmit = eventBus.emit;
-      eventBus.emit = function(eventName, ...args) {
+      eventBus.emit = function (eventName, ...args) {
         debug(`🟢 EVENTBUS EMIT: ${eventName}`, args[0] ? args[0] : 'No data');
         return originalEventBusEmit.apply(this, [eventName, ...args]);
       };
@@ -295,12 +295,12 @@ export default async function handler(req, res) {
       // EventBus listeners: broadcast events to a room, excluding the originating socket
       eventBus.on('userJoined', (userDetails) => {
         const { userId, sessionId, socketId, isFirstJoin } = userDetails;
-        
+
         // Track this event to detect duplicates
         const count = emittedEvents.trackEvent('userJoined', userId, sessionId || 'global');
-        
+
         debug(`EVENTBUS HANDLER: userJoined for ${userId} in ${sessionId || 'global'} (count: ${count})`);
-        
+
         if (sessionId) {
           // Only broadcast to the specific room
           debug(`Broadcasting userJoined to room ${sessionId} excluding socket ${socketId}`);
@@ -314,7 +314,7 @@ export default async function handler(req, res) {
 
       eventBus.on('sessionChanged', ({ userId, sessionId, socketId }) => {
         debug(`EVENTBUS HANDLER: sessionChanged for ${userId} to ${sessionId}`);
-        
+
         // Notify others in the new session about this user
         io.in(sessionId).except(socketId).emit('userJoined', participants[userId]);
       });
@@ -322,9 +322,9 @@ export default async function handler(req, res) {
       eventBus.on('userLeft', ({ userId, sessionId, socketId }) => {
         // Track this event to detect duplicates
         const count = emittedEvents.trackEvent('userLeft', userId, sessionId || 'global');
-        
+
         debug(`EVENTBUS HANDLER: userLeft for ${userId} from ${sessionId || 'global'} (count: ${count})`);
-        
+
         if (sessionId) {
           debug(`Broadcasting userLeft to room ${sessionId}`);
           io.in(sessionId).emit('userLeft', { userId, sessionId });
@@ -336,12 +336,12 @@ export default async function handler(req, res) {
 
       eventBus.on('updateEmojis', (participantData) => {
         const { userId, sessionId, socketId } = participantData;
-        
+
         // Track this event to detect duplicates
         const count = emittedEvents.trackEvent('updateEmojis', userId, sessionId || 'global');
-        
+
         debug(`EVENTBUS HANDLER: updateEmojis for ${userId} in ${sessionId || 'global'} (count: ${count})`);
-        
+
         // Prepare complete participant data for broadcast
         const broadcastData = {
           userId,
@@ -351,7 +351,7 @@ export default async function handler(req, res) {
           points: participantData.points || 0,
           sessionId: participantData.sessionId
         };
-      
+
         if (sessionId) {
           debug(`Broadcasting updateEmojis to room ${sessionId} except ${socketId}`);
           io.in(sessionId).except(socketId).emit('updateEmojis', broadcastData);
@@ -363,14 +363,14 @@ export default async function handler(req, res) {
 
       eventBus.on('clearAllEmojis', ({ sessionId, socketId, participants }) => {
         debug(`EVENTBUS HANDLER: clearAllEmojis for room ${sessionId}`);
-        
+
         if (sessionId) {
           debug(`Broadcasting clearAllEmojis to room ${sessionId} except ${socketId}`);
           io.in(sessionId).except(socketId).emit('clearAllEmojis', {
             cleared: true,
             participants
           });
-          
+
           // Also send to originator with different flag
           debug(`Confirming clearAllEmojis to originator ${socketId}`);
           io.to(socketId).emit('clearAllEmojis', {
@@ -383,26 +383,26 @@ export default async function handler(req, res) {
       eventBus.on('updateStudentPoints', ({ studentId, points, sessionId, socketId }) => {
         // Track this event to detect duplicates
         const count = emittedEvents.trackEvent('updateStudentPoints', studentId, sessionId || 'global');
-        
+
         debug(`EVENTBUS HANDLER: updateStudentPoints for ${studentId} in ${sessionId || 'global'} (count: ${count})`);
-        
+
         if (sessionId) {
           debug(`Broadcasting updateStudentPoints to room ${sessionId} except ${socketId}`);
-          io.in(sessionId).except(socketId).emit('updateStudentPoints', { studentId, points });
+          io.in(sessionId).except(socketId).emit('updateStudentPoints', { studentId, points, sessionId });
         } else {
           debug(`Broadcasting updateStudentPoints globally except ${socketId}`);
-          io.except(socketId).emit('updateStudentPoints', { studentId, points });
+          io.except(socketId).emit('updateStudentPoints', { studentId, points, sessionId });
         }
       });
 
       eventBus.on('chatmessage', (data) => {
         const { userId, sessionId, socketId } = data;
-        
+
         // Track this event to detect duplicates
         const count = userId ? emittedEvents.trackEvent('chatmessage', userId, sessionId || 'global') : 0;
-        
+
         debug(`EVENTBUS HANDLER: chatmessage in ${sessionId || 'global'} ${userId ? `(count: ${count})` : ''}`);
-        
+
         if (sessionId) {
           debug(`Broadcasting chatmessage to room ${sessionId} except ${socketId}`);
           io.in(sessionId).except(socketId).emit('chatmessage', data);
@@ -414,7 +414,7 @@ export default async function handler(req, res) {
 
       eventBus.on('pushMCQs', ({ mcqArray, sessionId, socketId }) => {
         debug(`EVENTBUS HANDLER: pushMCQs for room ${sessionId || 'global'}`);
-        
+
         if (sessionId) {
           debug(`Broadcasting MCQs to room ${sessionId} except ${socketId}`);
           io.in(sessionId).except(socketId).emit('broadcastMCQs', mcqArray);
@@ -426,7 +426,7 @@ export default async function handler(req, res) {
 
       eventBus.on('pushQuestion', ({ questionData, sessionId, socketId }) => {
         debug(`EVENTBUS HANDLER: pushQuestion for room ${sessionId || 'global'}`);
-        
+
         if (sessionId) {
           debug(`Broadcasting question to room ${sessionId} except ${socketId}`);
           io.in(sessionId).except(socketId).emit('pushQuestion', questionData);
@@ -438,7 +438,7 @@ export default async function handler(req, res) {
 
       eventBus.on('pushCoupons', ({ coupons, sessionId, socketId }) => {
         debug(`EVENTBUS HANDLER: pushCoupons for room ${sessionId || 'global'}`);
-        
+
         if (sessionId) {
           debug(`Broadcasting coupons to room ${sessionId} except ${socketId}`);
           io.in(sessionId).except(socketId).emit('broadcastCoupons', coupons);
@@ -450,9 +450,9 @@ export default async function handler(req, res) {
 
       eventBus.on('sessionUpdated', (updatedData) => {
         const { sessionId, socketId } = updatedData;
-        
+
         debug(`EVENTBUS HANDLER: sessionUpdated for room ${sessionId || 'global'}`);
-        
+
         if (sessionId) {
           debug(`Broadcasting sessionUpdated to room ${sessionId} except ${socketId}`);
           io.in(sessionId).except(socketId).emit('sessionUpdated', updatedData);

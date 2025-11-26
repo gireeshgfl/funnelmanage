@@ -9,13 +9,13 @@ import { API_ROUTES } from '@/config';
 import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
 
-const QuestionDisplay = ({ 
-  question, 
-  studentUserName, 
-  studentUserId, 
-  sessionId, 
-  selectedAnswer, 
-  setSelectedAnswer, 
+const QuestionDisplay = ({
+  question,
+  studentUserName,
+  studentUserId,
+  sessionId,
+  selectedAnswer,
+  setSelectedAnswer,
   onCorrectAnswer,
   onClearQuestion,
   fetchPoints
@@ -32,7 +32,7 @@ const QuestionDisplay = ({
 
   const handleSubmit = async () => {
     if (selectedAnswer === null) return;
-  
+
     try {
       const response = await fetch(API_ROUTES.SESSION_SERVICE.SAVE_POINTS, {
         method: 'POST',
@@ -47,14 +47,14 @@ const QuestionDisplay = ({
           sessionId,
         }),
       });
-  
+
       if (response.ok) {
         const result = await response.json();
         setPointsEarned(result.data.pointsEarned || 0);
         setSelectedAnswerText(result.data.selectedAnswerText);
         setCorrectAnswerText(result.data.correctAnswerText);
         setShowResults(true);
-  
+
         if (result.message === "Correct Answer. Points saved successfully") {
           if (onCorrectAnswer) {
             onCorrectAnswer(true);
@@ -62,7 +62,7 @@ const QuestionDisplay = ({
         }
 
         await fetchPoints();
-  
+
         setTimeout(() => {
           setShowResults(false);
           onClearQuestion();
@@ -86,17 +86,17 @@ const QuestionDisplay = ({
             <div className="p-6 space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0 p-2 rounded-full bg-green-100 dark:bg-green-900/50">
-                  <svg 
-                    className={`h-6 w-6 ${pointsEarned > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
+                  <svg
+                    className={`h-6 w-6 ${pointsEarned > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d={pointsEarned > 0 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} 
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d={pointsEarned > 0 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"}
                     />
                   </svg>
                 </div>
@@ -145,9 +145,9 @@ const QuestionDisplay = ({
             ) : question.questionType === 'image-text' ? (
               <>
                 {question.question && (
-                  <img 
-                    src={question.question} 
-                    alt="Question" 
+                  <img
+                    src={question.question}
+                    alt="Question"
                     className="w-full max-h-64 rounded-lg mb-4 object-contain"
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -159,9 +159,9 @@ const QuestionDisplay = ({
             ) : question.questionType === 'image-image' ? (
               <>
                 {question.question && (
-                  <img 
-                    src={question.question} 
-                    alt="Question" 
+                  <img
+                    src={question.question}
+                    alt="Question"
                     className="w-full max-h-64 rounded-lg mb-4 object-contain"
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -176,19 +176,18 @@ const QuestionDisplay = ({
           </div>
           <div className="grid grid-cols-2 gap-3 mb-6">
             {question.answers.map((answer, index) => (
-              <div 
+              <div
                 key={index}
-                className={`p-4 min-h-[120px] rounded-lg cursor-pointer border-2 transition-colors ${
-                  selectedAnswer === index
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                    : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                }`}
+                className={`p-4 min-h-[120px] rounded-lg cursor-pointer border-2 transition-colors ${selectedAnswer === index
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                  : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  }`}
                 onClick={() => handleSelectAnswer(index)}
               >
                 {answer.text}
                 {question.answerMediaUrls?.[index] && (
-                  <img 
-                    src={question.answerMediaUrls[index]} 
+                  <img
+                    src={question.answerMediaUrls[index]}
                     alt={`Option ${index + 1}`}
                     className="mt-2 max-h-32 w-full object-contain rounded"
                     onError={(e) => {
@@ -250,6 +249,10 @@ const IndexPage = () => {
   useEffect(() => {
     if (!socket) return;
 
+    // Join the session immediately
+    console.log('Emitting setSessionId for session:', sessionId);
+    socket.emit('setSessionId', { sessionId });
+
     socket.on('pushQuestion', (questionData) => {
       console.log('Received pushQuestion:', questionData);
       handleQuestion(questionData, false);
@@ -268,6 +271,14 @@ const IndexPage = () => {
       socket.off('broadcastMCQs');
     };
   }, [socket, sessionId]);
+
+  // Sync points when socket becomes available
+  useEffect(() => {
+    if (socket && pointsEarned > 0) {
+      console.log('Socket available, syncing points:', pointsEarned);
+      socket.emit('updateStudentPoints', { points: pointsEarned });
+    }
+  }, [socket, pointsEarned]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -368,9 +379,9 @@ const IndexPage = () => {
 
   return (
     <div className="h-full w-full flex flex-col">
-      <CelebrationOverlay 
-        isOpen={showCelebration} 
-        confettiProps={{ colors: ['#f00', '#0f0', '#00f'] }} 
+      <CelebrationOverlay
+        isOpen={showCelebration}
+        confettiProps={{ colors: ['#f00', '#0f0', '#00f'] }}
       />
       <div className="w-full max-w-6xl mx-auto p-4 flex-grow flex items-stretch h-full">
         <div className="w-full h-full bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 relative flex flex-col">
@@ -383,8 +394,8 @@ const IndexPage = () => {
                 </svg>
                 <span className="font-medium">Reward Points: {pointsEarned}</span>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => router.push('/dashboard/student')}
                 className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               >
@@ -397,20 +408,18 @@ const IndexPage = () => {
           </div>
           <div className="flex justify-center mb-4 relative">
             <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 relative w-full max-w-md">
-              <div 
-                className={`absolute top-1 h-[calc(100%-8px)] bg-white dark:bg-gray-600 rounded-md shadow-sm transition-all duration-300 ease-in-out ${
-                  activeTab === 'question' 
-                    ? 'left-1 w-[calc(50%-4px)]' 
-                    : 'left-[calc(50%+4px)] w-[calc(50%-8px)]'
-                }`}
+              <div
+                className={`absolute top-1 h-[calc(100%-8px)] bg-white dark:bg-gray-600 rounded-md shadow-sm transition-all duration-300 ease-in-out ${activeTab === 'question'
+                  ? 'left-1 w-[calc(50%-4px)]'
+                  : 'left-[calc(50%+4px)] w-[calc(50%-8px)]'
+                  }`}
               />
               <button
                 onClick={() => setActiveTab('question')}
-                className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${
-                  activeTab === 'question'
-                    ? 'text-gray-900 dark:text-white'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
+                className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${activeTab === 'question'
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
               >
                 <span className="relative">
                   Question
@@ -423,11 +432,10 @@ const IndexPage = () => {
               </button>
               <button
                 onClick={() => setActiveTab('chat')}
-                className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${
-                  activeTab === 'chat'
-                    ? 'text-gray-900 dark:text-white'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
+                className={`relative z-10 px-8 py-3 rounded-md text-sm font-medium transition-colors duration-200 flex-1 ${activeTab === 'chat'
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
               >
                 Chats
               </button>
@@ -435,12 +443,12 @@ const IndexPage = () => {
           </div>
           <div className="flex-grow flex flex-col overflow-hidden">
             {activeTab === 'question' ? (
-              <div 
-                className="flex-grow overflow-y-auto scrollable-content" 
+              <div
+                className="flex-grow overflow-y-auto scrollable-content"
                 ref={questionContainerRef}
               >
                 {currentQuestion ? (
-                  <QuestionDisplay 
+                  <QuestionDisplay
                     key={currentQuestion.id}
                     question={currentQuestion}
                     studentUserName={studentUserName}
@@ -461,8 +469,8 @@ const IndexPage = () => {
             ) : (
               <div className="flex-grow flex flex-col overflow-hidden">
                 <EmojiSelector />
-                <div 
-                  className="flex-grow overflow-y-auto scrollable-content" 
+                <div
+                  className="flex-grow overflow-y-auto scrollable-content"
                   ref={chatContainerRef}
                 >
                   <ChatRoom

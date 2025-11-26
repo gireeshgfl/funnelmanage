@@ -27,7 +27,7 @@ const SocketProvider = ({ children }) => {
           .then((response) => {
             console.log('WebSocket endpoint response:', response.status);
 
-            socketInstance = io('wss://eduvocate.in', {
+            socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || undefined, {
               path: '/socket.io',
               transports: ['websocket'],
               query: { userId, role, username },

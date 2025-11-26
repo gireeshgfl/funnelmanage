@@ -18,11 +18,11 @@ const ParticipantsList = ({ currentSessionId }) => {
 
     const handleInitialParticipants = (participantsList) => {
       console.log("🚀 initialParticipants", participantsList);
-      setParticipants(participantsList.filter(p => p.sessionId === currentSessionId));
+      setParticipants(participantsList.filter(p => String(p.sessionId) === String(currentSessionId)));
     };
 
     const handleUserJoined = async (userDetails) => {
-      if (userDetails.role === 'student' && userDetails.sessionId === currentSessionId) {
+      if (userDetails.role === 'student' && String(userDetails.sessionId) === String(currentSessionId)) {
         console.log("👤 userJoined", userDetails);
 
         setParticipants(prev => {
@@ -47,18 +47,18 @@ const ParticipantsList = ({ currentSessionId }) => {
 
     const handleUserLeft = ({ userId, sessionId }) => {
       console.log("❌ userLeft triggered", userId, sessionId);
-      if (sessionId === currentSessionId) {
+      if (String(sessionId) === String(currentSessionId)) {
         setParticipants(prev => prev.filter(p => p.userId !== userId));
       }
     };
 
     const handleUpdateEmojis = ({ userId, emojis, sessionId }) => {
       console.log("🔄 Handling emoji update for", userId, "with emojis:", emojis);
-      if (sessionId === currentSessionId) {
-        setParticipants(prev => 
-          prev.map(p => 
-            p.userId === userId 
-              ? { ...p, emojis: Array.isArray(emojis) ? emojis : [emojis] } 
+      if (String(sessionId) === String(currentSessionId)) {
+        setParticipants(prev =>
+          prev.map(p =>
+            p.userId === userId
+              ? { ...p, emojis: Array.isArray(emojis) ? emojis : [emojis] }
               : p
           )
         );
@@ -66,7 +66,7 @@ const ParticipantsList = ({ currentSessionId }) => {
     };
 
     const handleUpdateStudentPoints = ({ studentId, points, sessionId }) => {
-      if (sessionId === currentSessionId) {
+      if (String(sessionId) === String(currentSessionId)) {
         setParticipants(prev =>
           prev.map(p =>
             p.userId === studentId ? { ...p, points } : p
@@ -93,28 +93,28 @@ const ParticipantsList = ({ currentSessionId }) => {
   const handleClearAllEmojis = () => {
     if (socket) {
       // Optimistic UI update
-      setParticipants(prev => 
+      setParticipants(prev =>
         prev.map(p => ({ ...p, emojis: [] }))
       );
       socket.emit('clearAllEmojis');
     }
   };
-  
+
   // Add this effect to handle server confirmation
   useEffect(() => {
     if (!socket) return;
-  
+
     const handleClearAll = ({ confirmed, participants }) => {
       if (confirmed) {
         console.log('Server confirmed clearAllEmojis');
-        setParticipants(prev => 
+        setParticipants(prev =>
           prev.map(p => ({ ...p, emojis: [] }))
         );
       }
     };
-  
+
     socket.on('clearAllEmojis', handleClearAll);
-  
+
     return () => {
       socket.off('clearAllEmojis', handleClearAll);
     };
