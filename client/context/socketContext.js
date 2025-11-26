@@ -28,7 +28,7 @@ const SocketProvider = ({ children }) => {
             console.log('WebSocket endpoint response:', response.status);
 
             socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || undefined, {
-              path: '/socket.io',
+              path: '/funnel-management/socket.io',
               transports: ['websocket'],
               query: { userId, role, username },
               reconnectionAttempts: 5,

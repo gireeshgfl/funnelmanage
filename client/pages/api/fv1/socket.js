@@ -45,14 +45,14 @@ export default async function handler(req, res) {
   try {
     if (!res.socket.server.io) {
       debug('Initializing Socket.IO server...');
-      debug(`Socket Path: /socket.io`);
+      debug(`Socket Path: /funnel-management/socket.io`);
 
       const io = new Server(res.socket.server, {
         cors: {
           origin: process.env.ALLOWED_ORIGIN || '*',
           methods: ['GET', 'POST'],
         },
-        path: '/socket.io',
+        path: '/funnel-management/socket.io',
       });
       res.socket.server.io = io;
 
