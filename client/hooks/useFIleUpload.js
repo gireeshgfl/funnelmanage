@@ -15,7 +15,6 @@
 
 import { useState } from 'react';
 import axios from 'axios';
-import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from '@/config';
 
 const useFileUpload = () => {
@@ -63,7 +62,7 @@ const useFileUpload = () => {
       console.log("[useFileUpload] Sending POST request to:", endpoint);
 
       // Request presigned URL from backend
-      const response = await apiClient.post(endpoint, payload, {
+      const response = await axios.post(endpoint, payload, {
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -107,7 +106,7 @@ const useFileUpload = () => {
           // Only trigger HLS conversion if the uploaded file is a video
           if (file.type.startsWith('video/')) {
             try {
-              const hlsResponse = await apiClient.post(
+              const hlsResponse = await axios.post(
                 API_ROUTES.VIDEO_SERVICE.CONVERT_TO_HLS,
                 {
                   videoName: file.name,

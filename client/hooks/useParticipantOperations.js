@@ -1,6 +1,6 @@
 // In useParticipantOperations.js
 import { useState, useCallback } from "react";
-import apiClient from '@/utils/axiosinterceptor';
+import axios from "axios";
 import { API_ROUTES } from "@/config";
 
 export function useSessionParticipantOperations(sessionId) {
@@ -25,7 +25,7 @@ export function useSessionParticipantOperations(sessionId) {
         setLoading(true);
         setFeedbackMessage("");
 
-        const res = await apiClient.post(
+        const res = await axios.post(
           API_ROUTES.SESSION_SERVICE.ADD_PARTICIPANTS,
           {
             sessionId,

@@ -1,6 +1,5 @@
 // app/api/auth_service/refresh_token/route.js
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { AuthRefreshRequest } from '@/utils/auth/authRequests';
 import { extractServiceAndMethod } from '@/utils/requestUtils';
 import logger from '@/lib/logger';
@@ -55,26 +54,6 @@ export async function POST(request) {
     const accessTokenExpiry = 15 * 60;
     // 7 days
     const refreshTokenExpiry = 7 * 24 * 60 * 60;
-
-    const cookieStore = await cookies();
-
-    cookieStore.set('accessToken', responseData.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: accessTokenExpiry,
-      path: '/',
-    });
-
-    if (responseData.refresh_token) {
-      cookieStore.set('refreshToken', responseData.refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: refreshTokenExpiry,
-        path: '/',
-      });
-    }
 
     // Return new tokens & expiration in JSON
     return NextResponse.json({

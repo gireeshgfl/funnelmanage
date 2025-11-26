@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import apiClient from '@/utils/axiosinterceptor';
+import axios from 'axios';
 import { API_ROUTES } from '@/config';
 
 export const useSessionQuestionQueue = () => {
@@ -12,7 +12,7 @@ export const useSessionQuestionQueue = () => {
     setError(null);
 
     try {
-      const response = await apiClient.post(
+      const response = await axios.post(
         API_ROUTES.SESSION_SERVICE.GET_QUESTION_QUEUE,
         { sessionId },
         {
@@ -46,7 +46,7 @@ export const useSessionQuestionQueue = () => {
     }
 
     try {
-      const response = await apiClient.post(
+      const response = await axios.post(
         API_ROUTES.SESSION_SERVICE.SAVE_QUESTION_QUEUE,
         {
           questions,
