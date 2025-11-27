@@ -1061,5 +1061,33 @@ class InSessionQuestionsDAO(BaseDAO):
         result = self.insert_one(mcq_data)
         mcq_data["_id"] = result.inserted_id
         return mcq_data
+    
+    def bulk_create_mcqs(self, mcq_array, session_id, user_id):
+        
+        saved_count = 0
+        failed_count = 0
+        
+        for mcq in mcq_array:
+            try:
+                question_data = {
+                    "question": mcq.get("question"),
+                    "answers": mcq.get("answers"),
+                    "correctAnswerIndex": mcq.get("correctAnswerIndex"),
+                    "sessionId": session_id,
+                    "created_by": ObjectId(user_id),
+                    "created_at": datetime.utcnow(),
+                    "type": "MCQ"
+                }
+                
+                result = self.insert_one(question_data)
+                if result.inserted_id:
+                    saved_count += 1
+                else:
+                    failed_count += 1
+            except Exception as e:
+                print(f"Error saving MCQ: {e}")
+                failed_count += 1
+        
+        return {"saved_count": saved_count, "failed_count": failed_count}
 
 

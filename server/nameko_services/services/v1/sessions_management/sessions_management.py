@@ -437,28 +437,29 @@ class SessionService:
     @rbac_check(required_roles=['trainer'])
     @serialize_result
     def save_mcq(self, user_id, data):
-        """
-        RPC method to save an MCQ question created during a session.
-        """
-        # Attach metadata
-        mcq_data = data.copy()
-        mcq_data["created_by"] = ObjectId(user_id)
-        mcq_data["created_at"] = datetime.utcnow()
-        mcq_data["type"] = "MCQ"
 
-        # Save to DB
-        result = self.in_session_questions_dao.create_mcq(mcq_data)
-
-        if result.get('_id'):
-            return {
-                "message": "MCQ saved successfully",
-                "status": 200
-            }
+        mcq_array = data.get('mcqArray', [])
+        session_id = data.get('sessionId')
+        
+        if not mcq_array:
+            return {"message": "No MCQ questions provided", "status": 400}
+        
+        if not session_id:
+            return {"message": "Session ID is required", "status": 400}
+        
+        # Delegate to DAO
+        result = self.in_session_questions_dao.bulk_create_mcqs(mcq_array, session_id, user_id)
+        
+        saved_count = result["saved_count"]
+        failed_count = result["failed_count"]
+        
+        if saved_count > 0:
+            message = f"Successfully saved {saved_count} MCQ(s)"
+            if failed_count > 0:
+                message += f", {failed_count} failed"
+            return {"message": message, "status": 200}
         else:
-            return {
-                "message": "Failed to save MCQ",
-                "status": 500
-            }
+            return {"message": "Failed to save MCQs", "status": 500}
     
     @rpc
     @error_handler
