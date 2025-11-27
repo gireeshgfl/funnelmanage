@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
-import apiClient from '@/utils/axiosinterceptor';
 import { SocketContext } from '@/context/socketContext';
-import { API_ROUTES } from '@/config';
 import { Input, Button, Card } from '@components/ui/components';
 import { CheckCircle, Edit2, Trash2, Plus, Send, List } from 'lucide-react';
+import { saveSessionQuestions } from '@/hooks/session_management/questionService';
 
 const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
   const { socket, connectionStatus } = useContext(SocketContext);
@@ -106,21 +105,11 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
     }
 
     try {
-      const response = await apiClient.post(
-        API_ROUTES.SESSION_SERVICE.SAVE_MCQ,
-        {
-          mcqArray: mcqQuestions,
-          sessionId,
-          trainerUserId,
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      const data = await saveSessionQuestions(mcqQuestions, sessionId);
 
-      if (response.status === 200 || response.status === 201) {
-        console.log('MCQs saved successfully:', response.data);
-        const savedMCQs = response.data.mcqArray || mcqQuestions;
+      if (data) {
+        console.log('MCQs saved successfully:', data);
+        const savedMCQs = data.mcqArray || mcqQuestions;
 
         setMCQQuestions([]);
         setQuestionText('');
