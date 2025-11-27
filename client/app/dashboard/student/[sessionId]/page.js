@@ -6,6 +6,7 @@ import ChatRoom from '@/components/ChatRoom';
 import EmojiSelector from '@/components/EmojiSelector';
 import CelebrationOverlay from '@/components/CelebrationOverlay';
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
 
@@ -34,22 +35,18 @@ const QuestionDisplay = ({
     if (selectedAnswer === null) return;
 
     try {
-      const response = await fetch(API_ROUTES.SESSION_SERVICE.SAVE_POINTS, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionId: question.id,
-          selectedAnswerIndex: selectedAnswer,
-          selectedAnswerText: question.answers[selectedAnswer].text,
-          studentUserName,
-          studentUserId,
-          questionText: question.question || question.questionText,
-          sessionId,
-        }),
+      const response = await apiClient.post(API_ROUTES.SESSION_SERVICE.SAVE_POINTS, {
+        questionId: question.id,
+        selectedAnswerIndex: selectedAnswer,
+        selectedAnswerText: question.answers[selectedAnswer].text,
+        studentUserName,
+        studentUserId,
+        questionText: question.question || question.questionText,
+        sessionId,
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      if (response.status === 200 || response.status === 201) {
+        const result = response.data;
         setPointsEarned(result.data.pointsEarned || 0);
         setSelectedAnswerText(result.data.selectedAnswerText);
         setCorrectAnswerText(result.data.correctAnswerText);
@@ -68,7 +65,7 @@ const QuestionDisplay = ({
           onClearQuestion();
         }, 3000);
       } else {
-        console.error('Error in API response:', await response.text());
+        console.error('Error in API response:', response.statusText);
       }
     } catch (error) {
       console.error('Error submitting question:', error);
@@ -316,12 +313,10 @@ const IndexPage = () => {
 
   const fetchUserInfo = async () => {
     try {
-      const response = await fetch(`${API_ROUTES.AUTH_SERVICE.USER}`, {
-        credentials: 'include',
-      });
+      const response = await apiClient.get(API_ROUTES.AUTH_SERVICE.USER);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200) {
+        const data = response.data;
         setStudentUserName(capitalizeFirstLetter(data.username));
         setStudentUserId(data.user_id);
         await fetchPoints(data.user_id);
@@ -339,16 +334,10 @@ const IndexPage = () => {
 
   const fetchPoints = async (userId) => {
     try {
-      const response = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_POINTS}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      const response = await apiClient.get(API_ROUTES.SESSION_SERVICE.GET_POINTS);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200) {
+        const data = response.data;
         setPointsEarned(data.pointsEarned);
       }
     } catch (error) {

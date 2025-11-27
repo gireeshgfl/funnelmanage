@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from '@/config';
 
 export function useFunnel() {
@@ -13,7 +13,7 @@ export function useFunnel() {
   useEffect(() => {
     async function fetchParticipants() {
       try {
-        const res = await axios.get(API_ROUTES.FUNNEL_SERVICE.GET_PARTICIPANTS);
+        const res = await apiClient.get(API_ROUTES.FUNNEL_SERVICE.GET_PARTICIPANTS);
         if (res.data?.status === 200 && Array.isArray(res.data.data)) {
           setParticipants(res.data.data);
         } else {
@@ -35,7 +35,7 @@ export function useFunnel() {
     setFunnellingResponse(null);
     setFunnellingMessage(null);
     try {
-      const res = await axios.get(`${API_ROUTES.FUNNEL_SERVICE.FUNNELLING}?id=${id}`);
+      const res = await apiClient.get(`${API_ROUTES.FUNNEL_SERVICE.FUNNELLING}?id=${id}`);
       if (res.data?.status === 200) {
         setFunnellingResponse(res.data);
         return res.data;

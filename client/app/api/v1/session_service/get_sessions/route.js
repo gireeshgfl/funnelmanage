@@ -17,6 +17,8 @@ export async function GET(request, { params }) {
             return NextResponse.json({ error: result.error }, { status: 400 });
         } else if (result.status === 404) {
             return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        } else if (result.status === 401) {
+            return NextResponse.json({ error: result.error || 'Unauthorized' }, { status: 401 });
         } else {
             return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
         }

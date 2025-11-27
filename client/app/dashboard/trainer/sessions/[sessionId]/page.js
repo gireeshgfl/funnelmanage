@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import apiClient from '@/utils/axiosinterceptor';
 import { useParams } from 'next/navigation';
 import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter } from 'lucide-react';
 import MCQCreation from '@/components/MCQCreation';
@@ -35,12 +35,12 @@ const SessionWorkspace = () => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('color-theme');
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
+
       if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
         setDarkMode(true);
         document.documentElement.classList.add('dark');
       }
-      
+
       // Prevent page scrolling
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
@@ -52,12 +52,10 @@ const SessionWorkspace = () => {
 
     const fetchTrainerData = async () => {
       try {
-        const response = await fetch(API_ROUTES.AUTH_SERVICE.USER, {
-          credentials: 'include',
-        });
+        const response = await apiClient.get(API_ROUTES.AUTH_SERVICE.USER);
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.status === 200) {
+          const data = response.data;
           setTrainerName(data.username.charAt(0).toUpperCase() + data.username.slice(1));
         } else {
           setError('Authentication required');
@@ -72,7 +70,7 @@ const SessionWorkspace = () => {
     };
 
     fetchTrainerData();
-    
+
     // Cleanup function to reset styles when component unmounts
     return () => {
       if (typeof window !== 'undefined') {
@@ -110,15 +108,14 @@ const SessionWorkspace = () => {
     setIsEndingSession(true);
     try {
       const [response] = await Promise.all([
-        axios.delete(`${API_ROUTES.CHAT_SERVICE.DELETE_CHAT}?id=${sessionId}`, {
+        apiClient.delete(`${API_ROUTES.CHAT_SERVICE.DELETE_CHAT}?id=${sessionId}`, {
           headers: {
             'Content-Type': 'application/json',
           },
-          withCredentials: true,
         }),
-        new Promise(resolve => setTimeout(resolve, 1000)) 
+        new Promise(resolve => setTimeout(resolve, 1000))
       ]);
-  
+
       if (response.status === 200) {
         console.log('Session ended successfully!');
         router.push('/dashboard/trainer/sessions');
@@ -133,13 +130,13 @@ const SessionWorkspace = () => {
       setIsEndingSession(false);
     }
   };
-  
+
   const handlePushContent = (type, content) => {
     if (socket) {
       const event = type === 'mcq' ? 'pushMCQs' : 'pushCoupons';
-      socket.emit(event, { 
-        [type === 'mcq' ? 'mcqArray' : 'coupons']: content, 
-        sessionId 
+      socket.emit(event, {
+        [type === 'mcq' ? 'mcqArray' : 'coupons']: content,
+        sessionId
       });
     }
   };
@@ -188,7 +185,7 @@ const SessionWorkspace = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <Filter className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-                <button 
+                <button
                   onClick={() => router.push('/dashboard/trainer')}
                   className="ml-2 text-xl font-bold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 focus:outline-none"
                 >
@@ -235,10 +232,10 @@ const SessionWorkspace = () => {
                   aria-haspopup="true"
                 >
                   <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                    <svg 
-                      className="h-5 w-5 text-primary-600 dark:text-primary-400" 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className="h-5 w-5 text-primary-600 dark:text-primary-400"
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 极 00-7 7h14a7 7 0 00-7-7z" />
@@ -263,7 +260,7 @@ const SessionWorkspace = () => {
           </div>
         </div>
       </header>
-  
+
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Participants (narrower) */}
@@ -276,7 +273,7 @@ const SessionWorkspace = () => {
             <ParticipantsList currentSessionId={sessionId} />
           </div>
         </div>
-  
+
         {/* Middle Section - Question Bank (wider) */}
         <div className="w-[35rem] h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
@@ -287,7 +284,7 @@ const SessionWorkspace = () => {
             <QuestionBank />
           </div>
         </div>
-  
+
         {/* Right Section - Session Workspace */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-[30rem]">
           {/* Workspace Toolbar */}
@@ -296,7 +293,7 @@ const SessionWorkspace = () => {
               <MessageSquare className="h-5 w-5 text-primary-500" />
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Session Workspace</h2>
             </div>
-            
+
             <div className="relative group">
               {activeFeature ? (
                 <button
@@ -339,14 +336,14 @@ const SessionWorkspace = () => {
               )}
             </div>
           </div>
-  
+
           {/* Dynamic Content Area */}
           {activeFeature ? (
             <>
               {/* Feature Content Area (when active) */}
               <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-gray-800">
                 {activeFeature === 'MCQCreation' && (
-                  <MCQCreation pushMCQsToChat={(mcqs) => handlePushContent('mcq', mcqs)} sessionId={sessionId}/>
+                  <MCQCreation pushMCQsToChat={(mcqs) => handlePushContent('mcq', mcqs)} sessionId={sessionId} />
                 )}
                 {activeFeature === 'AddParticipants' && (
                   <AddParticipants sessionId={sessionId} />
@@ -358,10 +355,10 @@ const SessionWorkspace = () => {
               {/* Chat Room (reduced height when feature is active) */}
               <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-48 flex-shrink-0">
                 <div className="h-full overflow-y-auto">
-                  <ChatRoom 
-                    sessionId={sessionId} 
-                    trainerUserName={trainerName} 
-                    isTrainer={true} 
+                  <ChatRoom
+                    sessionId={sessionId}
+                    trainerUserName={trainerName}
+                    isTrainer={true}
                   />
                 </div>
               </div>
@@ -369,10 +366,10 @@ const SessionWorkspace = () => {
           ) : (
             /* Full-height Chat Room (when no feature is active) */
             <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-800">
-              <ChatRoom 
-                sessionId={sessionId} 
-                trainerUserName={trainerName} 
-                isTrainer={true} 
+              <ChatRoom
+                sessionId={sessionId}
+                trainerUserName={trainerName}
+                isTrainer={true}
               />
             </div>
           )}

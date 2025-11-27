@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 
 export const useQuestionOperations = (fetchQuestions, setFeedbackMessage, topicId) => {
 
@@ -20,15 +21,7 @@ export const useQuestionOperations = (fetchQuestions, setFeedbackMessage, topicI
     try {
       const questionData = { ...newQuestion, topicId };
 
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.SAVE_QUESTIONS}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error adding question: ${response.statusText}`);
-      }
+      await apiClient.post(API_ROUTES.QUESTION_SERVICE.SAVE_QUESTIONS, questionData);
 
       setFeedbackMessage('Question added successfully!');
       fetchQuestions();
@@ -48,15 +41,7 @@ export const useQuestionOperations = (fetchQuestions, setFeedbackMessage, topicI
       // Prepare the updated question data by adding the question ID.
       let questionData = { ...updatedQuestion, _id: questionId };
 
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.UPDATE_QUESTION}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error updating question: ${response.statusText}`);
-      }
+      await apiClient.put(API_ROUTES.QUESTION_SERVICE.UPDATE_QUESTION, questionData);
 
       setFeedbackMessage('Question updated successfully!');
       fetchQuestions();
@@ -68,14 +53,7 @@ export const useQuestionOperations = (fetchQuestions, setFeedbackMessage, topicI
 
   const handleDelete = useCallback(async (questionId) => {
     try {
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.DELETE_QUESTION}?id=${questionId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error deleting question: ${response.statusText}`);
-      }
+      await apiClient.delete(`${API_ROUTES.QUESTION_SERVICE.DELETE_QUESTION}?id=${questionId}`);
 
       setFeedbackMessage('Question deleted successfully!');
       fetchQuestions();

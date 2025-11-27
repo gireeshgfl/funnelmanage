@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from '@/config';
 import { useEmailOperations } from '@/hooks/useEmailOperations';
 
@@ -19,9 +19,9 @@ export default function LoginPage() {
 
   const handleRoleBasedRedirect = (role) => {
     console.log('Redirecting with role:', role);
-    
+
     const validRoles = ['trainer', 'student', 'super-admin'];
-    
+
     if (role && validRoles.includes(role.toLowerCase())) {
       router.replace(`/dashboard/${role.toLowerCase()}`);
     } else {
@@ -37,13 +37,13 @@ export default function LoginPage() {
 
     try {
       console.log('Submitting login request...');
-      const response = await axios.post(API_ROUTES.AUTH_SERVICE.SIGNIN, {
+      const response = await apiClient.post(API_ROUTES.AUTH_SERVICE.SIGNIN, {
         email,
         password,
       });
 
       console.log('Login response:', response.data);
-      
+
       if (response.status === 200 && response.data.status === 200) {
         console.log('Login successful, role:', response.data.role);
         setTimeout(() => {
@@ -67,17 +67,17 @@ export default function LoginPage() {
 
     try {
       console.log('Requesting participant access...');
-      
+
       // Use the hook to send the email
       const response = await sendEmail(participantEmail);
-      
+
       console.log('Participant access response:', response);
-      
+
       if (response) {
         // Store the participant email and temporary session data
         localStorage.setItem('participantEmail', participantEmail);
         localStorage.setItem('tempSession', JSON.stringify(response.session));
-        
+
         // Redirect to session page
         if (response.redirectUrl) {
           router.replace(response.redirectUrl);

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import axios from "axios";
+import apiClient from "@/utils/axiosinterceptor";
 import { API_ROUTES } from "@/config";
 
 export function useEmailOperations() {
@@ -11,7 +11,7 @@ export function useEmailOperations() {
     setFeedbackMessage("");
 
     try {
-      const response = await axios.post(API_ROUTES.AUTH_SERVICE.PARTICIPANTS_TOKEN, {
+      const response = await apiClient.post(API_ROUTES.AUTH_SERVICE.PARTICIPANTS_TOKEN, {
         email,
       });
 

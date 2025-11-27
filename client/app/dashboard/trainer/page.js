@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from '@/config';
 import { Calendar, BookOpen, Gift, Filter } from 'lucide-react';
 import { getSessions } from '@/hooks/session_management/sessionService';
@@ -22,11 +22,11 @@ const TrainerDashboard = () => {
   // Check if session date/time is in the future
   const isFutureSession = (session) => {
     if (!session.date) return false;
-    
+
     try {
       const sessionDate = new Date(session.date);
       const time = session.time || '00:00';
-      
+
       // Parse time if available
       const [hours, minutes] = time.split(':').map(Number);
       sessionDate.setHours(hours || 0, minutes || 0, 0, 0);
@@ -41,11 +41,11 @@ const TrainerDashboard = () => {
   // Format date for display
   const formatSessionDate = (session) => {
     if (!session.date) return 'Date not set';
-    
+
     try {
       const date = new Date(session.date);
       const time = session.time || '00:00';
-      
+
       // Parse time if available
       const [hours, minutes] = time.split(':').map(Number);
       date.setHours(hours || 0, minutes || 0, 0, 0);
@@ -53,25 +53,25 @@ const TrainerDashboard = () => {
       const now = new Date();
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      
+
       // Check if it's today
       if (date.toDateString() === now.toDateString()) {
-        return `Today, ${date.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
+        return `Today, ${date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: true 
+          hour12: true
         })}`;
       }
-      
+
       // Check if it's tomorrow
       if (date.toDateString() === tomorrow.toDateString()) {
-        return `Tomorrow, ${date.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
+        return `Tomorrow, ${date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: true 
+          hour12: true
         })}`;
       }
-      
+
       // For other dates
       return date.toLocaleDateString('en-US', {
         weekday: 'short',
@@ -100,9 +100,7 @@ const TrainerDashboard = () => {
       try {
         setUserLoading(true);
         // Fetch user info
-        const userResponse = await axios.get(API_ROUTES.AUTH_SERVICE.USER, {
-          withCredentials: true,
-        });
+        const userResponse = await apiClient.get(API_ROUTES.AUTH_SERVICE.USER);
         setUserName(capitalizeFirstLetter(userResponse.data.username));
       } catch (error) {
         if (error.response?.status === 401) {
@@ -224,14 +222,14 @@ const TrainerDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upcoming Sessions</h2>
-            <button 
+            <button
               onClick={() => navigateTo('/dashboard/trainer/sessions')}
               className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
             >
               View All
             </button>
           </div>
-          
+
           {sessionsLoading ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500"></div>
@@ -258,8 +256,8 @@ const TrainerDashboard = () => {
           ) : (
             <div className="space-y-4">
               {upcomingSessions.map((session) => (
-                <div 
-                  key={session._id} 
+                <div
+                  key={session._id}
                   className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors cursor-pointer"
                   onClick={() => navigateTo('/dashboard/trainer/sessions')}
                 >
@@ -279,11 +277,10 @@ const TrainerDashboard = () => {
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
                     <div>{getQuestionCount(session)} questions</div>
-                    <div className={`text-xs mt-1 ${
-                      session.status === "Activate" 
-                        ? 'text-green-600 dark:text-green-400' 
+                    <div className={`text-xs mt-1 ${session.status === "Activate"
+                        ? 'text-green-600 dark:text-green-400'
                         : 'text-orange-600 dark:text-orange-400'
-                    }`}>
+                      }`}>
                       {session.status === "Activate" ? 'Active' : 'Inactive'}
                     </div>
                   </div>

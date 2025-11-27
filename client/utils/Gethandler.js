@@ -7,7 +7,7 @@ export async function handleGetRequest(service, method, queryParams = null) {
     const sessionCookie = cookieStore.get('accessToken');
 
     if (!sessionCookie) {
-      return NextResponse.json({ error: 'Unauthorized: No session cookie found' }, { status: 401 });
+      return { error: 'Unauthorized: No session cookie found', status: 401 };
     }
 
     // Construct the base URL
@@ -29,7 +29,7 @@ export async function handleGetRequest(service, method, queryParams = null) {
 
     if (response.status === 401) {
       const errorData = await response.json();
-      return NextResponse.json({ error: errorData.message || 'An error occurred' }, { status: response.status });
+      return { error: errorData.message || 'An error occurred', status: 401 };
     }
 
     if (response.status === 204) {
@@ -41,7 +41,7 @@ export async function handleGetRequest(service, method, queryParams = null) {
 
   } catch (error) {
     console.error('Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return { error: error.message || 'Internal Server Error', status: 500 };
   }
 }
 
@@ -51,7 +51,7 @@ export async function handleDeleteRequest(service, method, queryParams = null) {
     const sessionCookie = cookieStore.get('accessToken');
 
     if (!sessionCookie) {
-      return NextResponse.json({ error: 'Unauthorized: No session cookie found' }, { status: 401 });
+      return { error: 'Unauthorized: No session cookie found', status: 401 };
     }
 
     // Construct the base URL
@@ -72,7 +72,7 @@ export async function handleDeleteRequest(service, method, queryParams = null) {
 
     if (response.status === 401) {
       const errorData = await response.json();
-      return NextResponse.json({ error: errorData.message || 'An error occurred' }, { status: response.status });
+      return { error: errorData.message || 'An error occurred', status: 401 };
     }
 
     if (response.status === 204) {
@@ -84,6 +84,6 @@ export async function handleDeleteRequest(service, method, queryParams = null) {
 
   } catch (error) {
     console.error('Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return { error: error.message || 'Internal Server Error', status: 500 };
   }
 }

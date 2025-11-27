@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import apiClient from '@/utils/axiosinterceptor';
 import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
 import { Input, Button, Card } from '@components/ui/components';
@@ -106,7 +106,7 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
     }
 
     try {
-      const response = await axios.post(
+      const response = await apiClient.post(
         API_ROUTES.SESSION_SERVICE.SAVE_MCQ,
         {
           mcqArray: mcqQuestions,
@@ -115,7 +115,6 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
         },
         {
           headers: { 'Content-Type': 'application/json' },
-          withCredentials: true,
         }
       );
 

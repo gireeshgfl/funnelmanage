@@ -3,6 +3,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import io from 'socket.io-client';
 import { AuthContext } from './AuthContext';
+import apiClient from '@/utils/axiosinterceptor';
 
 const SocketContext = createContext();
 
@@ -23,7 +24,7 @@ const SocketProvider = ({ children }) => {
         console.log('Initializing socket with user ID:', userId, 'role:', role, 'username:', username);
 
         // Optional: if backend requires this for routing/warm-up
-        fetch('/funnel-management/api/fv1/socket/')
+        apiClient.get('/funnel-management/api/fv1/socket/')
           .then((response) => {
             console.log('WebSocket endpoint response:', response.status);
 

@@ -10,7 +10,7 @@ export async function AuthPostRequest(data, service, method) {
     // Proceed with normal synchronous call
     const response = await fetch(`${process.env.API_BASE_URL}/get/${service}/${method}`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -29,10 +29,11 @@ export async function AuthGetRequest(service, method, token) {
     // console.log('Service:', service);
     // console.log('Method:', method);
 
-    const sessionCookie = cookies().get('accessToken');
-        
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('accessToken');
+
     if (!sessionCookie) {
-        return NextResponse.json({ error: 'Unauthorized: No session cookie found' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized: No session cookie found' }, { status: 401 });
     }
 
     const sessionToken = sessionCookie.value;
@@ -47,7 +48,8 @@ export async function AuthGetRequest(service, method, token) {
 
     if (!response.ok) {
       const errorData = await response.json(); // Optionally extract error data if available
-      return NextResponse.json({ error: errorData.message || 'An error occurred' }, { status: response.status });    }
+      return NextResponse.json({ error: errorData.message || 'An error occurred' }, { status: response.status });
+    }
 
     const responseData = await response.json();
     // console.log('Data from service:', responseData);
@@ -59,7 +61,7 @@ export async function AuthGetRequest(service, method, token) {
   }
 }
 
-export async function AuthRefreshRequest(service, method,refresh_token) {
+export async function AuthRefreshRequest(service, method, refresh_token) {
   try {
     // Fetch data from the service
     const response = await fetch(`${process.env.API_BASE_URL}/get/${service}/${method}`, {
@@ -70,8 +72,10 @@ export async function AuthRefreshRequest(service, method,refresh_token) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json(); // Optionally extract error data if available
-      return NextResponse.json({ error: errorData.message || 'An error occurred' }, { status: response.status });      
+      const errorData = await response.json();
+      const error = new Error(errorData.message || 'Failed to refresh token');
+      error.status = response.status;
+      throw error;
     }
 
     const responseData = await response.json();
@@ -84,9 +88,9 @@ export async function AuthRefreshRequest(service, method,refresh_token) {
   }
 }
 
-export async function AuthSignOutRequest(service,method,refresh_token) {
+export async function AuthSignOutRequest(service, method, refresh_token) {
   try {
-    console.log(typeof(refresh_token))
+    console.log(typeof (refresh_token))
     // Send a POST request to sign out
     const response = await fetch(`${process.env.API_BASE_URL}/get/${service}/${method}`, {
       method: 'DELETE',

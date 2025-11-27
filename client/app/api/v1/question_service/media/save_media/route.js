@@ -93,7 +93,11 @@ export async function POST(req) {
     });
 
     if (!response.ok) {
-      throw new Error(`Error saving question: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { status: 'error', message: 'Failed to save question', data: errorData },
+        { status: response.status }
+      );
     }
 
     const savedQuestionData = await response.json();

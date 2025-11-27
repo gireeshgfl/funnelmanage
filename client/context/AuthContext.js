@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useEffect } from 'react';
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 
 export const AuthContext = createContext();
 
@@ -13,10 +14,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`${API_ROUTES.AUTH_SERVICE.USER}`, { credentials: 'include' });
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
+        const response = await apiClient.get(API_ROUTES.AUTH_SERVICE.USER);
+        if (response.status === 200) {
+          setUser(response.data);
         } else {
           setUser(null);
           setError('Not authenticated');

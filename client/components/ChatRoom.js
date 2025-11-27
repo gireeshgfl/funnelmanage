@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 
 const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, isTrainer }) => {
   const [messages, setMessages] = useState([]);
@@ -22,15 +23,15 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
       if (!sessionId) return;
 
       try {
-        const statusResponse = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_SESSION_STATUS}?id=${sessionId}`);
-        if (statusResponse.ok) {
-          const statusData = await statusResponse.json();
+        const statusResponse = await apiClient.get(`${API_ROUTES.SESSION_SERVICE.GET_SESSION_STATUS}?id=${sessionId}`);
+        if (statusResponse.status === 200 || statusResponse.status === 201) {
+          const statusData = statusResponse.data;
           if (statusData.data) setSessionStatus(statusData.data);
         }
 
-        const chatResponse = await fetch(`${API_ROUTES.CHAT_SERVICE.FETCH_CHAT}?id=${sessionId}`);
-        if (chatResponse.ok) {
-          const chatData = await chatResponse.json();
+        const chatResponse = await apiClient.get(`${API_ROUTES.CHAT_SERVICE.FETCH_CHAT}?id=${sessionId}`);
+        if (chatResponse.status === 200 || chatResponse.status === 201) {
+          const chatData = chatResponse.data;
           if (chatData.data && Array.isArray(chatData.data)) {
             const formattedMessages = chatData.data.map(msg => ({
               username: msg.sender,
@@ -38,7 +39,7 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
               timestamp: msg.createdAt || new Date().toISOString(),
               type: 'regular',
               role: msg.sender === studentUserName ? 'student' :
-                    msg.sender === trainerUserName ? 'trainer' : 'other',
+                msg.sender === trainerUserName ? 'trainer' : 'other',
             }));
             setMessages(formattedMessages);
           }
@@ -68,7 +69,7 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
           timestamp: new Date().toISOString(),
           type: 'regular',
           role: data.sender === studentUserName ? 'student' :
-                data.sender === trainerUserName ? 'trainer' : 'other',
+            data.sender === trainerUserName ? 'trainer' : 'other',
         }
       ]);
     };
@@ -138,11 +139,7 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     setInputMessage('');
 
     try {
-      await fetch(API_ROUTES.CHAT_SERVICE.SAVE_CHAT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(messageData),
-      });
+      await apiClient.post(API_ROUTES.CHAT_SERVICE.SAVE_CHAT, messageData);
     } catch (error) {
       console.error('Error saving message:', error);
     }
@@ -173,7 +170,7 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
             <div className={`max-w-[80%] rounded-lg p-3 ${message.role === 'trainer'
               ? 'bg-primary-500 text-white rounded-br-none'
               : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-bl-none'}`}>
-              
+
               <div className="flex items-center justify-between mb-1">
                 <span className="font-semibold text-sm">
                   {message.username}

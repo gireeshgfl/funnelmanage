@@ -1,4 +1,5 @@
 // app/api/auth_service/refresh_token/route.js
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { AuthRefreshRequest } from '@/utils/auth/authRequests';
 import { extractServiceAndMethod } from '@/utils/requestUtils';
@@ -12,9 +13,23 @@ export async function POST(request) {
 
     // Extract refresh token from Authorization header
     const authHeader = request.headers.get('Authorization');
-    const refreshToken = authHeader && authHeader.startsWith('Bearer ')
+    let refreshToken = authHeader && authHeader.startsWith('Bearer ')
       ? authHeader.slice(7)
       : null;
+
+    console.log('Initial Refresh Token from Header:', refreshToken);
+
+    // If not in header, check cookies
+    if (!refreshToken) {
+      const cookieStore = await cookies();
+      const refreshTokenCookie = cookieStore.get('refreshToken');
+      console.log('Refresh Token Cookie:', refreshTokenCookie);
+      if (refreshTokenCookie) {
+        refreshToken = refreshTokenCookie.value;
+      }
+    }
+
+    console.log('Final Refresh Token:', refreshToken);
 
     if (!refreshToken) {
       logger.warn('Refresh token not found');
@@ -50,23 +65,49 @@ export async function POST(request) {
     // (Optional) decode the new access token to find its new expiry
     const payload = await verifyToken(responseData.access_token);
 
-    // 15 minutes from now
-    const accessTokenExpiry = 15 * 60;
+    // 60 minutes from now
+    const accessTokenExpiry = 60 * 60;
     // 7 days
     const refreshTokenExpiry = 7 * 24 * 60 * 60;
 
     // Return new tokens & expiration in JSON
-    return NextResponse.json({
+    const response = NextResponse.json({
       access_token: responseData.access_token,
       refresh_token: responseData.refresh_token,
       access_token_expiry: accessTokenExpiry,
       refresh_token_expiry: refreshTokenExpiry
     });
+
+    // Set the access token in cookies
+    response.cookies.set({
+      name: "accessToken",
+      value: responseData.access_token,
+      httpOnly: true,
+      secure: false, // Matching signin route
+      sameSite: 'strict',
+      path: "/",
+      maxAge: accessTokenExpiry,
+    });
+
+    // Set the refresh token in cookies
+    response.cookies.set({
+      name: 'refreshToken',
+      value: responseData.refresh_token,
+      httpOnly: true,
+      secure: false, // Matching signin route
+      sameSite: 'strict',
+      path: "/",
+      maxAge: refreshTokenExpiry,
+    });
+
+    return response;
   } catch (error) {
     logger.error('Error refreshing token:', error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal server error';
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: message },
+      { status: status }
     );
   }
 }

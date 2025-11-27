@@ -6,13 +6,14 @@ import logger from "./lib/logger";
 const BASE_PATH = "/funnel-management";
 
 // Routes accessible without a token (auth routes)
-const AUTH_ROUTES = ["/signup", "/login", "/forgot-password"];
+// Routes accessible without a token (auth routes)
+const AUTH_ROUTES = ["/login", "/forgot-password"];
 
 // Protected dashboard routes (without the base path)
 const ROLE_DASHBOARD_MAP = {
-  trainer: "/trainerdashboard",
-  student: "/studentdashboard",
-  "super-admin": "/super-admin/dashboard",
+  trainer: "/dashboard/trainer",
+  student: "/dashboard/student",
+  "super-admin": "/dashboard/super-admin",
 };
 
 // Role priority list for determining the highest role
@@ -30,7 +31,7 @@ function getUserCredentials(request) {
     token = authHeader.split(" ")[1];
     logger.debug("Token extracted from header:", token);
   } else {
-    const cookie = request.cookies.get("access_token");
+    const cookie = request.cookies.get("accessToken");
     token = cookie?.value || null;
     logger.debug("Token extracted from cookie:", token);
   }
@@ -64,14 +65,13 @@ async function checkUserRole(credentials, requestedRole) {
 }
 
 /**
- * Redirects to the signup page.
+ * Redirects to the login page.
  * @param {Request} request - The incoming request object
- * @returns {NextResponse} - Redirect response to the signup page
+ * @returns {NextResponse} - Redirect response to the login page
  */
-function redirectToSignup(request) {
-  const url = request.nextUrl.clone();
-  url.pathname = `${BASE_PATH}/signup`;
-  logger.info("Redirecting to signup", { redirectUrl: url.toString() });
+function redirectToLogin(request) {
+  const url = new URL(`${BASE_PATH}/login`, request.url);
+  logger.info("Redirecting to login", { redirectUrl: url.toString() });
   return NextResponse.redirect(url);
 }
 
@@ -81,8 +81,7 @@ function redirectToSignup(request) {
  * @returns {NextResponse} - Redirect response to the unauthorized page
  */
 function redirectToUnauthorized(request) {
-  const url = request.nextUrl.clone();
-  url.pathname = `${BASE_PATH}/unauthorized`;
+  const url = new URL(`${BASE_PATH}/unauthorized`, request.url);
   logger.info("Redirecting to unauthorized", { redirectUrl: url.toString() });
   return NextResponse.redirect(url);
 }
@@ -95,9 +94,14 @@ function redirectToUnauthorized(request) {
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   // Normalize the path by removing the BASE_PATH if present
-  const normalizedPath = pathname.startsWith(BASE_PATH)
+  let normalizedPath = pathname.startsWith(BASE_PATH)
     ? pathname.slice(BASE_PATH.length)
     : pathname;
+
+  // Remove trailing slash if present, except for root
+  if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
+    normalizedPath = normalizedPath.slice(0, -1);
+  }
 
   logger.info("Middleware processing", { pathname, normalizedPath });
   const credentials = getUserCredentials(request);
@@ -110,8 +114,7 @@ export async function middleware(request) {
         const payload = await verifyToken(credentials.access_token);
         const highestRole = getHighestPriorityRole(payload.roles);
         if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
-          const url = request.nextUrl.clone();
-          url.pathname = `${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`;
+          const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
           logger.info("Redirecting authenticated user", { redirectUrl: url.toString() });
           return NextResponse.redirect(url);
         }
@@ -122,6 +125,28 @@ export async function middleware(request) {
     return NextResponse.next();
   }
 
+  // Check if the user is accessing the root path (landing page)
+  if (normalizedPath === "/" || normalizedPath === "") {
+    if (credentials.access_token) {
+      try {
+        const payload = await verifyToken(credentials.access_token);
+        const highestRole = getHighestPriorityRole(payload.roles);
+        if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
+          const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
+          logger.info("Redirecting authenticated user from root", { redirectUrl: url.toString() });
+          return NextResponse.redirect(url);
+        }
+      } catch (error) {
+        logger.error("Token verification failed at root", { error: error.message });
+      }
+    } else {
+      // Redirect unauthenticated users to login
+      const url = new URL(`${BASE_PATH}/login`, request.url);
+      logger.info("Redirecting unauthenticated user from root to login", { redirectUrl: url.toString() });
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Protect dashboard routes and their subpaths
   for (const role in ROLE_DASHBOARD_MAP) {
     const dashboardPath = ROLE_DASHBOARD_MAP[role];
@@ -129,7 +154,7 @@ export async function middleware(request) {
       logger.debug("Checking protected route", { normalizedPath, role });
       if (!credentials.access_token) {
         logger.warn("No token found for protected route", { normalizedPath });
-        return redirectToSignup(request);
+        return redirectToLogin(request);
       }
       const hasAccess = await checkUserRole(credentials, role);
       return hasAccess ? NextResponse.next() : redirectToUnauthorized(request);
@@ -144,11 +169,6 @@ export async function middleware(request) {
 // Configuration for the middleware matcher
 export const config = {
   matcher: [
-    // "/funnel-management/trainerdashboard/:path*",
-    // "/funnel-management/studentdashboard/:path*",
-    // "/funnel-management/super-admin/dashboard/:path*",
-    // "/funnel-management/signup",
-    // "/funnel-management/login",
-    // "/funnel-management/forgot-password",
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

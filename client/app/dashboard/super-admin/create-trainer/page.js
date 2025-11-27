@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import apiClient from '@/utils/axiosinterceptor';
 
 export default function SignUp() {
   const router = useRouter();
@@ -33,22 +34,14 @@ export default function SignUp() {
 
       setIsLoading(true);
       try {
-        const response = await fetch('/api/auth/sign_up', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
-        });
-        if (response.ok) {
+        const response = await apiClient.post('/api/auth/sign_up', values);
+        if (response.status === 200 || response.status === 201) {
           router.push('/super-admin/dashboard');
-        } else {
-          const errorData = await response.json();
-          setServerErrorMessage(errorData.data);
         }
       } catch (error) {
         console.error(error);
-        setServerErrorMessage('An unexpected error occurred while creating user. Please try again later.');
+        const errorMessage = error.response?.data?.data || 'An unexpected error occurred while creating user. Please try again later.';
+        setServerErrorMessage(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -58,7 +51,7 @@ export default function SignUp() {
   return (
     <div className="max-w-md mx-auto mt-28 p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-6">Create Trainer</h1>
-      
+
       {serverErrorMessage && (
         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           <h3 className="font-bold">Error</h3>

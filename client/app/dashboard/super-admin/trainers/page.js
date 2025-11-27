@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 
 export default function Home() {
   const [trainers, setTrainers] = useState([]);
@@ -15,11 +16,8 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(API_ROUTES.SUPER_ADMIN_SERVICE.GET_TRAINERS, { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`Error fetching trainers: ${response.statusText}`);
-      }
-      const data = await response.json();
+      const response = await apiClient.get(API_ROUTES.SUPER_ADMIN_SERVICE.GET_TRAINERS);
+      const data = response.data;
       setTrainers(data.data);
     } catch (error) {
       console.error("Error fetching trainers:", error);
@@ -32,49 +30,31 @@ export default function Home() {
   const handleDelete = async (trainerId) => {
     try {
       console.log(`Deleting trainer with ID: ${trainerId}`);
-      const response = await fetch(API_ROUTES.SUPER_ADMIN_SERVICE.DELETE_TRAINER, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ _id: trainerId }),
+      await apiClient.delete(API_ROUTES.SUPER_ADMIN_SERVICE.DELETE_TRAINER, {
+        data: { _id: trainerId }
       });
-  
-      if (!response.ok) {
-        throw new Error(`Error deleting trainer: ${response.statusText}`);
-      }
-  
+
       await fetchTrainers();
     } catch (error) {
       console.error('Error deleting trainer:', error);
       setError('An error occurred. Please try again later.');
     }
   };
-  
+
   const handleToggleStatus = async (trainerId, currentStatus) => {
     try {
       console.log(`${currentStatus === 'Active' ? 'Deactivating' : 'Activating'} trainer with ID: ${trainerId}`);
-  
+
       const updatedTrainer = {
         _id: trainerId,
         status: currentStatus === 'Active' ? 'Deactivated' : 'Active',
       };
-  
-      const response = await fetch(API_ROUTES.SUPER_ADMIN_SERVICE.TRAINER_STATUS, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedTrainer),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`${currentStatus === 'Active' ? 'Error deactivating' : 'Error activating'} trainer: ${response.statusText}`);
-      }
-  
-      const result = await response.json();
+
+      const response = await apiClient.put(API_ROUTES.SUPER_ADMIN_SERVICE.TRAINER_STATUS, updatedTrainer);
+
+      const result = response.data;
       console.log(result.message);
-  
+
       setTrainers((prevTrainers) =>
         prevTrainers.map((trainer) =>
           trainer._id === trainerId ? { ...trainer, status: updatedTrainer.status } : trainer
@@ -85,7 +65,7 @@ export default function Home() {
       setError(`An error occurred while ${currentStatus === 'Active' ? 'deactivating' : 'activating'} the trainer.`);
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
@@ -95,7 +75,7 @@ export default function Home() {
             <p>{error}</p>
           </div>
         )}
-        
+
         {isLoading ? (
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
@@ -128,11 +108,10 @@ export default function Home() {
                         </button>
                         <button
                           onClick={() => handleToggleStatus(trainer._id, trainer.status)}
-                          className={`px-3 py-2 rounded text-white focus:outline-none focus:ring-2 ${
-                            trainer.status === 'Active' 
-                              ? 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500' 
-                              : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'
-                          }`}
+                          className={`px-3 py-2 rounded text-white focus:outline-none focus:ring-2 ${trainer.status === 'Active'
+                            ? 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500'
+                            : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'
+                            }`}
                         >
                           {trainer.status === 'Active' ? 'Deactivate' : 'Activate'}
                         </button>

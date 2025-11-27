@@ -4,7 +4,7 @@ import { useState, useEffect, useContext, useMemo } from 'react';
 import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
 import { Users } from 'lucide-react';
-import axios from 'axios';
+import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from '@/config';
 
 const ParticipantsList = ({ currentSessionId }) => {
@@ -34,7 +34,7 @@ const ParticipantsList = ({ currentSessionId }) => {
         const { userId, username, sessionId } = userDetails;
 
         try {
-          await axios.post(`${API_ROUTES.FUNNEL_SERVICE.SAVE_PARTICIPANTS}`, {
+          await apiClient.post(`${API_ROUTES.FUNNEL_SERVICE.SAVE_PARTICIPANTS}`, {
             userId,
             username,
             sessionId

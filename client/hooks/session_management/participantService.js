@@ -1,13 +1,9 @@
 import { API_ROUTES } from "@/config";
+import apiClient from '@/utils/axiosinterceptor';
 
 export const getParticipants = async () => {
-  const response = await fetch(API_ROUTES.QUESTION_SERVICE.GET_PARTICIPANTS, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error(`Error fetching participants: ${response.statusText}`);
-  }
-
-  const data = await response.json();
+  const response = await apiClient.get(API_ROUTES.QUESTION_SERVICE.GET_PARTICIPANTS);
+  const data = response.data;
 
   if (!data?.data) {
     throw new Error("Invalid API response format");

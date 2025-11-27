@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Button, Input } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 import { ArrowLeft, CheckCircle, Image, Video, Save, Send, Tag, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -46,9 +47,8 @@ const QuestionBank = () => {
 
   const fetchSessionData = async (id) => {
     try {
-      const response = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_QUESTION_TOPICS}?id=${id}`);
-      if (!response.ok) throw new Error('Failed to fetch topics');
-      const { data } = await response.json();
+      const response = await apiClient.get(`${API_ROUTES.SESSION_SERVICE.GET_QUESTION_TOPICS}?id=${id}`);
+      const { data } = response.data;
       setSessionData(data);
     } catch (err) {
       setError(err.message);
@@ -60,9 +60,8 @@ const QuestionBank = () => {
   const fetchQuestions = async (topicId) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.GET_QUESTIONS}?id=${topicId}`);
-      if (!response.ok) throw new Error('Failed to fetch questions');
-      const { data } = await response.json();
+      const response = await apiClient.get(`${API_ROUTES.QUESTION_SERVICE.GET_QUESTIONS}?id=${topicId}`);
+      const { data } = response.data;
       setQuestions(data);
       fetchPushedStatus(data);
     } catch (err) {
@@ -74,12 +73,19 @@ const QuestionBank = () => {
 
   const fetchPushedStatus = async (questions) => {
     try {
-      const response = await fetch(`${API_ROUTES.SESSION_SERVICE.GET_PUSHED_QUESTIONS}?id=${params.sessionId}`);
-      if (response.ok) {
-        const { data } = await response.json();
+      const response = await apiClient.get(`${API_ROUTES.SESSION_SERVICE.GET_PUSHED_QUESTIONS}?id=${params.sessionId}`);
+      if (response.status === 200 || response.status === 201) {
+        const { data } = response.data;
+        // Safety check: ensure data is an array before calling .some()
+        const pushedQuestions = Array.isArray(data) ? data : [];
+
+        if (!Array.isArray(data)) {
+          console.warn('fetchPushedStatus: Expected array for data but got:', data, 'Full response:', response.data);
+        }
+
         setQuestions(prev => prev.map(q => ({
           ...q,
-          isPushed: data.some(p => p.questionId === q._id)
+          isPushed: pushedQuestions.some(p => p.questionId === q._id)
         })));
       }
     } catch (err) {
@@ -89,16 +95,12 @@ const QuestionBank = () => {
 
   const handleSavePoints = async (questionIdx) => {
     try {
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.UPDATE_QUESTION}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          _id: questions[questionIdx]._id,
-          points: points[questionIdx]
-        }),
+      const response = await apiClient.put(API_ROUTES.QUESTION_SERVICE.UPDATE_QUESTION, {
+        _id: questions[questionIdx]._id,
+        points: points[questionIdx]
       });
-      if (response.ok) {
-        setQuestions(prev => prev.map((q, idx) => 
+      if (response.status === 200 || response.status === 201) {
+        setQuestions(prev => prev.map((q, idx) =>
           idx === questionIdx ? { ...q, points: points[questionIdx] } : q
         ));
       }
@@ -120,18 +122,14 @@ const QuestionBank = () => {
     };
 
     socket.emit('pushQuestion', questionData);
-    
+
     try {
-      await fetch(`${API_ROUTES.SESSION_SERVICE.SAVE_PUSHED_QUESTIONS}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topicId: selectedTopic.id,
-          questionId: question._id,
-          sessionId: params.sessionId,
-        }),
+      await apiClient.post(API_ROUTES.SESSION_SERVICE.SAVE_PUSHED_QUESTIONS, {
+        topicId: selectedTopic.id,
+        questionId: question._id,
+        sessionId: params.sessionId,
       });
-      setQuestions(prev => prev.map(q => 
+      setQuestions(prev => prev.map(q =>
         q._id === question._id ? { ...q, isPushed: true } : q
       ));
     } catch (err) {
@@ -189,7 +187,7 @@ const QuestionBank = () => {
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {questions.length > 0 ? (
                 questions.map((question, qIdx) => (
-                  <motion.div 
+                  <motion.div
                     key={question._id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -202,7 +200,7 @@ const QuestionBank = () => {
                       ) : question.questionType === 'image-text' ? (
                         <Image className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
                       ) : null}
-                      
+
                       <div className="flex-1 space-y-4">
                         <div className="flex items-start justify-between">
                           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -222,10 +220,10 @@ const QuestionBank = () => {
                                 <source src={question.question} type="video/mp4" />
                               </video>
                             ) : (
-                              <img 
-                                src={question.question} 
-                                alt="Question media" 
-                                className="max-w-md max-h-64 rounded-lg border border-gray-200 dark:border-gray-700" 
+                              <img
+                                src={question.question}
+                                alt="Question media"
+                                className="max-w-md max-h-64 rounded-lg border border-gray-200 dark:border-gray-700"
                               />
                             )}
                           </div>
@@ -236,15 +234,14 @@ const QuestionBank = () => {
                             <Tag className="h-4 w-4" />
                             <span>Answers</span>
                           </div>
-                          
+
                           {question.answers?.map((answer, aIdx) => (
                             <div key={aIdx} className="flex items-center justify-between gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                               <div className="flex items-center gap-3 flex-1">
-                                <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                                  aIdx === question.correctAnswerIndex 
-                                    ? 'border-green-500 bg-green-500' 
-                                    : 'border-gray-300 dark:border-gray-600'
-                                }`}>
+                                <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${aIdx === question.correctAnswerIndex
+                                  ? 'border-green-500 bg-green-500'
+                                  : 'border-gray-300 dark:border-gray-600'
+                                  }`}>
                                   {aIdx === question.correctAnswerIndex && (
                                     <CheckCircle className="h-3 w-3 text-white" />
                                   )}
@@ -275,16 +272,15 @@ const QuestionBank = () => {
                             whileTap={{ scale: 0.97 }}
                             onClick={() => handlePushQuestion(question)}
                             disabled={question.isPushed}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                              question.isPushed
-                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                                : 'bg-primary-500 hover:bg-primary-600 text-white'
-                            }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${question.isPushed
+                              ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                              : 'bg-primary-500 hover:bg-primary-600 text-white'
+                              }`}
                           >
                             <Send className="h-4 w-4" />
                             {question.isPushed ? 'Question Pushed' : 'Push to Session'}
                           </motion.button>
-                          
+
                           <motion.button
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
@@ -344,7 +340,7 @@ const QuestionBank = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {sessionData.map((topic) => (
-                <motion.div 
+                <motion.div
                   key={topic.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

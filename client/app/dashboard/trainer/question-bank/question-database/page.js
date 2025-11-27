@@ -1,17 +1,18 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  Search, 
-  Edit, 
-  Trash2, 
-  FileText, 
-  Check, 
-  Loader2 ,
+import {
+  ArrowLeft,
+  Search,
+  Edit,
+  Trash2,
+  FileText,
+  Check,
+  Loader2,
   X
 } from 'lucide-react';
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 
 function TopicDatabase() {
   const router = useRouter();
@@ -29,11 +30,8 @@ function TopicDatabase() {
 
   const fetchTopics = async () => {
     try {
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.GET_TOPICS}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch topics: ${response.statusText}`);
-      }
-      const responseData = await response.json();
+      const response = await apiClient.get(API_ROUTES.QUESTION_SERVICE.GET_TOPICS);
+      const responseData = response.data;
       setTopics(responseData.data || []);
     } catch (error) {
       console.error('Error fetching topics:', error);
@@ -63,21 +61,15 @@ function TopicDatabase() {
       const { _id, topic, description, difficulty } = editingTopic;
       const data = { _id, topic, description, difficulty };
 
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.UPDATE_TOPIC}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await apiClient.put(API_ROUTES.QUESTION_SERVICE.UPDATE_TOPIC, data);
 
-      if (!response.ok) {
+      if (response.status === 200 || response.status === 201) {
+        setEditModalOpen(false);
+        setEditingTopic(null);
+        await fetchTopics();
+      } else {
         throw new Error(`Failed to update topic: ${response.statusText}`);
       }
-
-      setEditModalOpen(false);
-      setEditingTopic(null);
-      await fetchTopics();
     } catch (error) {
       console.error('Error updating topic:', error);
     } finally {
@@ -88,18 +80,13 @@ function TopicDatabase() {
   const handleDelete = async (topicId) => {
     setIsDeleting(true);
     try {
-      const response = await fetch(`${API_ROUTES.QUESTION_SERVICE.DELETE_TOPIC}?id=${topicId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await apiClient.delete(`${API_ROUTES.QUESTION_SERVICE.DELETE_TOPIC}?id=${topicId}`);
 
-      if (!response.ok) {
+      if (response.status === 200 || response.status === 204) {
+        await fetchTopics();
+      } else {
         throw new Error(`Failed to delete topic: ${response.statusText}`);
       }
-
-      await fetchTopics();
     } catch (error) {
       console.error('Error deleting topic:', error);
     } finally {
@@ -300,9 +287,8 @@ function TopicDatabase() {
                   type="button"
                   onClick={handleUpdate}
                   disabled={isUpdating}
-                  className={`px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
-                    isUpdating ? 'opacity-75 cursor-not-allowed' : ''
-                  }`}
+                  className={`px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${isUpdating ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
                 >
                   {isUpdating ? (
                     <>

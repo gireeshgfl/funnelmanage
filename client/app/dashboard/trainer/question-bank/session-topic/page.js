@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Edit3, FileText, ChevronDown, Loader2 } from 'lucide-react';
 import { API_ROUTES } from '@/config';
+import apiClient from '@/utils/axiosinterceptor';
 
 export default function TopicSelectionForm() {
   const [topic, setTopic] = useState('');
@@ -21,12 +22,10 @@ export default function TopicSelectionForm() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch(`${API_ROUTES.AUTH_SERVICE.USER}`, {
-          credentials: 'include',
-        });
+        const response = await apiClient.get(API_ROUTES.AUTH_SERVICE.USER);
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.status === 200) {
+          const data = response.data;
           setUserId(data.user_id);
         } else {
           setFeedbackMessage('Not authenticated');
@@ -66,13 +65,13 @@ export default function TopicSelectionForm() {
     e.preventDefault();
     setIsSubmitting(true);
     const selectedTopic = isCustomTopic ? customTopic : topic;
-  
+
     if (!selectedTopic || !description || !difficulty || !userId) {
       setFeedbackMessage('Please fill in all fields before submitting.');
       setIsSubmitting(false);
       return;
     }
-  
+
     try {
       const saveRequestBody = {
         user_id: userId,
@@ -81,33 +80,29 @@ export default function TopicSelectionForm() {
           description: description,
           difficulty: difficulty,
         },
-      };      
-  
-      const saveResponse = await fetch(`${API_ROUTES.QUESTION_SERVICE.SAVE_TOPIC}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(saveRequestBody),
-      });
-  
-      if (!saveResponse.ok) {
+      };
+
+      const saveResponse = await apiClient.post(API_ROUTES.QUESTION_SERVICE.SAVE_TOPIC, saveRequestBody);
+
+      if (saveResponse.status === 200 || saveResponse.status === 201) {
+        const responseData = saveResponse.data;
+        const objectId = responseData.data._id;
+
+        if (!objectId) {
+          throw new Error('Failed to get the ObjectID of the newly created topic');
+        }
+
+        setTopic('');
+        setCustomTopic('');
+        setDescription('');
+        setDifficulty('');
+        setIsCustomTopic(false);
+        setFeedbackMessage('Form submitted successfully!');
+
+        router.push(`/dashboard/trainer/question-bank/session-topic/question-generation?topic=${selectedTopic}&topicId=${objectId}`);
+      } else {
         throw new Error(`Error saving topic: ${saveResponse.statusText}`);
       }
-  
-      const responseData = await saveResponse.json();
-      const objectId = responseData.data._id;
-  
-      if (!objectId) {
-        throw new Error('Failed to get the ObjectID of the newly created topic');
-      }
-  
-      setTopic('');
-      setCustomTopic('');
-      setDescription('');
-      setDifficulty('');
-      setIsCustomTopic(false);
-      setFeedbackMessage('Form submitted successfully!');
-      
-      router.push(`/dashboard/trainer/question-bank/session-topic/question-generation?topic=${selectedTopic}&topicId=${objectId}`);
     } catch (error) {
       console.error('Error submitting form:', error);
       setFeedbackMessage('Failed to submit form. Please try again.');
@@ -124,7 +119,7 @@ export default function TopicSelectionForm() {
           Indicate Your Preferred Subject For Discussion
         </h1>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Topic Selection */}
         <div className="space-y-3">
@@ -227,9 +222,8 @@ export default function TopicSelectionForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 ${
-              isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
-            }`}
+            className={`w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
           >
             {isSubmitting ? (
               <>
@@ -245,11 +239,10 @@ export default function TopicSelectionForm() {
         {/* Feedback Message */}
         {feedbackMessage && (
           <div
-            className={`p-4 rounded-lg mt-4 ${
-              feedbackMessage.includes('Failed') || feedbackMessage.includes('Please fill')
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-4 border-red-500'
-                : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-l-4 border-green-500'
-            }`}
+            className={`p-4 rounded-lg mt-4 ${feedbackMessage.includes('Failed') || feedbackMessage.includes('Please fill')
+              ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-4 border-red-500'
+              : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-l-4 border-green-500'
+              }`}
           >
             {feedbackMessage}
           </div>

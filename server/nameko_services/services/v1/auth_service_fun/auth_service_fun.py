@@ -74,7 +74,7 @@ class AuthServiceV1:
 
 
     def _create_access_token(self, user):
-        expire_time = int(time.time()) + ( 15* 24 * 60 * 60)  # 15 minutes from now
+        expire_time = int(time.time()) + (60 * 60)  # 60 minutes from now
         print(f"Access Token Expires At: {datetime.utcfromtimestamp(expire_time)}")
 
         to_encode = {
@@ -92,7 +92,7 @@ class AuthServiceV1:
         return jwt.encode(to_encode, self.secret_key, algorithm=self.jwt_algorithm)
 
     def _create_refresh_token(self, user):
-        expire_time = int(time.time()) + (30 * 24 * 60 * 60)  # 30 days from now
+        expire_time = int(time.time()) + (7 * 24 * 60 * 60)  # 7 days from now
         print(f"Refresh Token Expires At: {datetime.utcfromtimestamp(expire_time)}")
 
         to_encode = {
@@ -240,7 +240,7 @@ class AuthServiceV1:
             if payload is None:
                 raise jwt.InvalidTokenError
             user_id = payload.get('user_id')
-            email = payload.get('sub')
+            email = payload.get('email')
             token_type = payload.get('type')
             if not user_id or not email or token_type != 'refresh':
                 raise jwt.InvalidTokenError
