@@ -94,7 +94,8 @@ const SessionQuestionsPage = () => {
                     {sessions.map((session) => (
                         <div
                             key={session._id}
-                            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200 overflow-hidden"
+                            onClick={() => router.push(`/dashboard/trainer/question-bank/question-database/session-questions/${session._id}`)}
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer"
                         >
                             <div className="p-6">
                                 <div className="flex items-start justify-between mb-4">

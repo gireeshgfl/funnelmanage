@@ -46,3 +46,9 @@ export const getSessionsWithQuestions = async () => {
   const response = await apiClient.get(API_ROUTES.SESSION_SERVICE.GET_SESSIONS_WITH_QUESTIONS);
   return response.data.data;
 };
+
+export const getInSessionQuestions = async (sessionId) => {
+  const url = `${API_ROUTES.SESSION_SERVICE.GET_IN_SESSION_QUESTIONS}?id=${sessionId}`;
+  const response = await apiClient.get(url);
+  return response.data;
+};

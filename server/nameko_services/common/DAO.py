@@ -1115,5 +1115,12 @@ class InSessionQuestionsDAO(BaseDAO):
         
         return self.collection.distinct("sessionId", {"created_by": user_id})
 
+    def get_questions_by_session_id(self, session_id):
+        """
+        Retrieve all questions for a specific session.
+        """
+        return list(self.find_many({"sessionId": session_id}))
+
+
 
 

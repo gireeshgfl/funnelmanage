@@ -703,3 +703,25 @@ class SessionService:
             "data": list(sessions),
             "status": 200
         }
+
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def get_in_session_questions(self, user_id, payload):
+        session_id = payload.get("query_params", {}).get("id")
+        
+        if not session_id:
+            return {
+                "message": "Session ID is required",
+                "status": 400
+            }
+
+        questions = self.in_session_questions_dao.get_questions_by_session_id(session_id)
+        
+        return {
+            "message": "In-session questions fetched successfully",
+            "data": questions,
+            "status": 200
+        }
+
