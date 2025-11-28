@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/utils/auth/jwtUtils";
+import { AuthRefreshRequest } from "@/utils/auth/authRequests";
 
 // Define the base path without spaces
 const BASE_PATH = "/funnel-management";
@@ -46,20 +47,95 @@ function getHighestPriorityRole(roles) {
 }
 
 /**
- * Verifies if the token grants access to the requested role.
- * @param {Object} credentials - User credentials containing the access token
- * @param {string} requestedRole - The role required for the route
- * @returns {Promise<boolean>} - True if access is granted, false otherwise
+ * Helper to set cookies on the response
  */
-async function checkUserRole(credentials, requestedRole) {
-  try {
-    const payload = await verifyToken(credentials.access_token);
-    const highestRole = getHighestPriorityRole(payload.roles);
-    return highestRole === requestedRole;
-  } catch (error) {
-    console.error("Error verifying token", { error: error.message });
-    return false;
+function setCookies(response, tokens) {
+  const currentTime = Math.floor(Date.now() / 1000);
+
+  if (tokens.accessExp) {
+    const accessMaxAge = Math.max(tokens.accessExp - currentTime, 0);
+    response.cookies.set({
+      name: "accessToken",
+      value: tokens.accessToken,
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      path: "/",
+      maxAge: accessMaxAge,
+    });
   }
+
+  if (tokens.refreshExp) {
+    const refreshMaxAge = Math.max(tokens.refreshExp - currentTime, 0);
+    response.cookies.set({
+      name: "refreshToken",
+      value: tokens.refreshToken,
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      path: "/",
+      maxAge: refreshMaxAge,
+    });
+  }
+
+  return response;
+}
+
+/**
+ * Validates the current token or attempts to refresh it.
+ * @param {Request} request - The incoming request object
+ * @returns {Promise<Object|null>} - Object with payload and optional newTokens, or null if invalid
+ */
+async function getValidPayload(request) {
+  const credentials = getUserCredentials(request);
+
+  // 1. Try to verify access token
+  if (credentials.access_token) {
+    try {
+      const payload = await verifyToken(credentials.access_token);
+      if (payload) {
+        return { payload, newTokens: null };
+      }
+    } catch (error) {
+      console.log("Access token verification failed, trying refresh...");
+    }
+  }
+
+  // 2. Try refresh token
+  const refreshTokenCookie = request.cookies.get("refreshToken");
+  const refreshToken = refreshTokenCookie?.value;
+
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    console.log("Attempting to refresh token in middleware...");
+    const newTokens = await AuthRefreshRequest('auth_service_fun', 'refresh_token', refreshToken);
+
+    if (newTokens && newTokens.access_token && newTokens.refresh_token) {
+      // Verify new access token to get payload and expiry
+      const newPayload = await verifyToken(newTokens.access_token);
+      const newRefreshPayload = await verifyToken(newTokens.refresh_token);
+
+      if (newPayload) {
+        console.log("Token refresh successful");
+        return {
+          payload: newPayload,
+          newTokens: {
+            accessToken: newTokens.access_token,
+            refreshToken: newTokens.refresh_token,
+            accessExp: newPayload.exp,
+            refreshExp: newRefreshPayload?.exp
+          }
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Token refresh failed in middleware:", error);
+  }
+
+  return null;
 }
 
 /**
@@ -103,44 +179,65 @@ export async function middleware(request) {
     }
 
     console.log("Middleware processing", { pathname, normalizedPath });
-    const credentials = getUserCredentials(request);
-    console.log("User credentials", { hasToken: !!credentials.access_token });
+
+    const authResult = await getValidPayload(request);
+    const payload = authResult?.payload;
+    const newTokens = authResult?.newTokens;
+
+    console.log("User credentials", { hasValidToken: !!payload, refreshed: !!newTokens });
 
     // Allow access to auth routes without a token
     if (AUTH_ROUTES.includes(normalizedPath)) {
-      if (credentials.access_token) {
+      if (payload) {
         try {
-          const payload = await verifyToken(credentials.access_token);
           const highestRole = getHighestPriorityRole(payload.roles);
           if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
             const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
             console.log("Redirecting authenticated user", { redirectUrl: url.toString() });
-            return NextResponse.redirect(url);
+            const response = NextResponse.redirect(url);
+            if (newTokens) {
+              setCookies(response, newTokens);
+            }
+            return response;
           }
         } catch (error) {
           console.error("Token verification failed", { error: error.message });
         }
       }
-      return NextResponse.next();
+      // If we refreshed tokens but didn't redirect (e.g. user stays on login page? unlikely if logged in),
+      // we should still set cookies. But usually if logged in we redirect.
+      // If we don't redirect, we return next().
+      const response = NextResponse.next();
+      if (newTokens) {
+        setCookies(response, newTokens);
+      }
+      return response;
     }
 
     // Check if the user is accessing the root path (landing page)
     if (normalizedPath === "/" || normalizedPath === "") {
-      if (credentials.access_token) {
+      if (payload) {
         try {
-          const payload = await verifyToken(credentials.access_token);
           const highestRole = getHighestPriorityRole(payload.roles);
           if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
             const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
             console.log("Redirecting authenticated user from root", { redirectUrl: url.toString() });
-            return NextResponse.redirect(url);
+            const response = NextResponse.redirect(url);
+            if (newTokens) {
+              setCookies(response, newTokens);
+            }
+            return response;
           }
         } catch (error) {
           console.error("Token verification failed at root", { error: error.message });
         }
       }
       // Allow unauthenticated users to see the landing page
-      return NextResponse.next();
+      const response = NextResponse.next();
+      if (newTokens) {
+        setCookies(response, newTokens);
+      }
+      return response;
     }
 
     // Protect dashboard routes and their subpaths
@@ -148,18 +245,33 @@ export async function middleware(request) {
       const dashboardPath = ROLE_DASHBOARD_MAP[role];
       if (normalizedPath.startsWith(dashboardPath)) {
         console.log("Checking protected route", { normalizedPath, role });
-        if (!credentials.access_token) {
-          console.warn("No token found for protected route", { normalizedPath });
+        if (!payload) {
+          console.warn("No valid token found for protected route", { normalizedPath });
           return redirectToLogin(request);
         }
-        const hasAccess = await checkUserRole(credentials, role);
-        return hasAccess ? NextResponse.next() : redirectToUnauthorized(request);
+
+        const highestRole = getHighestPriorityRole(payload.roles);
+        const hasAccess = highestRole === role;
+
+        if (hasAccess) {
+          const response = NextResponse.next();
+          if (newTokens) {
+            setCookies(response, newTokens);
+          }
+          return response;
+        } else {
+          return redirectToUnauthorized(request);
+        }
       }
     }
 
     // Allow all other routes
     console.log("Allowing access to non-protected route", { normalizedPath });
-    return NextResponse.next();
+    const response = NextResponse.next();
+    if (newTokens) {
+      setCookies(response, newTokens);
+    }
+    return response;
   } catch (error) {
     console.error("Middleware error:", error);
     return NextResponse.next();
