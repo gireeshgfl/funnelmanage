@@ -14,6 +14,7 @@ import { API_ROUTES } from '@/config';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@hooks/useAuth';
 import { decryptId } from '@/utils/encryption';
+import { updateSession } from '@/hooks/session_management/sessionService';
 
 const SessionWorkspace = () => {
   const [activeFeature, setActiveFeature] = useState(null);
@@ -108,20 +109,21 @@ const SessionWorkspace = () => {
   const handleEndSession = async () => {
     setIsEndingSession(true);
     try {
-      const [response] = await Promise.all([
+      const [deleteChatResponse, updateSessionResponse] = await Promise.all([
         apiClient.delete(`${API_ROUTES.CHAT_SERVICE.DELETE_CHAT}?id=${sessionId}`, {
           headers: {
             'Content-Type': 'application/json',
           },
         }),
+        updateSession({ _id: sessionId, status: 'ENDED' }),
         new Promise(resolve => setTimeout(resolve, 1000))
       ]);
 
-      if (response.status === 200) {
+      if (deleteChatResponse.status === 200 && updateSessionResponse) {
         console.log('Session ended successfully!');
         router.push('/dashboard/trainer/sessions');
       } else {
-        console.error('Failed to end session:', response.data);
+        console.error('Failed to end session');
         setError('Failed to end session');
       }
     } catch (error) {

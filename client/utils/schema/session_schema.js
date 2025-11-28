@@ -41,7 +41,7 @@ export const SessionSchema = z.object({
 });
 
 export const UpdateSessionSchema = SessionSchema.partial().extend({
-  status: z.enum(["Activate", "Deactivate"]).optional(),
+  status: z.enum(["Activate", "Deactivate", "ENDED"]).optional(),
   archived: z.string().optional(),
 });
 

@@ -165,6 +165,19 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     );
   }
 
+  if (sessionStatus === "ENDED") {
+    return (
+      <div className="p-6 text-center bg-white dark:bg-gray-800 rounded-lg shadow">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+          This session has ended
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          The trainer has ended this session.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-700/30 space-y-4">

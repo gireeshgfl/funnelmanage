@@ -148,8 +148,12 @@ class SessionService:
         
         # Determine the response based on the update result:
         if result and result.modified_count > 0:
+            message = "Session updated successfully"
+            if updated_session.get("status") == "ENDED":
+                message = "Session ended successfully"
+            
             return {
-                "message": "Session updated successfully",
+                "message": message,
                 "data": updated_session,  # Return the updated document
                 "status": 200
             }
