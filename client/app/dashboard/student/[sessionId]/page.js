@@ -35,12 +35,15 @@ const QuestionDisplay = ({
     if (selectedAnswer === null) return;
 
     try {
-      const response = await apiClient.post(API_ROUTES.SESSION_SERVICE.SAVE_POINTS, {
+      const endpoint = question.isInSessionQuestion
+        ? API_ROUTES.SESSION_SERVICE.SAVE_SESSION_POINTS
+        : API_ROUTES.SESSION_SERVICE.SAVE_POINTS;
+
+      const response = await apiClient.post(endpoint, {
         questionId: question.id,
         selectedAnswerIndex: selectedAnswer,
         selectedAnswerText: question.answers[selectedAnswer].text,
         studentUserName,
-        studentUserId,
         questionText: question.question || question.questionText,
         sessionId,
       });
@@ -228,7 +231,7 @@ const IndexPage = () => {
 
   const formatQuestion = (questionData, isMCQ = false) => {
     return {
-      id: questionData.id || Date.now().toString(),
+      id: questionData._id || questionData.id || Date.now().toString(),
       question: questionData.question || '',
       questionText: isMCQ ? questionData.question : (questionData.questionText || questionData.question || ''),
       questionType: isMCQ ? 'text' : (questionData.questionType || 'text'),
@@ -236,7 +239,8 @@ const IndexPage = () => {
         ? questionData.answers.map(answer => typeof answer === 'string' ? { text: answer } : answer)
         : [],
       answerMediaUrls: Array.isArray(questionData.answerMediaUrls) ? questionData.answerMediaUrls : [],
-      correctAnswerIndex: isMCQ ? questionData.correctAnswerIndex : undefined
+      correctAnswerIndex: isMCQ ? questionData.correctAnswerIndex : undefined,
+      isInSessionQuestion: isMCQ
     };
   };
 

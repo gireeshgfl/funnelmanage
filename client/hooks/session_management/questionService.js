@@ -14,3 +14,14 @@ export const saveSessionQuestions = async (mcqQuestions, sessionId) => {
     );
     return response.data;
 };
+
+export const saveSessionPoints = async (data) => {
+    const response = await apiClient.post(
+        API_ROUTES.SESSION_SERVICE.SAVE_SESSION_POINTS,
+        data,
+        {
+            headers: { 'Content-Type': 'application/json' },
+        }
+    );
+    return response.data;
+};

@@ -1092,4 +1092,15 @@ class InSessionQuestionsDAO(BaseDAO):
         
         return {"saved_count": saved_count, "failed_count": failed_count, "saved_ids": saved_ids}
 
+    def get_question_by_id(self, question_id):
+        """
+        Retrieve a question by its ID.
+        """
+        if not isinstance(question_id, ObjectId):
+            try:
+                question_id = ObjectId(question_id)
+            except Exception:
+                return None
+        return self.find_one({'_id': question_id})
+
 

@@ -60,6 +60,7 @@ export const API_ROUTES = {
     SAVE_MCQ: `${BASE_URL}/session_service/save_mcq/`,
     ADD_PARTICIPANTS: `${BASE_URL}/session_service/add_participants/`,
     GET_PARTICIPANT_SESSIONS: `${BASE_URL}/session_service/get_participant_sessions/`,
+    SAVE_SESSION_POINTS: `${BASE_URL}/session_service/save_session_points/`,
   },
 
   // ===========================

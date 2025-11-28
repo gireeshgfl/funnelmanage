@@ -84,7 +84,6 @@ export const pointsSaveSchema = z.object({
   selectedAnswerIndex: z.number(),
   selectedAnswerText: z.string(),
   studentUserName: z.string(),
-  studentUserId: z.string().length(24, "Invalid student ID format"),
   questionText: z.string(),
   sessionId: z.string().length(24, "Invalid student ID format"),
 });
