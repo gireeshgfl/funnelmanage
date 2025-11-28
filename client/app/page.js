@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useContext } from 'react';
-import Head from 'next/head';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Filter } from 'lucide-react';
@@ -16,7 +16,7 @@ export default function WelcomePage() {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('color-theme');
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
+
       if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
         setDarkMode(true);
         document.documentElement.classList.add('dark');
@@ -79,6 +79,7 @@ export default function WelcomePage() {
   ];
 
   if (loading) {
+    console.log('WelcomePage: Loading...');
     return (
       <div className="min-h-screen flex items-center justify-center dark:bg-gray-900">
         <p className="text-gray-600 dark:text-gray-300">Loading...</p>
@@ -88,11 +89,7 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-full flex flex-col dark:bg-gray-900 transition-colors duration-200">
-      <Head>
-        <title>FunnelManagement Plugin</title>
-        <meta name="description" content="Welcome to FunnelManagement - Powerful funnel management tools" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
-      </Head>
+
 
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,7 +162,7 @@ export default function WelcomePage() {
 
           <div className="mt-16">
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-  {features.map((feature) => (
+              {features.map((feature) => (
                 <div key={feature.name} className="pt-6">
                   <div className="flow-root bg-white dark:bg-gray-800 rounded-lg px-6 pb-8 shadow-md h-full transition-transform hover:scale-[1.02]">
                     <div className="-mt-6">

@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await apiClient.get(API_ROUTES.AUTH_SERVICE.USER);
+        const response = await apiClient.get(API_ROUTES.AUTH_SERVICE.USER, { skipAuthRedirect: true });
         if (response.status === 200) {
           setUser(response.data);
         } else {

@@ -28,7 +28,8 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
         // Only redirect if not already on the login page to prevent reload loops
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        // And check if the request explicitly asked to skip redirect
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && !error.config.skipAuthRedirect) {
           window.location.href = "/funnel-management/login";
         }
         return Promise.reject(refreshError);

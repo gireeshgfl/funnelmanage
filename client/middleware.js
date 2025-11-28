@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/utils/auth/jwtUtils";
-import logger from "./lib/logger";
 
 // Define the base path without spaces
 const BASE_PATH = "/funnel-management";
 
-// Routes accessible without a token (auth routes)
 // Routes accessible without a token (auth routes)
 const AUTH_ROUTES = ["/login", "/forgot-password"];
 
@@ -29,11 +27,11 @@ function getUserCredentials(request) {
   let token = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {
     token = authHeader.split(" ")[1];
-    logger.debug("Token extracted from header:", token);
+    console.log("Token extracted from header:", token);
   } else {
     const cookie = request.cookies.get("accessToken");
     token = cookie?.value || null;
-    logger.debug("Token extracted from cookie:", token);
+    console.log("Token extracted from cookie:", token);
   }
   return { access_token: token };
 }
@@ -59,7 +57,7 @@ async function checkUserRole(credentials, requestedRole) {
     const highestRole = getHighestPriorityRole(payload.roles);
     return highestRole === requestedRole;
   } catch (error) {
-    logger.error("Error verifying token", { error: error.message });
+    console.error("Error verifying token", { error: error.message });
     return false;
   }
 }
@@ -71,7 +69,7 @@ async function checkUserRole(credentials, requestedRole) {
  */
 function redirectToLogin(request) {
   const url = new URL(`${BASE_PATH}/login`, request.url);
-  logger.info("Redirecting to login", { redirectUrl: url.toString() });
+  console.log("Redirecting to login", { redirectUrl: url.toString() });
   return NextResponse.redirect(url);
 }
 
@@ -82,7 +80,7 @@ function redirectToLogin(request) {
  */
 function redirectToUnauthorized(request) {
   const url = new URL(`${BASE_PATH}/unauthorized`, request.url);
-  logger.info("Redirecting to unauthorized", { redirectUrl: url.toString() });
+  console.log("Redirecting to unauthorized", { redirectUrl: url.toString() });
   return NextResponse.redirect(url);
 }
 
@@ -92,83 +90,85 @@ function redirectToUnauthorized(request) {
  * @returns {Promise<NextResponse>} - The response based on authentication status
  */
 export async function middleware(request) {
-  const { pathname } = request.nextUrl;
-  // Normalize the path by removing the BASE_PATH if present
-  let normalizedPath = pathname.startsWith(BASE_PATH)
-    ? pathname.slice(BASE_PATH.length)
-    : pathname;
+  try {
+    const { pathname } = request.nextUrl;
+    // Normalize the path by removing the BASE_PATH if present
+    let normalizedPath = pathname.startsWith(BASE_PATH)
+      ? pathname.slice(BASE_PATH.length)
+      : pathname;
 
-  // Remove trailing slash if present, except for root
-  if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
-    normalizedPath = normalizedPath.slice(0, -1);
-  }
+    // Remove trailing slash if present, except for root
+    if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
+      normalizedPath = normalizedPath.slice(0, -1);
+    }
 
-  logger.info("Middleware processing", { pathname, normalizedPath });
-  const credentials = getUserCredentials(request);
-  logger.info("User credentials", { hasToken: !!credentials.access_token });
+    console.log("Middleware processing", { pathname, normalizedPath });
+    const credentials = getUserCredentials(request);
+    console.log("User credentials", { hasToken: !!credentials.access_token });
 
-  // Allow access to auth routes without a token
-  if (AUTH_ROUTES.includes(normalizedPath)) {
-    if (credentials.access_token) {
-      try {
-        const payload = await verifyToken(credentials.access_token);
-        const highestRole = getHighestPriorityRole(payload.roles);
-        if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
-          const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
-          logger.info("Redirecting authenticated user", { redirectUrl: url.toString() });
-          return NextResponse.redirect(url);
+    // Allow access to auth routes without a token
+    if (AUTH_ROUTES.includes(normalizedPath)) {
+      if (credentials.access_token) {
+        try {
+          const payload = await verifyToken(credentials.access_token);
+          const highestRole = getHighestPriorityRole(payload.roles);
+          if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
+            const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
+            console.log("Redirecting authenticated user", { redirectUrl: url.toString() });
+            return NextResponse.redirect(url);
+          }
+        } catch (error) {
+          console.error("Token verification failed", { error: error.message });
         }
-      } catch (error) {
-        logger.error("Token verification failed", { error: error.message });
+      }
+      return NextResponse.next();
+    }
+
+    // Check if the user is accessing the root path (landing page)
+    if (normalizedPath === "/" || normalizedPath === "") {
+      if (credentials.access_token) {
+        try {
+          const payload = await verifyToken(credentials.access_token);
+          const highestRole = getHighestPriorityRole(payload.roles);
+          if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
+            const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
+            console.log("Redirecting authenticated user from root", { redirectUrl: url.toString() });
+            return NextResponse.redirect(url);
+          }
+        } catch (error) {
+          console.error("Token verification failed at root", { error: error.message });
+        }
+      }
+      // Allow unauthenticated users to see the landing page
+      return NextResponse.next();
+    }
+
+    // Protect dashboard routes and their subpaths
+    for (const role in ROLE_DASHBOARD_MAP) {
+      const dashboardPath = ROLE_DASHBOARD_MAP[role];
+      if (normalizedPath.startsWith(dashboardPath)) {
+        console.log("Checking protected route", { normalizedPath, role });
+        if (!credentials.access_token) {
+          console.warn("No token found for protected route", { normalizedPath });
+          return redirectToLogin(request);
+        }
+        const hasAccess = await checkUserRole(credentials, role);
+        return hasAccess ? NextResponse.next() : redirectToUnauthorized(request);
       }
     }
+
+    // Allow all other routes
+    console.log("Allowing access to non-protected route", { normalizedPath });
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware error:", error);
     return NextResponse.next();
   }
-
-  // Check if the user is accessing the root path (landing page)
-  if (normalizedPath === "/" || normalizedPath === "") {
-    if (credentials.access_token) {
-      try {
-        const payload = await verifyToken(credentials.access_token);
-        const highestRole = getHighestPriorityRole(payload.roles);
-        if (highestRole && ROLE_DASHBOARD_MAP[highestRole]) {
-          const url = new URL(`${BASE_PATH}${ROLE_DASHBOARD_MAP[highestRole]}`, request.url);
-          logger.info("Redirecting authenticated user from root", { redirectUrl: url.toString() });
-          return NextResponse.redirect(url);
-        }
-      } catch (error) {
-        logger.error("Token verification failed at root", { error: error.message });
-      }
-    } else {
-      // Redirect unauthenticated users to login
-      const url = new URL(`${BASE_PATH}/login`, request.url);
-      logger.info("Redirecting unauthenticated user from root to login", { redirectUrl: url.toString() });
-      return NextResponse.redirect(url);
-    }
-  }
-
-  // Protect dashboard routes and their subpaths
-  for (const role in ROLE_DASHBOARD_MAP) {
-    const dashboardPath = ROLE_DASHBOARD_MAP[role];
-    if (normalizedPath.startsWith(dashboardPath)) {
-      logger.debug("Checking protected route", { normalizedPath, role });
-      if (!credentials.access_token) {
-        logger.warn("No token found for protected route", { normalizedPath });
-        return redirectToLogin(request);
-      }
-      const hasAccess = await checkUserRole(credentials, role);
-      return hasAccess ? NextResponse.next() : redirectToUnauthorized(request);
-    }
-  }
-
-  // Allow all other routes
-  logger.debug("Allowing access to non-protected route", { normalizedPath });
-  return NextResponse.next();
 }
 
 // Configuration for the middleware matcher
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  // matcher: [
+  //   "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  // ],
 };
