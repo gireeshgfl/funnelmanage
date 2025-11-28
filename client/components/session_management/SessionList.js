@@ -7,7 +7,7 @@ import { encryptId } from '@/utils/encryption';
 
 const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin, onActivate }) => {
   const copySessionUrl = (event, sessionId) => {
-    navigator.clipboard.writeText(`https://eduvocate.in/funnel-management/dashboard/student/${encryptId(sessionId)}`);
+    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_CLIENT_URL}/funnel-management/dashboard/student/${encryptId(sessionId)}`);
     const button = event.currentTarget;
     const originalContent = button.innerHTML;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
@@ -156,8 +156,8 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`rounded-md px-2.5 py-1 text-xs font-medium flex items-center gap-1 ${session.status === 'Activate'
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-800/50'
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-800/50'
                 }`}
               onClick={() => onActivate(session._id)}
             >
@@ -171,7 +171,7 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
             <div className="relative flex-grow">
               <input
                 type="text"
-                value={`https://eduvocate.in/funnel-management/dashboard/student/${encryptId(session._id)}`}
+                value={`${process.env.NEXT_PUBLIC_CLIENT_URL}/funnel-management/dashboard/student/${encryptId(session._id)}`}
                 readOnly
                 className="w-full text-xs py-1.5 px-2 pr-10 rounded-md bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
               />
