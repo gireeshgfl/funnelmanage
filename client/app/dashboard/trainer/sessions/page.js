@@ -16,6 +16,7 @@ import {
 import { useFunnel } from '@/hooks/useFunnel';
 import { getTopics } from '@/hooks/session_management/topicService';
 import { getParticipants } from '@/hooks/session_management/participantService';
+import { encryptId } from '@/utils/encryption';
 
 const SessionManagementPage = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -132,7 +133,7 @@ const SessionManagementPage = () => {
   };
 
   const handleJoinSession = (sessionId) => {
-    router.push(`/dashboard/trainer/sessions/${sessionId}`);
+    router.push(`/dashboard/trainer/sessions/${encryptId(sessionId)}`);
   };
 
   // Filter sessions based on the selected filter type

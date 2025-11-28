@@ -9,6 +9,7 @@ import { API_ROUTES } from '@/config';
 import apiClient from '@/utils/axiosinterceptor';
 import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
+import { decryptId } from '@/utils/encryption';
 
 const QuestionDisplay = ({
   question,
@@ -226,7 +227,8 @@ const IndexPage = () => {
   const chatContainerRef = useRef(null);
   const questionContainerRef = useRef(null);
   const router = useRouter();
-  const { sessionId } = useParams();
+  const params = useParams();
+  const sessionId = decryptId(params.sessionId);
   const { socket } = useContext(SocketContext);
 
   const formatQuestion = (questionData, isMCQ = false) => {

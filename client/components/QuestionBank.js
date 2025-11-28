@@ -8,6 +8,7 @@ import { API_ROUTES } from '@/config';
 import apiClient from '@/utils/axiosinterceptor';
 import { ArrowLeft, CheckCircle, Image, Video, Save, Send, Tag, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { decryptId } from '@/utils/encryption';
 
 const QuestionBank = () => {
   const params = useParams();
@@ -20,7 +21,7 @@ const QuestionBank = () => {
   const [points, setPoints] = useState({});
 
   useEffect(() => {
-    const id = params.sessionId;
+    const id = decryptId(params.sessionId);
     if (id) {
       fetchSessionData(id);
     } else {
@@ -73,7 +74,7 @@ const QuestionBank = () => {
 
   const fetchPushedStatus = async (questions) => {
     try {
-      const response = await apiClient.get(`${API_ROUTES.SESSION_SERVICE.GET_PUSHED_QUESTIONS}?id=${params.sessionId}`);
+      const response = await apiClient.get(`${API_ROUTES.SESSION_SERVICE.GET_PUSHED_QUESTIONS}?id=${decryptId(params.sessionId)}`);
       if (response.status === 200 || response.status === 201) {
         const { data } = response.data;
         // Safety check: ensure data is an array before calling .some()
@@ -127,7 +128,7 @@ const QuestionBank = () => {
       await apiClient.post(API_ROUTES.SESSION_SERVICE.SAVE_PUSHED_QUESTIONS, {
         topicId: selectedTopic.id,
         questionId: question._id,
-        sessionId: params.sessionId,
+        sessionId: decryptId(params.sessionId),
       });
       setQuestions(prev => prev.map(q =>
         q._id === question._id ? { ...q, isPushed: true } : q

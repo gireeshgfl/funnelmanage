@@ -13,6 +13,7 @@ import { SocketContext } from '@/context/socketContext';
 import { API_ROUTES } from '@/config';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@hooks/useAuth';
+import { decryptId } from '@/utils/encryption';
 
 const SessionWorkspace = () => {
   const [activeFeature, setActiveFeature] = useState(null);
@@ -28,7 +29,7 @@ const SessionWorkspace = () => {
 
   // Extract session ID from URL
   const params = useParams();
-  const sessionId = params?.sessionId || '';
+  const sessionId = decryptId(params?.sessionId || '');
 
   useEffect(() => {
     // Check for saved theme preference or system preference
