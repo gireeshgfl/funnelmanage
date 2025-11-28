@@ -669,9 +669,37 @@ class SessionService:
                 "status": 200
             }
 
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def get_sessions_with_questions(self, user_id, payload):
+        # Step 1: Get unique session IDs from InSessionQuestionsDAO
+        session_ids = self.in_session_questions_dao.get_unique_session_ids(user_id)
+        
+        if not session_ids:
+            return {
+                "message": "No sessions with questions found",
+                "data": [],
+                "status": 200
+            }
 
+        # Step 2: Convert session IDs to ObjectIds
+        try:
+            session_obj_ids = [ObjectId(sid) for sid in session_ids]
+        except Exception:
+             return {
+                "message": "Invalid session ID format found",
+                "status": 500
+            }
 
+        # Step 3: Fetch session details from SessionDAO
+        sessions = self.session_service_dao.find_many(
+            {"_id": {"$in": session_obj_ids}}
+        )
 
-
-
-
+        return {
+            "message": "Sessions with questions fetched successfully",
+            "data": list(sessions),
+            "status": 200
+        }

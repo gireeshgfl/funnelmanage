@@ -1092,6 +1092,7 @@ class InSessionQuestionsDAO(BaseDAO):
         
         return {"saved_count": saved_count, "failed_count": failed_count, "saved_ids": saved_ids}
 
+
     def get_question_by_id(self, question_id):
         """
         Retrieve a question by its ID.
@@ -1102,5 +1103,17 @@ class InSessionQuestionsDAO(BaseDAO):
             except Exception:
                 return None
         return self.find_one({'_id': question_id})
+
+    def get_unique_session_ids(self, user_id):
+        """
+        Retrieve unique session IDs that have in-session questions created by the user.
+        """
+        try:
+            user_id = ObjectId(user_id)
+        except Exception:
+            return []
+        
+        return self.collection.distinct("sessionId", {"created_by": user_id})
+
 
 

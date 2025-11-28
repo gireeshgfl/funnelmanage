@@ -199,7 +199,7 @@ const TrainerDashboard = () => {
               className="flex items-center space-x-2 text-left p-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
             >
               <BookOpen className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <span className="font-medium text-gray-700 dark:text-gray-300">Add Question</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">Question Bank</span>
             </button>
             <button
               onClick={() => navigateTo('/dashboard/trainer/funnels')}

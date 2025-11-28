@@ -41,3 +41,8 @@ export const activateSession = async (sessionId, newStatus) => {
   const response = await apiClient.put(API_ROUTES.SESSION_SERVICE.UPDATE_SESSIONS, { _id: sessionId, status: newStatus });
   return response.data;
 };
+
+export const getSessionsWithQuestions = async () => {
+  const response = await apiClient.get(API_ROUTES.SESSION_SERVICE.GET_SESSIONS_WITH_QUESTIONS);
+  return response.data.data;
+};

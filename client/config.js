@@ -61,6 +61,7 @@ export const API_ROUTES = {
     ADD_PARTICIPANTS: `${BASE_URL}/session_service/add_participants/`,
     GET_PARTICIPANT_SESSIONS: `${BASE_URL}/session_service/get_participant_sessions/`,
     SAVE_SESSION_POINTS: `${BASE_URL}/session_service/save_session_points/`,
+    GET_SESSIONS_WITH_QUESTIONS: `${BASE_URL}/session_service/get_sessions_with_questions/`,
   },
 
   // ===========================
