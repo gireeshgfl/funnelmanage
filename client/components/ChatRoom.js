@@ -97,7 +97,10 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     };
 
     const handleSessionUpdate = (updatedData) => {
-      if (updatedData?.status) setSessionStatus(updatedData.status);
+      // Only update if the event belongs to this session
+      if ((updatedData._id === sessionId || updatedData.sessionId === sessionId) && updatedData?.status) {
+        setSessionStatus(updatedData.status);
+      }
     };
 
     socket.on('chatmessage', handleReceiveMessage);

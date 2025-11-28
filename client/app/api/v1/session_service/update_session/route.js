@@ -8,23 +8,29 @@ import eventBus from '@/utils/eventBus';
 export async function PUT(request, { params }) {
   try {
     const result = await handleRequestComprehensive(request, UpdateSessionSchema);
-    
+
     if (result instanceof NextResponse) {
       return result;
     }
-    
+
     const { data, service, method } = result;
-    
+
     const putResult = await handlePost(data, service, method);
-    
+
     const updatedData = putResult.data;
-    
-    eventBus.emit('sessionUpdated', updatedData);
-    
+
+    // Ensure sessionId is present for the socket handler to route correctly
+    const eventData = {
+      ...updatedData,
+      sessionId: updatedData._id
+    };
+
+    eventBus.emit('sessionUpdated', eventData);
+
     return NextResponse.json(
-      { 
-        message: "Session updated successfully", 
-        updatedSession: updatedData 
+      {
+        message: "Session updated successfully",
+        updatedSession: updatedData
       },
       { status: 200 }
     );
