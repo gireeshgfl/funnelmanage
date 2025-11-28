@@ -1066,6 +1066,7 @@ class InSessionQuestionsDAO(BaseDAO):
         
         saved_count = 0
         failed_count = 0
+        saved_ids = []
         
         for mcq in mcq_array:
             try:
@@ -1082,12 +1083,13 @@ class InSessionQuestionsDAO(BaseDAO):
                 result = self.insert_one(question_data)
                 if result.inserted_id:
                     saved_count += 1
+                    saved_ids.append(str(result.inserted_id))
                 else:
                     failed_count += 1
             except Exception as e:
                 print(f"Error saving MCQ: {e}")
                 failed_count += 1
         
-        return {"saved_count": saved_count, "failed_count": failed_count}
+        return {"saved_count": saved_count, "failed_count": failed_count, "saved_ids": saved_ids}
 
 

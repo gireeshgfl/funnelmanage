@@ -109,7 +109,20 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
 
       if (data) {
         console.log('MCQs saved successfully:', data);
-        const savedMCQs = data.mcqArray || mcqQuestions;
+        const savedIds = data.data || [];
+
+        // Create full object for potential local use (though not currently used)
+        const savedMCQs = mcqQuestions.map((q, index) => ({
+          ...q,
+          _id: savedIds[index]
+        }));
+
+        // Sanitize data for participants - remove answers/points/correct index
+        const sanitizedMCQs = savedMCQs.map(q => ({
+          _id: q._id,
+          question: q.question,
+          answers: q.answers.map(a => ({ text: a.text }))
+        }));
 
         setMCQQuestions([]);
         setQuestionText('');
@@ -119,11 +132,11 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
         setEditIndex(null);
 
         if (pushMCQsToChat) {
-          console.log('Emitting pushMCQs via pushMCQsToChat:', savedMCQs);
-          pushMCQsToChat(savedMCQs);
+          console.log('Emitting pushMCQs via pushMCQsToChat:', sanitizedMCQs);
+          pushMCQsToChat(sanitizedMCQs);
         } else if (socket) {
-          console.log('Emitting pushMCQs directly:', savedMCQs);
-          socket.emit('pushMCQs', { mcqArray: savedMCQs, sessionId, socketId: socket.id });
+          console.log('Emitting pushMCQs directly:', sanitizedMCQs);
+          socket.emit('pushMCQs', { mcqArray: sanitizedMCQs, sessionId, socketId: socket.id });
         }
       } else {
         throw new Error('Failed to save MCQs');

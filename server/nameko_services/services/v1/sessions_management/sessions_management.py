@@ -452,12 +452,13 @@ class SessionService:
         
         saved_count = result["saved_count"]
         failed_count = result["failed_count"]
+        saved_ids = result.get("saved_ids", [])
         
         if saved_count > 0:
             message = f"Successfully saved {saved_count} MCQ(s)"
             if failed_count > 0:
                 message += f", {failed_count} failed"
-            return {"message": message, "status": 200}
+            return {"message": message, "data": saved_ids, "status": 200}
         else:
             return {"message": "Failed to save MCQs", "status": 500}
     
