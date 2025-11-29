@@ -9,7 +9,15 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
   const [inputMessage, setInputMessage] = useState('');
   const [sessionStatus, setSessionStatus] = useState("Activate");
   const { socket } = useContext(SocketContext);
-  const messagesEndRef = useRef(null);
+  // const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      const { scrollHeight, clientHeight } = messagesContainerRef.current;
+      messagesContainerRef.current.scrollTop = scrollHeight - clientHeight;
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (socket && sessionId) {
@@ -114,9 +122,10 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
     };
   }, [socket, isTrainer, trainerUserName, studentUserName]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // Removed scrollIntoView to prevent whole page scrolling
+  // useEffect(() => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // }, [messages]);
 
   const handleSendMessage = async () => {
     if (!socket || !inputMessage.trim() || !sessionId) return;
@@ -154,12 +163,17 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
 
   if (sessionStatus === "Deactivate") {
     return (
-      <div className="p-6 text-center bg-white dark:bg-gray-800 rounded-lg shadow">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-          This session is currently inactive
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-gray-50 dark:bg-gray-800/50">
+        <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+          <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          Session Inactive
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Please wait for the trainer to activate the session
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Waiting for trainer to activate...
         </p>
       </div>
     );
@@ -167,57 +181,90 @@ const ChatRoom = ({ sessionId, studentUserName, studentUserId, trainerUserName, 
 
   if (sessionStatus === "ENDED") {
     return (
-      <div className="p-6 text-center bg-white dark:bg-gray-800 rounded-lg shadow">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-          This session has ended
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-gray-50 dark:bg-gray-800/50">
+        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+          <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          Session Ended
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          The trainer has ended this session.
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          This session has been concluded.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-700/30 space-y-4">
-        {messages.map((message, index) => (
-          <div key={index} className={`flex ${message.role === 'trainer' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] rounded-lg p-3 ${message.role === 'trainer'
-              ? 'bg-primary-500 text-white rounded-br-none'
-              : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-bl-none'}`}>
-
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-semibold text-sm">
-                  {message.username}
-                </span>
-                <span className="text-xs opacity-80 ml-2">
-                  {formatTime(message.timestamp)}
-                </span>
-              </div>
-              <p className="text-gray-800 dark:text-gray-200">{message.content}</p>
-            </div>
+    <div className="flex flex-col h-full bg-transparent">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar"
+      >
+        {messages.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-400 dark:text-gray-500">No messages yet. Start the conversation!</p>
           </div>
-        ))}
-        <div ref={messagesEndRef} />
+        )}
+        {messages.map((message, index) => {
+          // Determine if the message is from the current user
+          let isMe = false;
+          if (isTrainer) {
+            isMe = message.role === 'trainer';
+          } else {
+            isMe = message.role === 'student' &&
+              (message.username?.toLowerCase() === studentUserName?.toLowerCase());
+          }
+
+          const isTrainerMsg = message.role === 'trainer';
+
+          return (
+            <div key={index} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm ${isMe
+                ? 'bg-primary-500 text-white rounded-br-none'
+                : isTrainerMsg
+                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100 border border-purple-200 dark:border-purple-800 rounded-bl-none'
+                  : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-600 rounded-bl-none'
+                }`}>
+                <div className="flex items-center justify-between mb-1 gap-2">
+                  <span className={`text-xs font-bold ${isMe ? 'text-primary-100' : isTrainerMsg ? 'text-purple-700 dark:text-purple-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                    {message.username}
+                  </span>
+                  <span className={`text-[10px] opacity-70 ${isMe ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                    {formatTime(message.timestamp)}
+                  </span>
+                </div>
+                <p className={`text-sm leading-relaxed ${isMe ? 'text-white' : 'text-gray-800 dark:text-gray-200'}`}>
+                  {message.content}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+        {/* <div ref={messagesEndRef} /> */}
       </div>
 
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700">
         <div className="flex gap-2">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            placeholder="Type a message..."
+            className="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm transition-all"
           />
           <Button
             onClick={handleSendMessage}
             variant="primary"
             disabled={!inputMessage.trim()}
+            className="rounded-full w-10 h-10 p-0 flex items-center justify-center flex-shrink-0 shadow-md hover:shadow-lg transition-all transform active:scale-95"
           >
-            Send
+            <svg className="h-5 w-5 transform rotate-90 translate-x-[1px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
           </Button>
         </div>
       </div>

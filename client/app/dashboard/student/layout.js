@@ -4,10 +4,10 @@ import Header from '@/components/layout/SHeader';
 
 const Layout = ({ children }) => {
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow overflow-hidden">
-        <div className="h-full w-full overflow-hidden">
+      <main className="flex-grow">
+        <div className="w-full">
           {children}
         </div>
       </main>
