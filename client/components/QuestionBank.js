@@ -97,7 +97,13 @@ const QuestionBank = () => {
         setQuestions(updatedQuestions);
       }
     } catch (err) {
-      console.error('Error fetching pushed status:', err);
+      if (err.response && err.response.status === 404) {
+        // 404 means no pushed questions found, which is a valid state
+        const updatedQuestions = questions.map(q => ({ ...q, isPushed: false }));
+        setQuestions(updatedQuestions);
+      } else {
+        console.error('Error fetching pushed status:', err);
+      }
     }
   };
 
@@ -278,6 +284,7 @@ const QuestionBank = () => {
                           <motion.button
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
+                            onClick={() => handlePushQuestion(question)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 text-white ${question.isPushed
                               ? 'bg-green-600 hover:bg-green-700'
                               : 'bg-primary-500 hover:bg-primary-600'
