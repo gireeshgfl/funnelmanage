@@ -268,7 +268,7 @@ const SessionWorkspace = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Participants (narrower) */}
         <div className="w-60 h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+          <div className="px-4 h-[72px] flex items-center border-b border-gray-200 dark:border-gray-700 space-x-2">
             <Users className="h-5 w-5 text-primary-500" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Participants</h2>
           </div>
@@ -279,7 +279,7 @@ const SessionWorkspace = () => {
 
         {/* Middle Section - Question Bank (wider) */}
         <div className="w-[35rem] h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+          <div className="px-4 h-[72px] flex items-center border-b border-gray-200 dark:border-gray-700 space-x-2">
             <BookOpen className="h-5 w-5 text-primary-500" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Question Bank</h2>
           </div>
@@ -291,7 +291,7 @@ const SessionWorkspace = () => {
         {/* Right Section - Session Workspace */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-[30rem]">
           {/* Workspace Toolbar */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between items-center flex-shrink-0">
+          <div className="px-4 h-[72px] flex items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 justify-between flex-shrink-0">
             <div className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5 text-primary-500" />
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Session Workspace</h2>
