@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import apiClient from '@/utils/axiosinterceptor';
 import { useParams } from 'next/navigation';
-import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter } from 'lucide-react';
+import { Plus, X, MessageSquare, Users, BookOpen, List, Award, Filter, User } from 'lucide-react';
 import MCQCreation from '@/components/MCQCreation';
 import AddParticipants from '@/components/AddParticipants';
 import CouponPage from '@/components/CouponPage';
@@ -211,7 +211,7 @@ const SessionWorkspace = () => {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800"
+                className="p-1 rounded-full text-gray-900 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800"
                 aria-label="Toggle dark mode"
               >
                 {darkMode ? (
@@ -220,7 +220,7 @@ const SessionWorkspace = () => {
                   </svg>
                 ) : (
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M17.293 13.293A8 8 极 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
                   </svg>
                 )}
               </button>
@@ -235,14 +235,7 @@ const SessionWorkspace = () => {
                   aria-haspopup="true"
                 >
                   <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                    <svg
-                      className="h-5 w-5 text-primary-600 dark:text-primary-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 极 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                    <User className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                   </div>
                 </button>
 
@@ -315,14 +308,14 @@ const SessionWorkspace = () => {
                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <button
                       onClick={() => setActiveFeature('MCQCreation')}
-                      className="flex items-center w-full px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg"
+                      className="flex items-center w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg"
                     >
                       <List className="h-4 w-4 mr-3 text-primary-500" />
                       <span>Create MCQs</span>
                     </button>
                     <button
                       onClick={() => setActiveFeature('AddParticipants')}
-                      className="flex items-center w-full px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="flex items-center w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       <Users className="h-4 w-4 mr-3 text-primary-500" />
                       <span>Add Participants</span>
