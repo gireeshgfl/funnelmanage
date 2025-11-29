@@ -206,7 +206,7 @@ const QuestionBank = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: qIdx * 0.05 }}
-                    className={`p-6 ${question.isPushed ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
+                    className={`p-6 ${question.isPushed ? 'bg-green-100 dark:bg-green-900/40' : ''}`}
                   >
                     <div className="flex items-start gap-4">
                       {question.questionType === 'video-text' ? (
