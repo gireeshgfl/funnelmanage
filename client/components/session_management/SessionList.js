@@ -7,7 +7,7 @@ import { encryptId } from '@/utils/encryption';
 
 const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin, onActivate }) => {
   const copySessionUrl = (event, sessionId) => {
-    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_CLIENT_URL}/funnel-management/dashboard/student/${encryptId(sessionId)}`);
+    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_HOST_ENDPOINT}/funnel-management/dashboard/student/${encryptId(sessionId)}`);
     const button = event.currentTarget;
     const originalContent = button.innerHTML;
     button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
@@ -171,7 +171,7 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
             <div className="relative flex-grow">
               <input
                 type="text"
-                value={`${process.env.NEXT_PUBLIC_CLIENT_URL}/funnel-management/dashboard/student/${encryptId(session._id)}`}
+                value={`${process.env.NEXT_PUBLIC_HOST_ENDPOINT}/funnel-management/dashboard/student/${encryptId(session._id)}`}
                 readOnly
                 className="w-full text-xs py-1.5 px-2 pr-10 rounded-md bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
               />

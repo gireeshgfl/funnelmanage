@@ -21,7 +21,7 @@ const ParticipantSessions = () => {
   }, [fetchSessions]);
 
   const handleSessionClick = (sessionId) => {
-    router.push(`${process.env.NEXT_PUBLIC_CLIENT_URL}/funnel-management/dashboard/student/${encryptId(sessionId)}`);
+    router.push(`${process.env.NEXT_PUBLIC_HOST_ENDPOINT}/funnel-management/dashboard/student/${encryptId(sessionId)}`);
   };
 
   if (isLoading) {
