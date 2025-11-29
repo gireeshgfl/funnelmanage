@@ -73,21 +73,28 @@ const QuestionBank = () => {
   };
 
   const fetchPushedStatus = async (questions) => {
+    if (!Array.isArray(questions)) return;
+
     try {
       const response = await apiClient.get(`${API_ROUTES.SESSION_SERVICE.GET_PUSHED_QUESTIONS}?id=${decryptId(params.sessionId)}`);
-      if (response.status === 200 || response.status === 201) {
-        const { data } = response.data;
-        // Safety check: ensure data is an array before calling .some()
-        const pushedQuestions = Array.isArray(data) ? data : [];
 
-        if (!Array.isArray(data)) {
-          console.warn('fetchPushedStatus: Expected array for data but got:', data, 'Full response:', response.data);
+      if (response.status === 200 || response.status === 201) {
+        // Handle potential variations in response structure
+        let pushedQuestions = [];
+        if (Array.isArray(response.data)) {
+          pushedQuestions = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          pushedQuestions = response.data.data;
+        } else {
+          console.warn('fetchPushedStatus: Unexpected response format:', response.data);
         }
 
-        setQuestions(prev => prev.map(q => ({
+        const updatedQuestions = questions.map(q => ({
           ...q,
-          isPushed: pushedQuestions.some(p => p.questionId === q._id)
-        })));
+          isPushed: pushedQuestions.some(p => p.questionId && String(p.questionId) === String(q._id))
+        }));
+
+        setQuestions(updatedQuestions);
       }
     } catch (err) {
       console.error('Error fetching pushed status:', err);
@@ -271,15 +278,13 @@ const QuestionBank = () => {
                           <motion.button
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
-                            onClick={() => handlePushQuestion(question)}
-                            disabled={question.isPushed}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${question.isPushed
-                              ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                              : 'bg-primary-500 hover:bg-primary-600 text-white'
+                            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 text-white ${question.isPushed
+                              ? 'bg-green-600 hover:bg-green-700'
+                              : 'bg-primary-500 hover:bg-primary-600'
                               }`}
                           >
                             <Send className="h-4 w-4" />
-                            {question.isPushed ? 'Question Pushed' : 'Push to Session'}
+                            {question.isPushed ? 'Push Again' : 'Push to Session'}
                           </motion.button>
 
                           <motion.button
