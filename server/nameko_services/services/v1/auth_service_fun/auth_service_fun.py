@@ -219,43 +219,35 @@ class AuthServiceV1:
     @rpc
     @error_handler
     def refresh_token(self, refresh_token):
-        print(f"DEBUG: refresh_token called with: {refresh_token}")
+
         
         def try_rpc_fallback(original_error):
-            print("DEBUG: Local refresh failed, trying eduvocate_auth_rpc")
             try:
                 rpc_response = self.eduvocate_auth_rpc.refresh_token(refresh_token)
                 if rpc_response and rpc_response.get('status') == 200:
-                    print("DEBUG: eduvocate_auth_rpc refresh successful")
                     return rpc_response
-            except Exception as e:
-                print(f"DEBUG: eduvocate_auth_rpc failed: {e}")
+            except Exception:
+                pass
             return original_error
 
         try:
             payload = self._decode_token(refresh_token)
-            print(f"DEBUG: Decoded payload: {payload}")
             if payload is None:
-                print("DEBUG: Payload is None")
                 raise jwt.InvalidTokenError
             user_id = payload.get('user_id')
             email = payload.get('email')
             token_type = payload.get('type')
             if not user_id or not email or token_type != 'refresh':
-                print(f"DEBUG: Invalid payload content. user_id: {user_id}, email: {email}, type: {token_type}")
                 raise jwt.InvalidTokenError
-        except jwt.InvalidTokenError as e:
-            print(f"DEBUG: jwt.InvalidTokenError: {e}")
+        except jwt.InvalidTokenError:
             return try_rpc_fallback({'error': 'Invalid refresh token', 'status': 401})
 
         user_data = self.user_db.find_user_by_user_id(user_id)
         if user_data is None:
-            print(f"DEBUG: User not found for user_id: {user_id}")
             return try_rpc_fallback({'error': 'User not found', 'status': 401})
 
         # Verify the refresh token exists and is valid
         if not self.token_db.verify_refresh_token(user_id, refresh_token):
-            print(f"DEBUG: verify_refresh_token failed for user_id: {user_id}")
             return try_rpc_fallback({'error': 'Invalid or expired refresh token', 'status': 401})
 
         access_token = self._create_access_token(user_data)
@@ -263,10 +255,8 @@ class AuthServiceV1:
         result = self._store_tokens(user_data['email'], access_token, new_refresh_token, user_id)
         
         if result.acknowledged:
-            print("DEBUG: Tokens refreshed successfully")
             return {'access_token': access_token, 'refresh_token': new_refresh_token, 'status': 200}
         
-        print("DEBUG: Token update failed in DB")
         return {'error': 'Token update failed', 'status': 500}
 
     @rpc
