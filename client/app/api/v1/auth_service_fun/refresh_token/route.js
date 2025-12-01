@@ -54,8 +54,19 @@ export async function POST(request) {
     const responseData = await AuthRefreshRequest(service, method, refreshToken);
     logger.info('Refresh response data:', responseData);
 
+    // Check if the backend returned an error or if the status is not 200
+    if (responseData.error || (responseData.status && responseData.status !== 200)) {
+      const status = responseData.status || 401;
+      const message = responseData.error || 'Failed to refresh tokens';
+      logger.warn(`Refresh failed with status ${status}: ${message}`);
+      return NextResponse.json(
+        { error: message },
+        { status: status }
+      );
+    }
+
     if (!responseData.access_token || !responseData.refresh_token) {
-      logger.error('Failed to refresh tokens');
+      logger.error('Failed to refresh tokens: Missing tokens in response');
       return NextResponse.json(
         { error: 'Failed to refresh tokens' },
         { status: 500 }
