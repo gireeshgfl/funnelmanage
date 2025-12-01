@@ -4,7 +4,7 @@ import logging
 import json
 from functools import wraps
 from datetime import datetime, timedelta
-from nameko.rpc import rpc
+from nameko.rpc import rpc, RpcProxy
 from nameko.dependency_providers import Config
 from common.dependencies import WorkerContextProvider, RedisClient,MongoProviderAuth,MongoProvider
 from common.DAO import UserDAO, TokenDAO, OTPDAO,ApprovalDAO
@@ -22,11 +22,11 @@ logger = setup_logging(__name__, log_level=logging.DEBUG)
 
 class AuthServiceV1:
     name = 'auth_service_fun'
-
     mongo_provider = MongoProvider()
     worker_ctx = WorkerContextProvider()
     redis = RedisClient()
     config = Config()
+    eduvocate_auth_rpc = RpcProxy('auth_service_v2')
 
     @property
     def secret_key(self):
@@ -35,22 +35,6 @@ class AuthServiceV1:
     @property
     def jwt_algorithm(self):
         return self.config.get('JWT_ALGORITHM')
-
-    # @property
-    # def access_token_expire_days(self):
-    #     value = self.config.get('ACCESS_TOKEN_EXPIRY_DAYS')
-    #     print(value,'ameen')
-    #     if value is None:
-    #         value = 15  # Default value if the config is missing
-    #     return value
-
-    # @property
-    # def refresh_token_expire_days(self):
-    #     value = self.config.get('REFRESH_TOKEN_EXPIRY_DAYS')  # Fixed typo
-    #     print(value,'ameen')
-    #     if value is None:
-    #         value = 7  # Default value if the config is missing
-    #     return value
     
     @property
     def redis_token_key(self):
@@ -236,6 +220,18 @@ class AuthServiceV1:
     @error_handler
     def refresh_token(self, refresh_token):
         print(f"DEBUG: refresh_token called with: {refresh_token}")
+        
+        def try_rpc_fallback(original_error):
+            print("DEBUG: Local refresh failed, trying eduvocate_auth_rpc")
+            try:
+                rpc_response = self.eduvocate_auth_rpc.refresh_token(refresh_token)
+                if rpc_response and rpc_response.get('status') == 200:
+                    print("DEBUG: eduvocate_auth_rpc refresh successful")
+                    return rpc_response
+            except Exception as e:
+                print(f"DEBUG: eduvocate_auth_rpc failed: {e}")
+            return original_error
+
         try:
             payload = self._decode_token(refresh_token)
             print(f"DEBUG: Decoded payload: {payload}")
@@ -250,17 +246,17 @@ class AuthServiceV1:
                 raise jwt.InvalidTokenError
         except jwt.InvalidTokenError as e:
             print(f"DEBUG: jwt.InvalidTokenError: {e}")
-            return {'error': 'Invalid refresh token', 'status': 401}
+            return try_rpc_fallback({'error': 'Invalid refresh token', 'status': 401})
 
         user_data = self.user_db.find_user_by_user_id(user_id)
         if user_data is None:
             print(f"DEBUG: User not found for user_id: {user_id}")
-            return {'error': 'User not found', 'status': 401}
+            return try_rpc_fallback({'error': 'User not found', 'status': 401})
 
         # Verify the refresh token exists and is valid
         if not self.token_db.verify_refresh_token(user_id, refresh_token):
             print(f"DEBUG: verify_refresh_token failed for user_id: {user_id}")
-            return {'error': 'Invalid or expired refresh token', 'status': 401}
+            return try_rpc_fallback({'error': 'Invalid or expired refresh token', 'status': 401})
 
         access_token = self._create_access_token(user_data)
         new_refresh_token = self._create_refresh_token(user_data)
