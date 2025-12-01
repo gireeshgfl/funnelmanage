@@ -235,24 +235,31 @@ class AuthServiceV1:
     @rpc
     @error_handler
     def refresh_token(self, refresh_token):
+        print(f"DEBUG: refresh_token called with: {refresh_token}")
         try:
             payload = self._decode_token(refresh_token)
+            print(f"DEBUG: Decoded payload: {payload}")
             if payload is None:
+                print("DEBUG: Payload is None")
                 raise jwt.InvalidTokenError
             user_id = payload.get('user_id')
             email = payload.get('email')
             token_type = payload.get('type')
             if not user_id or not email or token_type != 'refresh':
+                print(f"DEBUG: Invalid payload content. user_id: {user_id}, email: {email}, type: {token_type}")
                 raise jwt.InvalidTokenError
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError as e:
+            print(f"DEBUG: jwt.InvalidTokenError: {e}")
             return {'error': 'Invalid refresh token', 'status': 401}
 
         user_data = self.user_db.find_user_by_user_id(user_id)
         if user_data is None:
+            print(f"DEBUG: User not found for user_id: {user_id}")
             return {'error': 'User not found', 'status': 401}
 
         # Verify the refresh token exists and is valid
         if not self.token_db.verify_refresh_token(user_id, refresh_token):
+            print(f"DEBUG: verify_refresh_token failed for user_id: {user_id}")
             return {'error': 'Invalid or expired refresh token', 'status': 401}
 
         access_token = self._create_access_token(user_data)
@@ -260,8 +267,10 @@ class AuthServiceV1:
         result = self._store_tokens(user_data['email'], access_token, new_refresh_token, user_id)
         
         if result.acknowledged:
+            print("DEBUG: Tokens refreshed successfully")
             return {'access_token': access_token, 'refresh_token': new_refresh_token, 'status': 200}
         
+        print("DEBUG: Token update failed in DB")
         return {'error': 'Token update failed', 'status': 500}
 
     @rpc
