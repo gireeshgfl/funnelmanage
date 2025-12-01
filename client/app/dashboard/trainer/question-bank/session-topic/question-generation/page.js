@@ -5,6 +5,7 @@ import { useQuestions } from '@/hooks/useQuestions';
 import { QuestionForm } from '@/components/question_generation/QuestionForm';
 import { QuestionList } from '@/components/question_generation/QuestionList';
 import { useQuestionOperations } from '@/hooks/useQuestionOperations';
+import { getTopic } from '@/hooks/session_management/topicService';
 
 function QuestionPageContent() {
   const router = useRouter();
@@ -14,6 +15,23 @@ function QuestionPageContent() {
   const { questions, questionIds, feedbackMessage, setFeedbackMessage, fetchQuestions } = useQuestions(topicId);
   const { handleDelete, handleUpdate, handleAdd } = useQuestionOperations(fetchQuestions, setFeedbackMessage, topicId);
   const [editIndex, setEditIndex] = useState(null);
+  const [topicName, setTopicName] = useState('');
+
+  React.useEffect(() => {
+    const fetchTopicName = async () => {
+      if (topicId) {
+        try {
+          const response = await getTopic(topicId);
+          if (response?.data?.topic) {
+            setTopicName(response.data.topic);
+          }
+        } catch (error) {
+          console.error('Error fetching topic:', error);
+        }
+      }
+    };
+    fetchTopicName();
+  }, [topicId]);
 
   const navigateToQuestionBank = () => {
     setFeedbackMessage('Session saved successfully!');
@@ -24,11 +42,10 @@ function QuestionPageContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Feedback Message */}
       {feedbackMessage && (
-        <div className={`mb-6 p-4 rounded-lg ${
-          feedbackMessage.includes('Failed') 
+        <div className={`mb-6 p-4 rounded-lg ${feedbackMessage.includes('Failed')
             ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-4 border-red-500'
             : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-l-4 border-green-500'
-        }`}>
+          }`}>
           {feedbackMessage}
         </div>
       )}
@@ -39,14 +56,14 @@ function QuestionPageContent() {
           {/* Question Form Column */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 h-[810px] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-              {editIndex !== null ? 'Edit Question' : 'Create Question'}
+              {editIndex !== null ? 'Edit Question' : `Create Question for ${topicName}`}
             </h2>
-            <QuestionForm 
+            <QuestionForm
               onSubmit={(data) => {
                 if (editIndex !== null) {
                   handleUpdate(data, questionIds[editIndex]);
                 } else {
-                  handleAdd(data); 
+                  handleAdd(data);
                 }
               }}
               initialData={editIndex !== null ? questions[editIndex] : null}
@@ -60,7 +77,7 @@ function QuestionPageContent() {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
               Saved Questions
             </h2>
-            <QuestionList 
+            <QuestionList
               questions={questions}
               onEdit={setEditIndex}
               onDelete={(index) => handleDelete(questionIds[index])}

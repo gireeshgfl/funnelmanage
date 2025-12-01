@@ -738,6 +738,32 @@ class TopicDAO:
         """
         return list(self.db.find(query))
 
+    def get_topic_by_id_and_user(self, topic_id, user_id):
+        """
+        Retrieve a topic by ID and verify ownership.
+        """
+        if not isinstance(topic_id, ObjectId):
+            try:
+                topic_id = ObjectId(topic_id)
+            except Exception:
+                return None
+        
+        query = {
+            '_id': topic_id,
+            'created_by': ObjectId(user_id)
+        }
+        return self.db.find_one(query)
+
+    def get_topics_by_user(self, user_id):
+        """
+        Retrieve all topics created by a specific user.
+        """
+        query = {
+            "user_id": user_id,
+            "created_by": ObjectId(user_id)
+        }
+        return list(self.db.find(query))
+
 
 # ------------------------------
 # Points Service DAO Module

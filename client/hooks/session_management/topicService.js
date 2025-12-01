@@ -8,6 +8,10 @@ export const getTopics = async () => {
     key: topic._id,
     text: topic.data.topic,
     value: topic._id,
-    difficulty: topic.data.difficulty,
   }));
+};
+
+export const getTopic = async (topicId) => {
+  const response = await apiClient.get(`${API_ROUTES.QUESTION_SERVICE.GET_TOPICS}?id=${topicId}`);
+  return response.data;
 };

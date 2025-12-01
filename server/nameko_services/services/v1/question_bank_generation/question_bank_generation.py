@@ -214,27 +214,28 @@ class QuestionService:
 
     @rpc
     @error_handler
-    @rbac_check(required_roles=['trainer'])
+    @get_rbac_check(required_roles=['trainer'])
     @serialize_result
-    def get_topics(self, user_id):
-        """
-        Fetch topics where both user_id and created_by match the provided user_id.
-        """
+    def get_topics(self, user_id, payload):
 
-        query = {
-            "user_id": user_id,
-            "created_by": ObjectId(user_id)
-        }
-        
-        topics = self.topic_dao.find_topics(query)
-        
-        for topic in topics:
-            topic['_id'] = str(topic['_id'])
-        
-        if not topics:
-            return {'message': "No topics found", 'data': [], 'status': 200}
-        
-        return {'message': "Topics fetched successfully", 'data': topics, 'status': 200}
+        topic_id = payload.get("query_params", {}).get("id")
+
+        if topic_id:
+            topic = self.topic_dao.get_topic_by_id_and_user(topic_id, user_id)
+            if not topic:
+                return {'message': 'Topic not found or permission denied', 'status': 404}
+            
+            return {'message': "Topic fetched successfully", 'data': {'topic': topic['data']['topic']}, 'status': 200}
+
+        else:
+            topics = self.topic_dao.get_topics_by_user(user_id)
+            for topic in topics:
+                topic['_id'] = str(topic['_id'])
+            
+            if not topics:
+                return {'message': "No topics found", 'data': [], 'status': 200}
+            
+            return {'message': "Topics fetched successfully", 'data': topics, 'status': 200}
 
     @rpc
     @error_handler

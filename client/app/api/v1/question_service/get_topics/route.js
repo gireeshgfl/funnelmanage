@@ -8,7 +8,13 @@ export async function GET(request, { params }) {
         const url = new URL(request.url);
         const { service, method } = await extractServiceAndMethod(url);
 
-        const result = await handleGetRequest(service, method);
+        // Extract all search parameters
+        const params = {};
+        url.searchParams.forEach((value, key) => {
+            params[key] = value;
+        });
+
+        const result = await handleGetRequest(service, method, params);
         if (result.status === 200) {
             return NextResponse.json(result);
         } else if (result.status === 400) {
