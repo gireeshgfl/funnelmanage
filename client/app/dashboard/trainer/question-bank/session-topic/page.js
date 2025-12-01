@@ -10,14 +10,14 @@ export default function TopicSelectionForm() {
   const [customTopic, setCustomTopic] = useState('');
   const [isCustomTopic, setIsCustomTopic] = useState(false);
   const [description, setDescription] = useState('');
-  const [difficulty, setDifficulty] = useState('');
+
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState(null);
   const router = useRouter();
 
   const topics = ['JavaScript', 'React', 'Python', 'Machine Learning', 'Web Design', 'Software Engineering', 'Custom'];
-  const difficulties = ['Easy', 'Medium', 'Hard'];
+
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -53,9 +53,7 @@ export default function TopicSelectionForm() {
       case 'description':
         setDescription(value);
         break;
-      case 'difficulty':
-        setDifficulty(value);
-        break;
+
       default:
         break;
     }
@@ -66,7 +64,7 @@ export default function TopicSelectionForm() {
     setIsSubmitting(true);
     const selectedTopic = isCustomTopic ? customTopic : topic;
 
-    if (!selectedTopic || !description || !difficulty || !userId) {
+    if (!selectedTopic || !userId) {
       setFeedbackMessage('Please fill in all fields before submitting.');
       setIsSubmitting(false);
       return;
@@ -78,7 +76,7 @@ export default function TopicSelectionForm() {
         data: {
           topic: selectedTopic,
           description: description,
-          difficulty: difficulty,
+
         },
       };
 
@@ -95,9 +93,9 @@ export default function TopicSelectionForm() {
         setTopic('');
         setCustomTopic('');
         setDescription('');
-        setDifficulty('');
+
         setIsCustomTopic(false);
-        setFeedbackMessage('Form submitted successfully!');
+        setFeedbackMessage(responseData.message || 'Form submitted successfully!');
 
         router.push(`/dashboard/trainer/question-bank/session-topic/question-generation?topic=${selectedTopic}&topicId=${objectId}`);
       } else {
@@ -116,7 +114,7 @@ export default function TopicSelectionForm() {
       <div className="flex items-center mb-8">
         <BookOpen className="h-8 w-8 text-primary-500 mr-3" />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Indicate Your Preferred Subject For Discussion
+          Select Topic for Question Generation
         </h1>
       </div>
 
@@ -173,7 +171,7 @@ export default function TopicSelectionForm() {
         {/* Description */}
         <div className="space-y-3">
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Description <span className="text-red-500">*</span>
+            Description
           </label>
           <div className="relative">
             <div className="absolute top-3 left-3">
@@ -191,31 +189,7 @@ export default function TopicSelectionForm() {
           </div>
         </div>
 
-        {/* Difficulty */}
-        <div className="space-y-3">
-          <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Difficulty <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <select
-              id="difficulty"
-              name="difficulty"
-              value={difficulty}
-              onChange={handleChange}
-              className="block w-full pl-4 pr-10 py-3 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white rounded-lg appearance-none transition-all duration-200"
-            >
-              <option value="">Select Difficulty</option>
-              {difficulties.map((difficulty) => (
-                <option key={difficulty} value={difficulty}>
-                  {difficulty}
-                </option>
-              ))}
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-300" />
-            </div>
-          </div>
-        </div>
+
 
         {/* Submit Button */}
         <div className="pt-4">

@@ -50,7 +50,7 @@ function TopicDatabase() {
       _id: topic._id,
       topic: topic.data.topic,
       description: topic.data.description,
-      difficulty: topic.data.difficulty,
+      description: topic.data.description,
     });
     setEditModalOpen(true);
   };
@@ -58,8 +58,8 @@ function TopicDatabase() {
   const handleUpdate = async () => {
     setIsUpdating(true);
     try {
-      const { _id, topic, description, difficulty } = editingTopic;
-      const data = { _id, topic, description, difficulty };
+      const { _id, topic, description } = editingTopic;
+      const data = { _id, topic, description };
 
       const response = await apiClient.put(API_ROUTES.QUESTION_SERVICE.UPDATE_TOPIC, data);
 
@@ -150,9 +150,7 @@ function TopicDatabase() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   {topic.data.topic}
                 </h3>
-                <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 mb-3">
-                  {topic.data.difficulty}
-                </span>
+
                 <p className="text-gray-600 dark:text-gray-300 line-clamp-3">
                   {topic.data.description}
                 </p>
@@ -244,21 +242,7 @@ function TopicDatabase() {
                     />
                   </div>
 
-                  <div>
-                    <label htmlFor="edit-difficulty" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Difficulty
-                    </label>
-                    <select
-                      id="edit-difficulty"
-                      className="block w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:text-white px-4 py-2"
-                      value={editingTopic?.difficulty || ''}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, difficulty: e.target.value })}
-                    >
-                      <option value="Easy">Easy</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Hard">Hard</option>
-                    </select>
-                  </div>
+
 
                   <div>
                     <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

@@ -12,10 +12,7 @@ export const TopicSchema = z.object({
   user_id: z.string().length(24, "Invalid user ID format"),
   data: z.object({
     topic: z.string().min(1, "Topic is required"),
-    description: z.string().min(1, "Description is required"),
-    difficulty: z.enum(["Easy", "Medium", "Hard"], {
-      message: "Difficulty must be one of: Easy, Medium, Hard",
-    }),
+    description: z.string().optional(),
   }),
 });
 

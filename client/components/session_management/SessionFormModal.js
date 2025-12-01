@@ -13,7 +13,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Funnel Participants state
   const [funnelCount, setFunnelCount] = useState(1);
   const [isFetchingFunnel, setIsFetchingFunnel] = useState(false);
@@ -32,10 +32,10 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
     console.log('Selected Funnel Participants:', selectedFunnelParticipants);
   }, [funnelParticipants, selectedFunnelParticipants]);
 
-  const topicOptions = useMemo(() => 
+  const topicOptions = useMemo(() =>
     availableTopics.map(topic => ({
       value: topic.id || topic.value,
-      label: `${topic.text || topic.name}${topic.difficulty ? ` (${topic.difficulty})` : ''}`
+      label: `${topic.text || topic.name}`
     })),
     [availableTopics]
   );
@@ -123,24 +123,23 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       return;
     }
     if (!hasChanges) return;
-    
+
     setFormError('');
     setIsSubmitting(true);
-    
+
     const questionsPayload = selectedTopics.map((id) => {
       const found = availableTopics.find((q) => (q.id || q.value) === id);
-      return found ? { 
-        id, 
-        name: found.text || found.name, 
-        difficulty: found.difficulty || "Easy" 
-      } : { id, name: "", difficulty: "Easy" };
+      return found ? {
+        id,
+        name: found.text || found.name
+      } : { id, name: "" };
     });
-  
+
     const participantsPayload = selectedParticipants.map((id) => {
       const found = availableParticipants.find((p) => (p.id || p.value) === id);
-      return found ? { 
-        id, 
-        name: found.text || found.name 
+      return found ? {
+        id,
+        name: found.text || found.name
       } : { id, name: "" };
     });
 
@@ -148,12 +147,12 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       const found = funnelParticipants.find((p) => p.value === id);
       return found || { id, name: "" };
     });
-  
-    const sessionData = { 
-      sessionName, 
-      date, 
-      time, 
-      topic, 
+
+    const sessionData = {
+      sessionName,
+      date,
+      time,
+      topic,
       additionalInfo,
       discount: discount || 0, // Include discount (default to 0 if empty)
       questions: questionsPayload,
@@ -161,7 +160,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       funnelParticipants: funnelParticipantsPayload,
       funnelParticipantsData: funnelParticipants
     };
-  
+
     try {
       await onSubmit(sessionData);
       onClose();
@@ -174,15 +173,15 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
   };
 
   const handleTopicSelect = (topicId) => {
-    setSelectedTopics(prev => 
-      prev.includes(topicId) 
+    setSelectedTopics(prev =>
+      prev.includes(topicId)
         ? prev.filter(id => id !== topicId)
         : [...prev, topicId]
     );
   };
 
   const handleParticipantSelect = (participantId) => {
-    setSelectedParticipants(prev => 
+    setSelectedParticipants(prev =>
       prev.includes(participantId)
         ? prev.filter(id => id !== participantId)
         : [...prev, participantId]
@@ -194,18 +193,18 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       setFormError('Please enter a valid number (1 or above)');
       return;
     }
-    
+
     if (discountError) {
       setFormError('Please fix discount errors before fetching participants');
       return;
     }
-    
+
     setIsFetchingFunnel(true);
     setHasFetchedParticipants(false);
     try {
       const response = await fetchFunnellingData(funnelCount);
       console.log('API Response:', response);
-      
+
       if (response?.status === 200 && Array.isArray(response.data)) {
         const formattedData = response.data.map(participant => ({
           value: participant.userId,
@@ -213,7 +212,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
           sessionCount: participant.session_count,
           sessions: participant.sessions
         }));
-        
+
         console.log('Formatted Data:', formattedData);
         setFunnelParticipants(formattedData);
         setHasFetchedParticipants(true);
@@ -235,7 +234,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
     if (funnelSelectionMode === 'all') {
       setSelectedFunnelParticipants(funnelParticipants.map(p => p.value));
     } else {
-      setSelectedFunnelParticipants(prev => 
+      setSelectedFunnelParticipants(prev =>
         prev.includes(participantId)
           ? prev.filter(id => id !== participantId)
           : [...prev, participantId]
@@ -335,71 +334,71 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 className="w-full"
               />
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Questions
-        </label>
-        {topicOptions.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            No topics available. Please add topics.
-          </p>
-        ) : (
-          <Dropdown
-            trigger={
-              <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                {selectedTopics.length > 0 
-                  ? `${selectedTopics.length} selected` 
-                  : 'Select questions'}
-                <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            }
-            position="bottom"
-            className="w-full"
-          >
-            <div className="max-h-60 overflow-y-auto">
-              {topicOptions.map(option => (
-                <DropdownItem 
-                  key={option.value}
-                  onClick={() => handleTopicSelect(option.value)}
-                  className={`flex items-center ${selectedTopics.includes(option.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedTopics.includes(option.value)}
-                    readOnly
-                    className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
-                  />
-                  {option.label}
-                </DropdownItem>
-              ))}
-            </div>
-          </Dropdown>
-        )}
-        {selectedTopics.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {selectedTopics.map(topicId => {
-              const topic = availableTopics.find(t => (t.id || t.value) === topicId);
-              return (
-                <span 
-                  key={topicId} 
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200"
-                >
-                  {topic?.text || topic?.name || topicId}
-                  {topic?.difficulty && ` (${topic.difficulty})`}
-                  <button 
-                    onClick={() => handleTopicSelect(topicId)}
-                    className="ml-1.5 inline-flex text-primary-400 hover:text-primary-600 dark:hover:text-primary-300"
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Questions
+                </label>
+                {topicOptions.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    No topics available. Please add topics.
+                  </p>
+                ) : (
+                  <Dropdown
+                    trigger={
+                      <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                        {selectedTopics.length > 0
+                          ? `${selectedTopics.length} selected`
+                          : 'Select questions'}
+                        <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    }
+                    position="bottom"
+                    className="w-full"
                   >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {topicOptions.map(option => (
+                        <DropdownItem
+                          key={option.value}
+                          onClick={() => handleTopicSelect(option.value)}
+                          className={`flex items-center ${selectedTopics.includes(option.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedTopics.includes(option.value)}
+                            readOnly
+                            className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
+                          />
+                          {option.label}
+                        </DropdownItem>
+                      ))}
+                    </div>
+                  </Dropdown>
+                )}
+                {selectedTopics.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedTopics.map(topicId => {
+                      const topic = availableTopics.find(t => (t.id || t.value) === topicId);
+                      return (
+                        <span
+                          key={topicId}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200"
+                        >
+                          {topic?.text || topic?.name || topicId}
+
+                          <button
+                            onClick={() => handleTopicSelect(topicId)}
+                            className="ml-1.5 inline-flex text-primary-400 hover:text-primary-600 dark:hover:text-primary-300"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -408,8 +407,8 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 <Dropdown
                   trigger={
                     <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                      {selectedParticipants.length > 0 
-                        ? `${selectedParticipants.length} selected` 
+                      {selectedParticipants.length > 0
+                        ? `${selectedParticipants.length} selected`
                         : 'Select participants'}
                       <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -421,7 +420,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 >
                   <div className="max-h-60 overflow-y-auto">
                     {participantOptions.map(option => (
-                      <DropdownItem 
+                      <DropdownItem
                         key={option.value}
                         onClick={() => handleParticipantSelect(option.value)}
                         className={`flex items-center ${selectedParticipants.includes(option.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
@@ -442,12 +441,12 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                     {selectedParticipants.map(participantId => {
                       const participant = availableParticipants.find(p => (p.id || p.value) === participantId);
                       return (
-                        <span 
-                          key={participantId} 
+                        <span
+                          key={participantId}
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                         >
                           {participant?.text || participant?.name || participantId}
-                          <button 
+                          <button
                             onClick={() => handleParticipantSelect(participantId)}
                             className="ml-1.5 inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                           >
@@ -465,7 +464,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Funnel Participants & Discount
                 </label>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
                   <div>
                     <Input
@@ -540,8 +539,8 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                     <Dropdown
                       trigger={
                         <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                          {selectedFunnelParticipants.length > 0 
-                            ? `${selectedFunnelParticipants.length} selected` 
+                          {selectedFunnelParticipants.length > 0
+                            ? `${selectedFunnelParticipants.length} selected`
                             : 'Select funnel participants'}
                           <ChevronsUpDown className="h-5 w-5 text-gray-400" />
                         </button>
@@ -551,7 +550,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                     >
                       <div className="max-h-60 overflow-y-auto">
                         {funnelParticipants.map(participant => (
-                          <DropdownItem 
+                          <DropdownItem
                             key={participant.value}
                             onClick={() => handleFunnelParticipantSelect(participant.value)}
                             className={`flex items-center ${selectedFunnelParticipants.includes(participant.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
@@ -580,12 +579,12 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                         {selectedFunnelParticipants.map(participantId => {
                           const participant = funnelParticipants.find(p => p.value === participantId);
                           return (
-                            <span 
-                              key={participantId} 
+                            <span
+                              key={participantId}
                               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
                             >
                               {participant?.label || participantId}
-                              <button 
+                              <button
                                 onClick={() => handleFunnelParticipantSelect(participantId)}
                                 className="ml-1.5 inline-flex text-purple-400 hover:text-purple-600 dark:hover:text-purple-300"
                               >
