@@ -43,8 +43,8 @@ function QuestionPageContent() {
       {/* Feedback Message */}
       {feedbackMessage && (
         <div className={`mb-6 p-4 rounded-lg ${feedbackMessage.includes('Failed')
-            ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-4 border-red-500'
-            : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-l-4 border-green-500'
+          ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-4 border-red-500'
+          : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-l-4 border-green-500'
           }`}>
           {feedbackMessage}
         </div>
@@ -74,13 +74,11 @@ function QuestionPageContent() {
 
           {/* Question List Column */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 h-[810px] overflow-y-auto">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-              Saved Questions
-            </h2>
             <QuestionList
               questions={questions}
               onEdit={setEditIndex}
               onDelete={(index) => handleDelete(questionIds[index])}
+              title="Saved Questions"
             />
           </div>
         </div>
