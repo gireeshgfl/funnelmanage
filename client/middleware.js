@@ -111,7 +111,38 @@ async function getValidPayload(request) {
 
   try {
     console.log("Attempting to refresh token in middleware...");
-    const newTokens = await AuthRefreshRequest('auth_service_fun', 'refresh_token', refreshToken);
+    let newTokens;
+    try {
+      newTokens = await AuthRefreshRequest('auth_service_fun', 'refresh_token', refreshToken);
+    } catch (primaryError) {
+      console.error("Primary token refresh failed:", primaryError);
+
+      // Check if the error is 401 (Unauthorized)
+      if (primaryError.status === 401 || (primaryError.message && primaryError.message.includes('401'))) {
+        console.log("Attempting fallback refresh...");
+        try {
+          const fallbackResponse = await fetch('https://eduvocate.in/api/v2/auth_service/refresh_token', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${refreshToken}`
+            }
+          });
+
+          if (fallbackResponse.ok) {
+            newTokens = await fallbackResponse.json();
+            console.log("Fallback refresh successful");
+          } else {
+            console.error("Fallback refresh failed with status:", fallbackResponse.status);
+            throw new Error("Fallback refresh failed");
+          }
+        } catch (fallbackError) {
+          console.error("Fallback refresh error:", fallbackError);
+          throw fallbackError; // Re-throw to be caught by the outer catch
+        }
+      } else {
+        throw primaryError; // Re-throw if not 401
+      }
+    }
 
     if (newTokens && newTokens.access_token && newTokens.refresh_token) {
       // Verify new access token to get payload and expiry
@@ -119,7 +150,7 @@ async function getValidPayload(request) {
       const newRefreshPayload = await verifyToken(newTokens.refresh_token);
 
       if (newPayload) {
-        console.log("Token refresh successful");
+        console.log("Token refresh successful (primary or fallback)");
         return {
           payload: newPayload,
           newTokens: {
