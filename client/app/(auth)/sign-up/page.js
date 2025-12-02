@@ -5,6 +5,7 @@ import Link from 'next/link';
 import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from '@/config';
 import { Input, Select, Button } from '@/components/ui/components';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -136,19 +137,20 @@ export default function SignUpPage() {
                             value={formData.password}
                             onChange={handleChange}
                             disabled={isLoading}
+                            suffix={
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
+                            }
                         />
-                        <div className="flex items-center mb-4">
-                            <input
-                                id="show-password"
-                                type="checkbox"
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                                checked={showPassword}
-                                onChange={() => setShowPassword(!showPassword)}
-                            />
-                            <label htmlFor="show-password" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                                Show Password
-                            </label>
-                        </div>
                         <Input
                             label="Phone Number"
                             id="phone"
