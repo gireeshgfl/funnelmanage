@@ -301,7 +301,7 @@ const SessionWorkspace = () => {
               {activeFeature ? (
                 <button
                   onClick={() => setActiveFeature(null)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors text-gray-500 dark:text-gray-400"
                   aria-label="Close current feature"
                 >
                   <X className="h-5 w-5" />

@@ -151,7 +151,7 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
           <Plus className="h-5 w-5 text-primary-500" />
           {editIndex !== null ? 'Edit Question' : 'Create New Question'}
         </h2>
@@ -212,7 +212,7 @@ const MCQCreation = ({ pushMCQsToChat, sessionId, trainerUserId }) => {
 
       <Card className="p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
+          <h2 className="text-xl font-semibold flex items-center gap-2 dark:text-white">
             <List className="h-5 w-5 text-primary-500" />
             Your Questions ({mcqQuestions.length})
           </h2>

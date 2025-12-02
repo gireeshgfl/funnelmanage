@@ -7,7 +7,7 @@ const AddParticipants = ({ onAddParticipants, existingParticipants = [], session
   const [emailInput, setEmailInput] = useState('');
   const [participants, setParticipants] = useState([]);
   const [error, setError] = useState('');
-  
+
   // Use the participant operations hook - modified to handle multiple emails
   const { handleAddParticipants, loading, feedbackMessage, setFeedbackMessage } = useSessionParticipantOperations(sessionId);
 
@@ -17,8 +17,8 @@ const AddParticipants = ({ onAddParticipants, existingParticipants = [], session
   };
 
   const handleAddEmail = () => {
-    const email = emailInput.trim();    
-    
+    const email = emailInput.trim();
+
     if (!email) {
       setError('Please enter an email address');
       return;
@@ -65,7 +65,7 @@ const AddParticipants = ({ onAddParticipants, existingParticipants = [], session
 
     try {
       setFeedbackMessage(''); // Clear any previous messages
-      
+
       // Add all participants in a single API call
       const success = await handleAddParticipants(participants);
 
@@ -89,7 +89,7 @@ const AddParticipants = ({ onAddParticipants, existingParticipants = [], session
 
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
         <Mail className="h-5 w-5 text-primary-500" />
         Add Participants
       </h2>
@@ -97,11 +97,10 @@ const AddParticipants = ({ onAddParticipants, existingParticipants = [], session
       <div className="space-y-4">
         {/* Feedback Message */}
         {feedbackMessage && (
-          <div className={`p-3 rounded-lg text-sm ${
-            feedbackMessage.includes('successfully') 
+          <div className={`p-3 rounded-lg text-sm ${feedbackMessage.includes('successfully')
               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
               : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-          }`}>
+            }`}>
             {feedbackMessage}
           </div>
         )}
