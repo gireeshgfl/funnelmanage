@@ -28,6 +28,7 @@ const QuestionDisplay = ({
   const [selectedAnswerText, setSelectedAnswerText] = useState('');
   const [correctAnswerText, setCorrectAnswerText] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const handleSelectAnswer = (answerIndex) => {
     setSelectedAnswer(answerIndex);
@@ -59,6 +60,10 @@ const QuestionDisplay = ({
         setShowResults(true);
 
         if (result.message === "Correct Answer. Points saved successfully") {
+          setShowCelebration(true);
+          setTimeout(() => {
+            setShowCelebration(false);
+          }, 5000);
           if (onCorrectAnswer) {
             onCorrectAnswer(true);
           }
@@ -79,7 +84,12 @@ const QuestionDisplay = ({
   };
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 flex flex-col">
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/30 flex flex-col relative overflow-hidden">
+      <CelebrationOverlay
+        isOpen={showCelebration}
+        confettiProps={{ colors: ['#f00', '#0f0', '#00f', '#ff0', '#0ff'] }}
+        className="rounded-2xl"
+      />
       {showResults ? (
         <div className="flex flex-col items-center justify-center p-6 animate-fadeIn">
           <div className="w-full max-w-md bg-gradient-to-br from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-600">
@@ -211,7 +221,6 @@ const IndexPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pointsEarned, setPointsEarned] = useState(0);
-  const [showCelebration, setShowCelebration] = useState(false);
   const [activeTab, setActiveTab] = useState('question'); // For mobile view mainly
   const [rightPanelTab, setRightPanelTab] = useState('chat'); // For desktop view: 'chat' or 'participants'
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -353,12 +362,7 @@ const IndexPage = () => {
   };
 
   const onCorrectAnswerHandler = (isCorrect) => {
-    if (isCorrect) {
-      setShowCelebration(true);
-      setTimeout(() => {
-        setShowCelebration(false);
-      }, 5000);
-    }
+    // Handler logic if needed in future
   };
 
   const capitalizeFirstLetter = (string) => {
@@ -395,10 +399,7 @@ const IndexPage = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <CelebrationOverlay
-        isOpen={showCelebration}
-        confettiProps={{ colors: ['#f00', '#0f0', '#00f', '#ff0', '#0ff'] }}
-      />
+
 
       {/* Header */}
       <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm z-20 px-6 py-3 border-b border-gray-200 dark:border-gray-700">
