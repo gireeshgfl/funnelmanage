@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button, Modal } from '@/components/ui/components';
-import { Copy, Edit, Archive, Trash2, Play, Power, Reply, Calendar, Tag, MessageCircle } from 'lucide-react';
+import { Copy, Edit, Archive, Trash2, Play, Power, Reply, Calendar, Tag, MessageCircle, Clock, MoreVertical } from 'lucide-react';
 import { encryptId } from '@/utils/encryption';
 
 const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin, onActivate }) => {
@@ -18,187 +18,180 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
     }, 2000);
   };
 
+  const isActive = session.status === 'Activate';
+  const isArchived = session.archived === "True";
+  const dateObj = new Date(session.date);
+  const day = !isNaN(dateObj) ? dateObj.getDate() : session.date.split('-')[2] || 'DD';
+  const month = !isNaN(dateObj) ? dateObj.toLocaleString('default', { month: 'short' }) : 'MMM';
+
   return (
     <>
       <motion.div
-        className="w-full"
+        className="w-full h-full"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        whileHover={{ y: -5, transition: { duration: 0.2 } }}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
       >
         <div className={`
-        relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm
-        border border-gray-200 dark:border-gray-700 flex flex-col
-        ${session.status === 'Activate'
-            ? 'ring-2 ring-primary-500 dark:ring-primary-400'
-            : ''}
-      `}>
-          {/* Card Header with colored gradient overlay - Reduced height */}
-          <div className="relative h-24 bg-gradient-to-r from-primary-600 to-secondary-500 p-4 text-white">
-            <div className="absolute inset-0 bg-black/10"></div>
+          group relative h-full bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg
+          border border-gray-100 dark:border-gray-700 flex flex-row transition-all duration-300
+          ${isActive ? 'ring-1 ring-primary-500/30 dark:ring-primary-400/30' : ''}
+        `}>
 
-            <div className="relative z-10 flex justify-between items-start h-full">
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-white truncate max-w-[90%]">
-                  {session.sessionName}
-                </h3>
-
-                <p className="text-xs text-white/80 flex items-center mt-1">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  {session.date} at {session.time}
-                </p>
-              </div>
-
-              {session.status === 'Activate' && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/90 text-white">
-                  Active
-                </span>
-              )}
+          {/* Calendar Block (Left Side) */}
+          <div className={`
+            w-24 flex-shrink-0 flex flex-col items-center justify-center p-2 text-center
+            ${isActive
+              ? 'bg-primary-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}
+          `}>
+            <span className="text-xs font-medium uppercase tracking-wider opacity-80">{month}</span>
+            <span className="text-3xl font-bold leading-none my-1">{day}</span>
+            <div className={`h-0.5 w-8 my-2 ${isActive ? 'bg-white/30' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+            <div className="flex flex-col items-center text-xs opacity-90">
+              <Clock className="w-3.5 h-3.5 mb-0.5" />
+              <span>
+                {(() => {
+                  try {
+                    const [hours, minutes] = session.time.split(':');
+                    const date = new Date();
+                    date.setHours(parseInt(hours, 10));
+                    date.setMinutes(parseInt(minutes, 10));
+                    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                  } catch (e) {
+                    return session.time;
+                  }
+                })()}
+              </span>
             </div>
           </div>
 
-          {/* Card Content - Compact layout */}
-          <div className="p-4 flex-1">
-            {/* Topics as Tags */}
-            {session.topic && (
-              <div className="mb-3">
-                <div className="flex items-center mb-1">
-                  <Tag className="h-3.5 w-3.5 text-primary-500 dark:text-primary-400 mr-1.5" />
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Topic</p>
-                </div>
+          {/* Content Block (Right Side) */}
+          <div className="flex-1 p-4 flex flex-col min-w-0">
 
-                <div className="flex flex-wrap gap-1">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/50 dark:text-primary-300">
-                    {session.topic}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Questions as Tags - Modified to show all questions */}
-            {session.questions?.length > 0 && (
-              <div className="mb-3">
-                <div className="flex items-center mb-1">
-                  <MessageCircle className="h-3.5 w-3.5 text-secondary-500 dark:text-secondary-400 mr-1.5" />
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Questions</p>
-                </div>
-
-                <div className="flex flex-wrap gap-1">
-                  {session.questions.slice(0, 3).map((question, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-800 dark:bg-secondary-900/50 dark:text-secondary-300"
-                    >
-                      {question.name}
+            {/* Header */}
+            <div className="flex justify-between items-start gap-2 mb-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1 h-5">
+                  {isActive ? (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      Active
                     </span>
-                  ))}
-                  {session.questions.length > 3 && (
-                    <button
-                      onClick={() => setShowAllQuestions(true)}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
-                    >
-                      +{session.questions.length - 3} more
-                    </button>
+                  ) : isArchived ? (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                      Archived
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
+                      Inactive
+                    </span>
                   )}
                 </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                  {session.sessionName}
+                </h3>
               </div>
-            )}
-          </div>
 
-          {/* Card Actions - Compact layout */}
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => onEdit(session)}
-                aria-label="Edit session"
-              >
-                <Edit className="h-3.5 w-3.5" />
-              </motion.button>
-
-              {session.archive_eligibility === "True" ? (
-                session.archived === "True" ? (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-1.5 rounded-full text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30"
-                    onClick={() => onUnarchive(session._id)}
-                    aria-label="Unarchive session"
-                  >
-                    <Reply className="h-3.5 w-3.5" />
-                  </motion.button>
+              {/* Quick Action: Join/Start */}
+              <div className="flex-shrink-0">
+                {isActive ? (
+                  <div className="flex items-center gap-1">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => onActivate(session._id)}
+                      className="p-2 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                      title="Deactivate Session"
+                    >
+                      <Power className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => onJoin(session._id)}
+                      className="p-2 rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
+                      title="Join Session"
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                    </motion.button>
+                  </div>
                 ) : (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-1.5 rounded-full text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30"
-                    onClick={() => onArchive(session._id)}
-                    aria-label="Archive session"
+                    onClick={() => onActivate(session._id)}
+                    className="p-2 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors"
+                    title="Activate Session"
                   >
-                    <Archive className="h-3.5 w-3.5" />
+                    <Power className="w-4 h-4" />
                   </motion.button>
-                )
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-1.5 rounded-full text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
-                  onClick={() => onDelete(session._id)}
-                  aria-label="Delete session"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </motion.button>
+                )}
+              </div>
+            </div>
+
+            {/* Details */}
+            <div className="flex-1 flex flex-col gap-2">
+              {session.topic && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  <Tag className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="truncate">{session.topic}</span>
+                </div>
               )}
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="ml-auto rounded-md px-2.5 py-1 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium flex items-center gap-1"
-                onClick={() => onJoin(session._id)}
-              >
-                <Play className="h-3 w-3" />
-                <span>Join</span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium flex items-center gap-1 ${session.status === 'Activate'
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-800/50'
-                  }`}
-                onClick={() => onActivate(session._id)}
-              >
-                <Power className="h-3 w-3" />
-                <span>{session.status === 'Activate' ? 'Deactivate' : 'Activate'}</span>
-              </motion.button>
+              {session.questions?.length > 0 && (
+                <div className="flex items-start gap-2 mt-1">
+                  <MessageCircle className="w-3.5 h-3.5 text-gray-400 mt-1 flex-shrink-0" />
+                  <div className="flex flex-wrap gap-1">
+                    {session.questions.slice(0, 2).map((q, i) => (
+                      <span key={i} className="inline-block px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-300 truncate max-w-[100px]">
+                        {q.name}
+                      </span>
+                    ))}
+                    {session.questions.length > 2 && (
+                      <button onClick={() => setShowAllQuestions(true)} className="text-xs text-primary-600 dark:text-primary-400 hover:underline px-1">
+                        +{session.questions.length - 2}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Session URL - Compact */}
-            <div className="flex items-center relative">
-              <div className="relative flex-grow">
-                <input
-                  type="text"
-                  value={`${process.env.NEXT_PUBLIC_HOST_ENDPOINT}/funnel-management/dashboard/student/${encryptId(session._id)}`}
-                  readOnly
-                  className="w-full text-xs py-1.5 px-2 pr-10 rounded-md bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
-                  URL
-                </span>
+            {/* Footer Actions (Reveal on hover or always visible but subtle) */}
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+              <div className="flex gap-1">
+                <button onClick={() => onEdit(session)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+                {session.archive_eligibility === "True" ? (
+                  isArchived ? (
+                    <button onClick={() => onUnarchive(session._id)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                      <Reply className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <button onClick={() => onArchive(session._id)} className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                      <Archive className="w-3.5 h-3.5" />
+                    </button>
+                  )
+                ) : (
+                  <button onClick={() => onDelete(session._id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="ml-1.5 p-1.5 rounded-md bg-primary-500 hover:bg-primary-600 text-white"
-                onClick={(e) => copySessionUrl(e, session._id)}
-              >
-                <Copy className="h-3.5 w-3.5" />
-              </motion.button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => copySessionUrl(e, session._id)}
+                  className="text-xs font-medium text-gray-400 hover:text-primary-600 transition-colors flex items-center gap-1"
+                >
+                  <Copy className="w-3 h-3" />
+                  Copy Link
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
       </motion.div>
@@ -210,44 +203,49 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
         className="max-w-lg"
       >
         <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <MessageCircle className="h-5 w-5 text-secondary-500 mr-2" />
-              All Questions
-            </h3>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-secondary-50 dark:bg-secondary-900/20 rounded-xl text-secondary-500">
+                <MessageCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Session Questions
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {session.sessionName}
+                </p>
+              </div>
+            </div>
             <button
               onClick={() => setShowAllQuestions(false)}
-              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+              className="p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <span className="sr-only">Close</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <div className="mb-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              Session: <span className="font-medium text-gray-900 dark:text-white">{session.sessionName}</span>
-            </p>
+          <div className="max-h-[60vh] overflow-y-auto pr-2 -mr-2">
+            <div className="flex flex-wrap gap-2">
+              {session.questions.map((question, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-100 dark:border-gray-700"
+                >
+                  {question.name}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto p-1">
-            {session.questions.map((question, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-secondary-100 text-secondary-800 dark:bg-secondary-900/50 dark:text-secondary-300 border border-secondary-200 dark:border-secondary-800"
-              >
-                {question.name}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-6 flex justify-end">
+          <div className="mt-8 flex justify-end">
             <Button
               onClick={() => setShowAllQuestions(false)}
               variant="outline"
-              size="small"
+              className="min-w-[100px]"
             >
               Close
             </Button>
@@ -261,13 +259,16 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
 const SessionList = ({ sessions, filterType, onEdit, onDelete, onArchive, onUnarchive, onJoin, onActivate }) => {
   if (!sessions || sessions.length === 0) {
     return (
-      <div className="bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-200 rounded-xl p-4 text-center border border-dashed border-primary-200 dark:border-primary-800 transition-colors duration-300">
-        <h3 className="font-medium text-base">
-          {filterType === 'archived' ? "No sessions archived" : "No sessions to display"}
+      <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700 text-center">
+        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mb-4">
+          <Calendar className="w-8 h-8 text-gray-300 dark:text-gray-500" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          {filterType === 'archived' ? "No archived sessions" : "No sessions found"}
         </h3>
         {filterType !== 'archived' && (
-          <p className="mt-1 text-primary-600 dark:text-primary-400 text-sm">
-            Create a new session to get started
+          <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">
+            Get started by creating your first session to manage your questions and participants.
           </p>
         )}
       </div>
@@ -275,13 +276,13 @@ const SessionList = ({ sessions, filterType, onEdit, onDelete, onArchive, onUnar
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
       {sessions.map((session, index) => (
         <motion.div
-          key={index}
+          key={session._id || index}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
           className="w-full"
         >
           <SessionCard
