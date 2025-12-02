@@ -115,6 +115,7 @@ export default function SignUpPage() {
                             value={formData.username}
                             onChange={handleChange}
                             disabled={isLoading}
+                            autoComplete="nickname"
                         />
                         <Input
                             label="Email address"
@@ -126,6 +127,7 @@ export default function SignUpPage() {
                             value={formData.email}
                             onChange={handleChange}
                             disabled={isLoading}
+                            autoComplete="username"
                         />
                         <Input
                             label="Password"
@@ -137,6 +139,7 @@ export default function SignUpPage() {
                             value={formData.password}
                             onChange={handleChange}
                             disabled={isLoading}
+                            autoComplete="new-password"
                             suffix={
                                 <button
                                     type="button"
