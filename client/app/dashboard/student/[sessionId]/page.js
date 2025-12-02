@@ -10,6 +10,8 @@ import apiClient from '@/utils/axiosinterceptor';
 import { Button } from '@components/ui/components';
 import { SocketContext } from '@/context/socketContext';
 import { decryptId } from '@/utils/encryption';
+import ParticipantsList from '@/components/ParticipantsList';
+import { useParticipants } from '@/hooks/useParticipants';
 
 const QuestionDisplay = ({
   question,
@@ -201,6 +203,8 @@ const QuestionDisplay = ({
   );
 };
 
+
+
 const IndexPage = () => {
   const [studentUserName, setStudentUserName] = useState('student');
   const [studentUserId, setStudentUserId] = useState(null);
@@ -209,6 +213,7 @@ const IndexPage = () => {
   const [pointsEarned, setPointsEarned] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [activeTab, setActiveTab] = useState('question'); // For mobile view mainly
+  const [rightPanelTab, setRightPanelTab] = useState('chat'); // For desktop view: 'chat' or 'participants'
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionQueue, setQuestionQueue] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -216,6 +221,7 @@ const IndexPage = () => {
   const params = useParams();
   const sessionId = decryptId(params.sessionId);
   const { socket } = useContext(SocketContext);
+  const { participants } = useParticipants(sessionId, socket);
 
   const formatQuestion = (questionData, isMCQ = false) => {
     return {
@@ -309,6 +315,18 @@ const IndexPage = () => {
         setStudentUserName(capitalizeFirstLetter(data.username));
         setStudentUserId(data.user_id);
         await fetchPoints(data.user_id);
+
+        // Save participant to database
+        try {
+          await apiClient.post(`${API_ROUTES.FUNNEL_SERVICE.SAVE_PARTICIPANTS}`, {
+            userId: data.user_id,
+            username: data.username,
+            sessionId
+          });
+          console.log('Participant saved successfully');
+        } catch (saveError) {
+          console.error('Error saving participant:', saveError);
+        }
       } else {
         setError('Not authenticated');
         router.push('/login');
@@ -486,29 +504,55 @@ const IndexPage = () => {
             )}
           </div>
 
-          {/* Right Column - Chat Area */}
-          <div className={`md:col-span-5 lg:col-span-5 transition-all duration-300 ${activeTab === 'chat' ? 'block' : 'hidden md:block'}`}>
+          {/* Right Column - Chat & Participants Area */}
+          <div className={`md:col-span-5 lg:col-span-5 transition-all duration-300 ${activeTab === 'chat' || activeTab === 'participants' ? 'block' : 'hidden md:block'}`}>
             <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 h-[600px] flex flex-col overflow-hidden sticky top-6">
-              <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
-                <h3 className="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                  <svg className="h-5 w-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  Chat Room
-                </h3>
-                <div className="text-xs text-gray-400 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  Online
+
+              {/* Desktop Tabs */}
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
+                <div className="flex space-x-2 w-full">
+                  <button
+                    onClick={() => setRightPanelTab('chat')}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${rightPanelTab === 'chat'
+                      ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                      }`}
+                  >
+                    Chat Room
+                  </button>
+                  <button
+                    onClick={() => setRightPanelTab('participants')}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${rightPanelTab === 'participants'
+                      ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                      }`}
+                  >
+                    Participants
+                  </button>
                 </div>
               </div>
 
               <div className="flex-grow overflow-hidden relative">
-                <ChatRoom
-                  sessionId={sessionId}
-                  studentUserName={studentUserName}
-                  studentUserId={studentUserId}
-                  isTrainer={false}
-                />
+                {/* Mobile: Show based on activeTab */}
+                {/* Desktop: Show based on rightPanelTab */}
+                <div className={`h-full ${(window.innerWidth < 768 && activeTab === 'chat') || (window.innerWidth >= 768 && rightPanelTab === 'chat')
+                  ? 'block'
+                  : 'hidden'
+                  }`}>
+                  <ChatRoom
+                    sessionId={sessionId}
+                    studentUserName={studentUserName}
+                    studentUserId={studentUserId}
+                    isTrainer={false}
+                  />
+                </div>
+
+                <div className={`h-full ${(window.innerWidth < 768 && activeTab === 'participants') || (window.innerWidth >= 768 && rightPanelTab === 'participants')
+                  ? 'block'
+                  : 'hidden'
+                  }`}>
+                  <ParticipantsList currentSessionId={sessionId} participants={participants} />
+                </div>
               </div>
             </div>
           </div>
@@ -539,6 +583,15 @@ const IndexPage = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
           <span className="text-xs font-medium">Chat</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('participants')}
+          className={`flex-1 py-3 flex flex-col items-center justify-center gap-1 ${activeTab === 'participants' ? 'text-primary-500 bg-primary-50 dark:bg-primary-900/10' : 'text-gray-500 dark:text-gray-400'}`}
+        >
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span className="text-xs font-medium">Participants</span>
         </button>
       </div>
     </div>

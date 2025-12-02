@@ -86,6 +86,13 @@ const SessionWorkspace = () => {
     };
   }, [router]);
 
+  useEffect(() => {
+    if (socket && sessionId) {
+      console.log('Trainer joining session:', sessionId);
+      socket.emit('setSessionId', { sessionId });
+    }
+  }, [socket, sessionId]);
+
   const toggleDarkMode = () => {
     if (darkMode) {
       document.documentElement.classList.remove('dark');
@@ -266,7 +273,7 @@ const SessionWorkspace = () => {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Participants</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <ParticipantsList currentSessionId={sessionId} />
+            <ParticipantsList currentSessionId={sessionId} isTrainer={true} />
           </div>
         </div>
 
