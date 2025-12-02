@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from 'react';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Filter, Sun, Moon } from 'lucide-react';
+import { Filter, Sun, Moon, BarChart3, Zap } from 'lucide-react';
 import { AuthContext } from '@/context/AuthContext';
 
 export default function WelcomePage() {
@@ -53,18 +53,14 @@ export default function WelcomePage() {
       name: 'Funnel Analytics',
       description: 'Track conversion rates at each stage of your funnel with detailed analytics and visualizations.',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2 Rob-2 0H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002 2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
+        <BarChart3 className="h-6 w-6" />
       )
     },
     {
       name: 'Optimization Tools',
       description: 'Identify bottlenecks and optimize your funnel with A/B testing and smart recommendations.',
       icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7部分 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
+        <Zap className="h-6 w-6" />
       )
     },
     {
