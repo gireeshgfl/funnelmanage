@@ -1,11 +1,13 @@
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/components';
+import { Button, Modal } from '@/components/ui/components';
 import { Copy, Edit, Archive, Trash2, Play, Power, Reply, Calendar, Tag, MessageCircle } from 'lucide-react';
 import { encryptId } from '@/utils/encryption';
 
 const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin, onActivate }) => {
+  const [showAllQuestions, setShowAllQuestions] = React.useState(false);
+
   const copySessionUrl = (event, sessionId) => {
     navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_HOST_ENDPOINT}/funnel-management/dashboard/student/${encryptId(sessionId)}`);
     const button = event.currentTarget;
@@ -17,180 +19,242 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
   };
 
   return (
-    <motion.div
-      className="w-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-    >
-      <div className={`
+    <>
+      <motion.div
+        className="w-full"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      >
+        <div className={`
         relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm
         border border-gray-200 dark:border-gray-700 flex flex-col
         ${session.status === 'Activate'
-          ? 'ring-2 ring-primary-500 dark:ring-primary-400'
-          : ''}
+            ? 'ring-2 ring-primary-500 dark:ring-primary-400'
+            : ''}
       `}>
-        {/* Card Header with colored gradient overlay - Reduced height */}
-        <div className="relative h-24 bg-gradient-to-r from-primary-600 to-secondary-500 p-4 text-white">
-          <div className="absolute inset-0 bg-black/10"></div>
+          {/* Card Header with colored gradient overlay - Reduced height */}
+          <div className="relative h-24 bg-gradient-to-r from-primary-600 to-secondary-500 p-4 text-white">
+            <div className="absolute inset-0 bg-black/10"></div>
 
-          <div className="relative z-10 flex justify-between items-start h-full">
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-white truncate max-w-[90%]">
-                {session.sessionName}
-              </h3>
+            <div className="relative z-10 flex justify-between items-start h-full">
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-white truncate max-w-[90%]">
+                  {session.sessionName}
+                </h3>
 
-              <p className="text-xs text-white/80 flex items-center mt-1">
-                <Calendar className="w-3 h-3 mr-1" />
-                {session.date} at {session.time}
-              </p>
+                <p className="text-xs text-white/80 flex items-center mt-1">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  {session.date} at {session.time}
+                </p>
+              </div>
+
+              {session.status === 'Activate' && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/90 text-white">
+                  Active
+                </span>
+              )}
             </div>
+          </div>
 
-            {session.status === 'Activate' && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/90 text-white">
-                Active
-              </span>
+          {/* Card Content - Compact layout */}
+          <div className="p-4 flex-1">
+            {/* Topics as Tags */}
+            {session.topic && (
+              <div className="mb-3">
+                <div className="flex items-center mb-1">
+                  <Tag className="h-3.5 w-3.5 text-primary-500 dark:text-primary-400 mr-1.5" />
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Topic</p>
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/50 dark:text-primary-300">
+                    {session.topic}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Questions as Tags - Modified to show all questions */}
+            {session.questions?.length > 0 && (
+              <div className="mb-3">
+                <div className="flex items-center mb-1">
+                  <MessageCircle className="h-3.5 w-3.5 text-secondary-500 dark:text-secondary-400 mr-1.5" />
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Questions</p>
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                  {session.questions.slice(0, 3).map((question, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-800 dark:bg-secondary-900/50 dark:text-secondary-300"
+                    >
+                      {question.name}
+                    </span>
+                  ))}
+                  {session.questions.length > 3 && (
+                    <button
+                      onClick={() => setShowAllQuestions(true)}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                    >
+                      +{session.questions.length - 3} more
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
           </div>
-        </div>
 
-        {/* Card Content - Compact layout */}
-        <div className="p-4 flex-1">
-          {/* Topics as Tags */}
-          {session.topic && (
-            <div className="mb-3">
-              <div className="flex items-center mb-1">
-                <Tag className="h-3.5 w-3.5 text-primary-500 dark:text-primary-400 mr-1.5" />
-                <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Topic</p>
-              </div>
+          {/* Card Actions - Compact layout */}
+          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => onEdit(session)}
+                aria-label="Edit session"
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </motion.button>
 
-              <div className="flex flex-wrap gap-1">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/50 dark:text-primary-300">
-                  {session.topic}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Questions as Tags - Modified to show all questions */}
-          {session.questions?.length > 0 && (
-            <div className="mb-3">
-              <div className="flex items-center mb-1">
-                <MessageCircle className="h-3.5 w-3.5 text-secondary-500 dark:text-secondary-400 mr-1.5" />
-                <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Questions</p>
-              </div>
-
-              <div className="flex flex-wrap gap-1">
-                {session.questions.map((question, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-800 dark:bg-secondary-900/50 dark:text-secondary-300"
+              {session.archive_eligibility === "True" ? (
+                session.archived === "True" ? (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-1.5 rounded-full text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30"
+                    onClick={() => onUnarchive(session._id)}
+                    aria-label="Unarchive session"
                   >
-                    {question.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Card Actions - Compact layout */}
-        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={() => onEdit(session)}
-              aria-label="Edit session"
-            >
-              <Edit className="h-3.5 w-3.5" />
-            </motion.button>
-
-            {session.archive_eligibility === "True" ? (
-              session.archived === "True" ? (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-1.5 rounded-full text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30"
-                  onClick={() => onUnarchive(session._id)}
-                  aria-label="Unarchive session"
-                >
-                  <Reply className="h-3.5 w-3.5" />
-                </motion.button>
+                    <Reply className="h-3.5 w-3.5" />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-1.5 rounded-full text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30"
+                    onClick={() => onArchive(session._id)}
+                    aria-label="Archive session"
+                  >
+                    <Archive className="h-3.5 w-3.5" />
+                  </motion.button>
+                )
               ) : (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-1.5 rounded-full text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/30"
-                  onClick={() => onArchive(session._id)}
-                  aria-label="Archive session"
+                  className="p-1.5 rounded-full text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
+                  onClick={() => onDelete(session._id)}
+                  aria-label="Delete session"
                 >
-                  <Archive className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </motion.button>
-              )
-            ) : (
+              )}
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-1.5 rounded-full text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
-                onClick={() => onDelete(session._id)}
-                aria-label="Delete session"
+                className="ml-auto rounded-md px-2.5 py-1 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium flex items-center gap-1"
+                onClick={() => onJoin(session._id)}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Play className="h-3 w-3" />
+                <span>Join</span>
               </motion.button>
-            )}
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="ml-auto rounded-md px-2.5 py-1 bg-primary-500 hover:bg-primary-600 text-white text-xs font-medium flex items-center gap-1"
-              onClick={() => onJoin(session._id)}
-            >
-              <Play className="h-3 w-3" />
-              <span>Join</span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium flex items-center gap-1 ${session.status === 'Activate'
-                ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-800/50'
-                }`}
-              onClick={() => onActivate(session._id)}
-            >
-              <Power className="h-3 w-3" />
-              <span>{session.status === 'Activate' ? 'Deactivate' : 'Activate'}</span>
-            </motion.button>
-          </div>
-
-          {/* Session URL - Compact */}
-          <div className="flex items-center relative">
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                value={`${process.env.NEXT_PUBLIC_HOST_ENDPOINT}/funnel-management/dashboard/student/${encryptId(session._id)}`}
-                readOnly
-                className="w-full text-xs py-1.5 px-2 pr-10 rounded-md bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
-              />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
-                URL
-              </span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`rounded-md px-2.5 py-1 text-xs font-medium flex items-center gap-1 ${session.status === 'Activate'
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-800/50'
+                  }`}
+                onClick={() => onActivate(session._id)}
+              >
+                <Power className="h-3 w-3" />
+                <span>{session.status === 'Activate' ? 'Deactivate' : 'Activate'}</span>
+              </motion.button>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="ml-1.5 p-1.5 rounded-md bg-primary-500 hover:bg-primary-600 text-white"
-              onClick={(e) => copySessionUrl(e, session._id)}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </motion.button>
+
+            {/* Session URL - Compact */}
+            <div className="flex items-center relative">
+              <div className="relative flex-grow">
+                <input
+                  type="text"
+                  value={`${process.env.NEXT_PUBLIC_HOST_ENDPOINT}/funnel-management/dashboard/student/${encryptId(session._id)}`}
+                  readOnly
+                  className="w-full text-xs py-1.5 px-2 pr-10 rounded-md bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
+                />
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
+                  URL
+                </span>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="ml-1.5 p-1.5 rounded-md bg-primary-500 hover:bg-primary-600 text-white"
+                onClick={(e) => copySessionUrl(e, session._id)}
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </motion.button>
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+
+      {/* Questions Modal */}
+      <Modal
+        isOpen={showAllQuestions}
+        onClose={() => setShowAllQuestions(false)}
+        className="max-w-lg"
+      >
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <MessageCircle className="h-5 w-5 text-secondary-500 mr-2" />
+              All Questions
+            </h3>
+            <button
+              onClick={() => setShowAllQuestions(false)}
+              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+            >
+              <span className="sr-only">Close</span>
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Session: <span className="font-medium text-gray-900 dark:text-white">{session.sessionName}</span>
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto p-1">
+            {session.questions.map((question, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-secondary-100 text-secondary-800 dark:bg-secondary-900/50 dark:text-secondary-300 border border-secondary-200 dark:border-secondary-800"
+              >
+                {question.name}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <Button
+              onClick={() => setShowAllQuestions(false)}
+              variant="outline"
+              size="small"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 
