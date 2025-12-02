@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Button, Modal } from '@/components/ui/components';
+import { Button, Modal, Tooltip } from '@/components/ui/components';
 import { Copy, Edit, Archive, Trash2, Play, Power, Reply, Calendar, Tag, MessageCircle, Clock, MoreVertical } from 'lucide-react';
 import { encryptId } from '@/utils/encryption';
 
@@ -34,14 +34,14 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
         whileHover={{ y: -4, transition: { duration: 0.2 } }}
       >
         <div className={`
-          group relative h-full bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg
+          group relative h-full bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg
           border border-gray-100 dark:border-gray-700 flex flex-row transition-all duration-300
           ${isActive ? 'ring-1 ring-primary-500/30 dark:ring-primary-400/30' : ''}
         `}>
 
           {/* Calendar Block (Left Side) */}
           <div className={`
-            w-24 flex-shrink-0 flex flex-col items-center justify-center p-2 text-center
+            w-24 flex-shrink-0 flex flex-col items-center justify-center p-2 text-center rounded-l-2xl
             ${isActive
               ? 'bg-primary-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}
@@ -97,35 +97,38 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
               <div className="flex-shrink-0">
                 {isActive ? (
                   <div className="flex items-center gap-1">
+                    <Tooltip content="Deactivate Session">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onActivate(session._id)}
+                        className="p-2 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                      >
+                        <Power className="w-4 h-4" />
+                      </motion.button>
+                    </Tooltip>
+                    <Tooltip content="Join Session">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onJoin(session._id)}
+                        className="p-2 rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
+                      >
+                        <Play className="w-4 h-4 fill-current" />
+                      </motion.button>
+                    </Tooltip>
+                  </div>
+                ) : (
+                  <Tooltip content="Activate Session">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => onActivate(session._id)}
-                      className="p-2 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-                      title="Deactivate Session"
+                      className="p-2 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors"
                     >
                       <Power className="w-4 h-4" />
                     </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => onJoin(session._id)}
-                      className="p-2 rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
-                      title="Join Session"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                    </motion.button>
-                  </div>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => onActivate(session._id)}
-                    className="p-2 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors"
-                    title="Activate Session"
-                  >
-                    <Power className="w-4 h-4" />
-                  </motion.button>
+                  </Tooltip>
                 )}
               </div>
             </div>
@@ -149,9 +152,11 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
                       </span>
                     ))}
                     {session.questions.length > 2 && (
-                      <button onClick={() => setShowAllQuestions(true)} className="text-xs text-primary-600 dark:text-primary-400 hover:underline px-1">
-                        +{session.questions.length - 2}
-                      </button>
+                      <Tooltip content="View all questions">
+                        <button onClick={() => setShowAllQuestions(true)} className="text-xs text-primary-600 dark:text-primary-400 hover:underline px-1">
+                          +{session.questions.length - 2}
+                        </button>
+                      </Tooltip>
                     )}
                   </div>
                 </div>
@@ -161,34 +166,44 @@ const SessionCard = ({ session, onEdit, onDelete, onArchive, onUnarchive, onJoin
             {/* Footer Actions (Reveal on hover or always visible but subtle) */}
             <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <div className="flex gap-1">
-                <button onClick={() => onEdit(session)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
-                  <Edit className="w-3.5 h-3.5" />
-                </button>
+                <Tooltip content="Edit Session">
+                  <button onClick={() => onEdit(session)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                </Tooltip>
                 {session.archive_eligibility === "True" ? (
                   isArchived ? (
-                    <button onClick={() => onUnarchive(session._id)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
-                      <Reply className="w-3.5 h-3.5" />
-                    </button>
+                    <Tooltip content="Unarchive Session">
+                      <button onClick={() => onUnarchive(session._id)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                        <Reply className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
                   ) : (
-                    <button onClick={() => onArchive(session._id)} className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
-                      <Archive className="w-3.5 h-3.5" />
-                    </button>
+                    <Tooltip content="Archive Session">
+                      <button onClick={() => onArchive(session._id)} className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                        <Archive className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
                   )
                 ) : (
-                  <button onClick={() => onDelete(session._id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <Tooltip content="Delete Session">
+                    <button onClick={() => onDelete(session._id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
                 )}
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => copySessionUrl(e, session._id)}
-                  className="text-xs font-medium text-gray-400 hover:text-primary-600 transition-colors flex items-center gap-1"
-                >
-                  <Copy className="w-3 h-3" />
-                  Copy Link
-                </button>
+                <Tooltip content="Copy Session Link" className="right-0 left-auto translate-x-0 origin-bottom-right">
+                  <button
+                    onClick={(e) => copySessionUrl(e, session._id)}
+                    className="text-xs font-medium text-gray-400 hover:text-primary-600 transition-colors flex items-center gap-1"
+                  >
+                    <Copy className="w-3 h-3" />
+                    Copy Link
+                  </button>
+                </Tooltip>
               </div>
             </div>
 

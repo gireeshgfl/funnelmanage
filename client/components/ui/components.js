@@ -249,6 +249,27 @@ export const Modal = ({
   );
 };
 
+// Tooltip Component
+export const Tooltip = ({ children, content, className = '' }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <div
+      className="relative inline-flex"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      {children}
+      {isVisible && (
+        <div className={`absolute z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg -top-9 left-1/2 transform -translate-x-1/2 whitespace-nowrap pointer-events-none ${className}`}>
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Export all components
 export default {
   Input,
@@ -258,4 +279,5 @@ export default {
   Button,
   Card,
   Modal,
+  Tooltip,
 };
