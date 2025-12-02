@@ -373,9 +373,7 @@ const QuestionBank = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Difficulty: {topic.difficulty}
-                      </span>
+
                       <Button
                         variant="ghost"
                         size="sm"

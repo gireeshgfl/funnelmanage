@@ -3,9 +3,6 @@ import { z } from "zod";
 const QuestionSchema = z.object({
   id: z.string().length(24, "Invalid question ID format"),
   name: z.string().min(1, "Question name is required"),
-  difficulty: z.enum(["Easy", "Medium", "Hard"], {
-    message: "Difficulty must be one of: Easy, Medium, Hard",
-  }),
 });
 
 export const TopicSchema = z.object({
@@ -20,9 +17,6 @@ export const TopicUpdateSchema = z.object({
   _id: z.string().length(24, "Invalid topic ID format"),
   topic: z.string().min(1, "Topic is required"),
   description: z.string().min(1, "Description is required"),
-  difficulty: z.enum(["Easy", "Medium", "Hard"], {
-    message: "Difficulty must be one of: Easy, Medium, Hard",
-  }),
 });
 
 export const SessionSchema = z.object({
