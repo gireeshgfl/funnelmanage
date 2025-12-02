@@ -29,6 +29,7 @@ const QuestionDisplay = ({
   const [correctAnswerText, setCorrectAnswerText] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [resultMessage, setResultMessage] = useState('');
 
   const handleSelectAnswer = (answerIndex) => {
     setSelectedAnswer(answerIndex);
@@ -57,6 +58,7 @@ const QuestionDisplay = ({
         setPointsEarned(result.data.pointsEarned || 0);
         setSelectedAnswerText(result.data.selectedAnswerText);
         setCorrectAnswerText(result.data.correctAnswerText);
+        setResultMessage(result.message);
         setShowResults(true);
 
         if (result.message === "Correct Answer. Points saved successfully") {
@@ -106,6 +108,9 @@ const QuestionDisplay = ({
                   </svg>
                 </div>
                 <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">+{pointsEarned} Points</p>
+                {resultMessage && (
+                  <p className="text-lg font-medium text-gray-600 dark:text-gray-300 mt-2 text-center">{resultMessage}</p>
+                )}
               </div>
 
               <div className="space-y-3">
