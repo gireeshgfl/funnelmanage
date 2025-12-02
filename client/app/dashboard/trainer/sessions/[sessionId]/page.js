@@ -277,8 +277,8 @@ const SessionWorkspace = () => {
           </div>
         </div>
 
-        {/* Middle Section - Question Bank (wider) */}
-        <div className="w-[65rem] h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+        {/* Middle Section - Question Bank (flexible) */}
+        <div className="flex-1 min-w-0 h-full flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <div className="px-4 h-[72px] flex items-center border-b border-gray-200 dark:border-gray-700 space-x-2">
             <BookOpen className="h-5 w-5 text-primary-500" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Question Bank</h2>
@@ -288,8 +288,8 @@ const SessionWorkspace = () => {
           </div>
         </div>
 
-        {/* Right Section - Session Workspace */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-[30rem]">
+        {/* Right Section - Session Workspace (fixed width) */}
+        <div className="w-[28rem] flex flex-col overflow-hidden flex-shrink-0">
           {/* Workspace Toolbar */}
           <div className="px-4 h-[72px] flex items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 justify-between flex-shrink-0">
             <div className="flex items-center space-x-2">
