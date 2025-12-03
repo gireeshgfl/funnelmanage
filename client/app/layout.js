@@ -1,12 +1,9 @@
 import "./globals.css";
-import { AuthProvider } from '@/context/AuthContext'; // Import AuthProvider
+import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata = {
   title: "Funnel Management",
   description: "Efficiently manage and streamline student assessments with our Funnel Management system. Conduct exams, evaluate performance, and filter top candidates for selection, training, or advancement.",
-  icons: {
-    icon: "/funnel-management/favicon.png",
-  },
 };
 
 export default function RootLayout({ children }) {
