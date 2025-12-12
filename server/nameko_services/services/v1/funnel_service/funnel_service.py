@@ -9,7 +9,7 @@ from nameko.events import EventDispatcher
 from datetime import datetime
 from bson.objectid import ObjectId
 
-logger = setup_logging('funnel_service', log_level=logging.ERROR)
+logger = setup_logging('funnel_service', log_level=logging.INFO)
 
 class FunnelService:
     name = 'funnel_service'

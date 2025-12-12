@@ -297,6 +297,7 @@ class QuestionService:
         else:
             return {'message': "Failed to delete topic", 'status': 400}
     @rpc
+    @error_handler
     def get_participants(self, user_id):
         try:
             # Fetch the participant data from RPC

@@ -5,7 +5,7 @@ from datetime import datetime
 from bson import ObjectId, Decimal128, MinKey, MaxKey, Regex, Timestamp
 import orjson
 import base64
-import common.dependencies as dependencies
+import nameko_services.common.dependencies as dependencies
 
 
 # Logging setup
@@ -27,7 +27,8 @@ services = [
     'super_admin_service',
     'auth_service',
     'utils',
-    'dependency'
+    'dependency',
+    'funnel_service'
 ]
 
 for service in services:
@@ -130,6 +131,7 @@ def error_handler(func):
             logger = logging.getLogger(service_name)
 
             # Log the service and method name
+            print(f"Service: {service_name}, Method: {method_name}")
             logger.info(f"Service: {service_name}, Method: {method_name}")
 
             # Call the actual method
