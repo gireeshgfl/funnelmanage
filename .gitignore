@@ -44,3 +44,38 @@ Thumbs.db
 # Git
 # -----------------------------
 *.orig
+
+# -----------------------------
+# Frontend (Client)
+# -----------------------------
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Certificates & Misc
+.cert/
+openssl-san.cnf
+key.pem.bak
+cert.pem.bak
+rabbitmq_messages.json

@@ -12,6 +12,7 @@ import inspect
 from nameko.runners import ServiceRunner
 from nameko.cli.main import setup_yaml_parser
 from nameko.exceptions import ConfigurationError
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -60,6 +61,11 @@ def run_services(config, services):
 
 def main():
     import subprocess
+    
+    # Load .env file
+    dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+    load_dotenv(dotenv_path)
+
     env = os.environ.copy()
     # Add nameko_services to PYTHONPATH so that 'common' can be imported directly
     # This is needed because bson_serialization matches imports assuming it is in path
