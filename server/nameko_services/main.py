@@ -73,9 +73,12 @@ def main():
     current_pythonpath = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = f"{nameko_services_path}:{current_pythonpath}"
 
+    # Calculate absolute path for config.yaml
+    config_path = os.path.join(nameko_services_path, "config.yaml")
+
     subprocess.call([
         "nameko", "run",
-        "--config", "nameko_services/config.yaml",
+        "--config", config_path,
         "nameko_services.services"
     ], env=env)
 
