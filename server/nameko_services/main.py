@@ -76,6 +76,12 @@ def main():
     # Calculate absolute path for config.yaml
     config_path = os.path.join(nameko_services_path, "config.yaml")
 
+    # Ensure the directory containing the current python executable is in the PATH
+    # This allows 'nameko' to be found if it's in the same bin directory (common in venvs)
+    python_bin_dir = os.path.dirname(sys.executable)
+    path_env = env.get("PATH", "")
+    env["PATH"] = f"{python_bin_dir}:{path_env}"
+
     subprocess.call([
         "nameko", "run",
         "--config", config_path,
