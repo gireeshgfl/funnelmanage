@@ -51,3 +51,4 @@ gunicorn==21.2.0
 # Build & Packaging
 setuptools<81
 graphene==3.4.3
+certifi==2024.12.14

@@ -17,6 +17,7 @@ import queue
 from pika.adapters.select_connection import SelectConnection
 from pika.exceptions import AMQPConnectionError
 from time import sleep
+import certifi
 
 
 
@@ -205,7 +206,8 @@ class MongoDBClient:
                 retryWrites=self.config['MONGODB']['RETRY_WRITES'],
                 retryReads=self.config['MONGODB']['RETRY_READS'],
                 connectTimeoutMS=self.config['MONGODB'].get('CONNECT_TIMEOUT_MS', 60000),
-                socketTimeoutMS=self.config['MONGODB'].get('SOCKET_TIMEOUT_MS', 60000)
+                socketTimeoutMS=self.config['MONGODB'].get('SOCKET_TIMEOUT_MS', 60000),
+                tlsCAFile=certifi.where()
             )
             self.db = self.client[self.config['MONGODB']['DATABASE']]
             # Test the connection
@@ -266,7 +268,8 @@ class MongoDBClientAuth:
                 retryWrites=self.config['MONGODB']['RETRY_WRITES'],
                 retryReads=self.config['MONGODB']['RETRY_READS'],
                 connectTimeoutMS=self.config['MONGODB'].get('CONNECT_TIMEOUT_MS', 60000),
-                socketTimeoutMS=self.config['MONGODB'].get('SOCKET_TIMEOUT_MS', 60000)
+                socketTimeoutMS=self.config['MONGODB'].get('SOCKET_TIMEOUT_MS', 60000),
+                tlsCAFile=certifi.where()
             )
             self.db = self.client[self.config['MONGODBEDUVOCATE']['DATABASE']]
             # Test the connection
