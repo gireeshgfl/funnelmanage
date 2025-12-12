@@ -60,6 +60,7 @@ coverage/
 # Next.js
 .next/
 out/
+client/deploy_bundle/
 
 # Logs
 npm-debug.log*
