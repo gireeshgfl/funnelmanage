@@ -1,8 +1,8 @@
 from nameko.rpc import rpc, RpcProxy
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
-from common.dependencies import MongoProvider, WorkerContextProvider, AmqpPublisher 
-from common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO, UserDAO
+from nameko_services.common.dependencies import MongoProvider, WorkerContextProvider, AmqpPublisher 
+from nameko_services.common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO, UserDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher

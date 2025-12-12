@@ -1,0 +1,9 @@
+recursive-include api_gateway *
+recursive-include nameko_services *
+
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.egg-info
+prune nameko_services/venv
+
+include requirements.txt

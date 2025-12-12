@@ -10,15 +10,12 @@ CONFIG = {
 }
 
 # Active API Versions
-ACTIVE_VERSIONS = ['v1', 'v2']
+ACTIVE_VERSIONS = ['v1']
 
 # Version-Specific Configurations
 VERSION_CONFIG = {
     'v1': {
         'setting1': os.getenv('V1_SETTING1', 'default_value1'),
-    },
-    'v2': {
-        'setting1': os.getenv('V2_SETTING1', 'default_value2'),
     },
 }
 

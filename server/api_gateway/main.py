@@ -12,7 +12,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import (
+from api_gateway.config import (
     EXCLUDED_PATH_PATTERNS,
     SECRET_KEY,
     ALGORITHM,
@@ -40,10 +40,11 @@ app.add_middleware(
 def include_versioned_routers(app: FastAPI, versions: list):
     logger.info("Starting to include versioned routers for versions: %s", versions)
     for version in versions:
+        module_base = f"api_gateway.routers.{version}"
         try:
-            graphql_router = importlib.import_module(f'routers.{version}.graphql').graphql_router
-            services_router = importlib.import_module(f'routers.{version}.services').router
-            health_router = importlib.import_module(f'routers.{version}.health').router
+            graphql_router = importlib.import_module(f"{module_base}.graphql").graphql_router
+            services_router = importlib.import_module(f"{module_base}.services").router
+            health_router = importlib.import_module(f"{module_base}.health").router
 
             app.include_router(graphql_router, prefix=f"/{version}", tags=[version])
             app.include_router(services_router, prefix=f"/{version}", tags=[version])
@@ -164,6 +165,10 @@ async def shutdown_event():
 
 app.add_event_handler("startup", startup_event)
 app.add_event_handler("shutdown", shutdown_event)
+
+def main():
+    import uvicorn
+    uvicorn.run("api_gateway.main:app", host="0.0.0.0", port=8001)
 
 if __name__ == "__main__":
     logger.info("Starting Uvicorn server...")

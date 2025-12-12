@@ -59,54 +59,19 @@ def run_services(config, services):
         logger.info("All services stopped.")
 
 def main():
-    parser = argparse.ArgumentParser(description="Run Nameko services with advanced configuration.")
-    parser.add_argument('--config', default='config.yaml', help='Path to the configuration YAML file')
-    parser.add_argument('--debug', action='store_true', help='Enable debug logging')
-    parser.add_argument('--version', default='v1', help='Version of the services to run (e.g., v1)')
-    args = parser.parse_args()
+    import subprocess
+    env = os.environ.copy()
+    # Add nameko_services to PYTHONPATH so that 'common' can be imported directly
+    # This is needed because bson_serialization matches imports assuming it is in path
+    nameko_services_path = os.path.dirname(os.path.abspath(__file__))
+    current_pythonpath = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{nameko_services_path}:{current_pythonpath}"
 
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-
-    config = load_config(args.config)
-
-    # Directory where services are located
-    services_dir = os.path.join('services', args.version)
-
-    if not os.path.isdir(services_dir):
-        logger.error(f"Services directory does not exist: {services_dir}")
-        sys.exit(1)
-
-    # Dynamically discover and import services
-    services = []
-    for service_name in os.listdir(services_dir):
-        service_path = os.path.join(services_dir, service_name)
-        if os.path.isdir(service_path):
-            # Construct the module import path
-            module_import_path = f'services.{args.version}.{service_name}.{service_name}'
-            try:
-                module = importlib.import_module(module_import_path)
-                # Find all classes in the module that are Nameko services
-                for name, obj in inspect.getmembers(module, inspect.isclass):
-                    if obj.__module__ == module.__name__:
-                        # Optionally, check if the class is a Nameko service
-                        if hasattr(obj, 'name'):
-                            services.append(obj)
-                            logger.info(f"Dynamically imported {name} from {module_import_path}")
-                # Handle cases where the service module doesn't have any classes
-                if not any(obj.__module__ == module.__name__ for name, obj in inspect.getmembers(module, inspect.isclass)):
-                    logger.warning(f"No service classes found in {module_import_path}")
-            except Exception as e:
-                logger.error(f"Failed to import services from {module_import_path}: {e}")
-                sys.exit(1)
-        else:
-            logger.warning(f"{service_path} is not a directory, skipping.")
-
-    if not services:
-        logger.error(f"No services found in directory {services_dir}")
-        sys.exit(1)
-
-    run_services(config, services)
+    subprocess.call([
+        "nameko", "run",
+        "--config", "nameko_services/config.yaml",
+        "nameko_services.services"
+    ], env=env)
 
 if __name__ == '__main__':
     main()

@@ -1,8 +1,8 @@
 from nameko.rpc import rpc
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
-from common.dependencies import MongoProvider, WorkerContextProvider
-from common.DAO import SuperAdminDAO
+from nameko_services.common.dependencies import MongoProvider, WorkerContextProvider
+from nameko_services.common.DAO import SuperAdminDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher

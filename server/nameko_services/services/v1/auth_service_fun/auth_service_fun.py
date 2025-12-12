@@ -6,8 +6,8 @@ from functools import wraps
 from datetime import datetime, timedelta
 from nameko.rpc import rpc, RpcProxy
 from nameko.dependency_providers import Config
-from common.dependencies import WorkerContextProvider, RedisClient,MongoProviderAuth,MongoProvider
-from common.DAO import UserDAO, TokenDAO, OTPDAO,ApprovalDAO
+from nameko_services.common.dependencies import WorkerContextProvider, RedisClient,MongoProviderAuth,MongoProvider
+from nameko_services.common.DAO import UserDAO, TokenDAO, OTPDAO,ApprovalDAO
 import bcrypt
 import jwt
 import random

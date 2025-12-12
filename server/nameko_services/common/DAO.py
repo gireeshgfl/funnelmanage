@@ -16,10 +16,10 @@ Note:
 # ------------------------------
 from bson import ObjectId
 from datetime import datetime
-from common.BaseClassDAO import BaseDAO
+from nameko_services.common.BaseClassDAO import BaseDAO
 from enum import Enum
 import pymongo
-from bson_serilizer.bson_serialization import serialize_result, deserialize_args  # type: ignore
+from nameko_services.bson_serilizer.bson_serialization import serialize_result, deserialize_args  # type: ignore
 from fastapi.encoders import jsonable_encoder
 from pymongo import IndexModel, ASCENDING, DESCENDING, TEXT
 from pymongo import ReturnDocument

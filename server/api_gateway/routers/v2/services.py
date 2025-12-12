@@ -7,7 +7,7 @@ from nameko.standalone.rpc import ClusterRpcProxy
 import orjson
 import jwt
 import logging
-from config import CONFIG, SECRET_KEY, ALGORITHM, REDIS_TOKEN_KEY_PREFIX
+from api_gateway.config import CONFIG, SECRET_KEY, ALGORITHM, REDIS_TOKEN_KEY_PREFIX
 from fastapi import Header
 
 security = HTTPBearer()

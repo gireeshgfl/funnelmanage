@@ -22,7 +22,7 @@ import orjson
 import jwt
 import logging
 import anyio
-from config import CONFIG, SECRET_KEY, ALGORITHM
+from api_gateway.config import CONFIG, SECRET_KEY, ALGORITHM
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

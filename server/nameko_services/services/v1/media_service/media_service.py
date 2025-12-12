@@ -3,8 +3,8 @@ from datetime import datetime
 from bson import ObjectId
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from common.utils import serialize_result, custom_json_dumps  # type: ignore
-from common.dependencies import MongoProvider, WorkerContextProvider
-from common.DAO import MediaDAO
+from nameko_services.common.dependencies import MongoProvider, WorkerContextProvider
+from nameko_services.common.DAO import MediaDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher

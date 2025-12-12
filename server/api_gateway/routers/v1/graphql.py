@@ -6,7 +6,7 @@ from graphql import GraphQLError
 import logging
 import random
 import anyio
-from config import CONFIG
+from api_gateway.config import CONFIG
 
 logger = logging.getLogger(__name__)
 

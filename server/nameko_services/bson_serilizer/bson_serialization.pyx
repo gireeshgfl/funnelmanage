@@ -5,7 +5,7 @@ from datetime import datetime
 from bson import ObjectId, Decimal128, MinKey, MaxKey, Regex, Timestamp
 import orjson
 import base64
-import common.dependencies as dependencies
+import nameko_services.common.dependencies as dependencies
 
 
 # Logging setup
