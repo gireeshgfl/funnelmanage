@@ -14,7 +14,7 @@ with open(REQ_FILE) as f:
 setup(
     name="funnel_server",
     version="1.0.0",
-    packages=find_packages(exclude=["*.venv", "*.venv.*", "venv", "venv.*"]),
+    packages=find_packages(include=["api_gateway*", "nameko_services*"]),
     include_package_data=True,
     install_requires=requirements,
     entry_points={
