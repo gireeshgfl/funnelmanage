@@ -11,7 +11,6 @@ gevent==23.9.1
 
 # MongoDB & Data
 pymongo==4.11.2
-bson==0.5.10
 
 # Redis and Caching
 redis==5.2.1
@@ -48,3 +47,7 @@ graphviz==0.20.1
 uvicorn==0.34.0
 gunicorn==21.2.0
 
+
+# Build & Packaging
+setuptools<81
+graphene==3.4.3

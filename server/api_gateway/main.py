@@ -51,8 +51,8 @@ def include_versioned_routers(app: FastAPI, versions: list):
             app.include_router(health_router, prefix=f"/{version}", tags=[version])
 
             logger.info("Successfully included routers for version: %s", version)
-        except ModuleNotFoundError:
-            logger.error("Routers for version '%s' not found. Skipping...", version)
+        except ModuleNotFoundError as e:
+            logger.error("Routers for version '%s' not found. Error: %s", version, e)
         except Exception as e:
             logger.exception("Error including routers for version '%s': %s", version, str(e))
 

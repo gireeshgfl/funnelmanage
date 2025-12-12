@@ -23,7 +23,7 @@ export default function UnauthorizedPage() {
 
                 <div className="flex w-full flex-col space-y-3 pt-4">
                     <Link
-                        href="/funnel-management/login"
+                        href="/login"
                         className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                     >
                         Return to Home
