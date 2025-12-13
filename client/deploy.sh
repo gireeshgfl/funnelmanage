@@ -29,4 +29,14 @@ cd deploy_bundle
 scp funnel_next.tar.gz ubuntu:~/funnelmanagement/client/
 scp funnel_nodemodules.tar.gz ubuntu:~/funnelmanagement/client/
 
-echo "Deployment files transferred successfully."
+echo "Executing remote commands..."
+# NOTE: Replace 'funnel-client' with your actual PM2 process name/id if different
+ssh ubuntu "cd ~/funnelmanagement/client && \
+echo 'Extracting application...' && \
+tar -xzf funnel_next.tar.gz && \
+echo 'Extracting node_modules...' && \
+tar -xzf funnel_nodemodules.tar.gz && \
+echo 'Restarting PM2 process...' && \
+pm2 restart funnel-client"
+
+echo "Deployment files transferred and process restarted."
