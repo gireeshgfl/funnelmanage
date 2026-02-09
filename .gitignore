@@ -108,9 +108,11 @@ config.yaml
 # Certificates & Keys
 .cert/
 openssl-san.cnf
-*.pem
 key.pem.bak
 cert.pem.bak
+
+# RSA keys: private.pem is secret; public.pem can be committed (like Eduvocate)
+server/keys/private.pem
 
 # Misc
 rabbitmq_messages.json
