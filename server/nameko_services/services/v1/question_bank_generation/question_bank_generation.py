@@ -309,11 +309,15 @@ class QuestionService:
             others = []
 
             for participant in response:
-                email = participant.get('email', '').lower()  # Get email and convert to lowercase
-                if 'trainer' in email:
-                    trainers.append(participant)
-                elif 'student' in email:
-                    students.append(participant)
+                user_roles = participant.get('roles', [])
+                
+                if isinstance(user_roles, list):
+                    if 'trainer' in user_roles:
+                        trainers.append(participant)
+                    elif 'student' in user_roles:
+                        students.append(participant)
+                    else:
+                        others.append(participant)
                 else:
                     others.append(participant)
 
