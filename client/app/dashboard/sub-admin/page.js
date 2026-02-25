@@ -3,18 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Layers, 
-  BookOpen, 
-  PlusCircle, 
-  CheckCircle, 
+import {
+  Users,
   Activity,
-  ArrowRight
+  ArrowRight,
+  UserCheck,
+  Group
 } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4"
@@ -31,7 +29,7 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
 
 const ActionButton = ({ title, icon: Icon, href, description }) => (
   <Link href={href}>
-    <motion.div 
+    <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
@@ -50,56 +48,50 @@ const ActionButton = ({ title, icon: Icon, href, description }) => (
 
 const SubAdminDashboard = () => {
   const stats = [
-    { title: 'Total Users', value: '1,284', icon: Users, color: 'bg-indigo-500' },
-    { title: 'Categories', value: '42', icon: Layers, color: 'bg-emerald-500' },
-    { title: 'Active Courses', value: '156', icon: BookOpen, color: 'bg-amber-500' },
-    { title: 'Approvals Pending', value: '12', icon: CheckCircle, color: 'bg-rose-500' },
+    { title: 'Total Students', value: '450', icon: Users, color: 'bg-indigo-500' },
+    { title: 'Total Trainers', value: '25', icon: UserCheck, color: 'bg-emerald-500' },
+    { title: 'Active Groups', value: '18', icon: Group, color: 'bg-amber-500' },
   ];
 
   const actions = [
-    { title: 'Create User', description: 'Add new users and assign roles', icon: PlusCircle, href: '/dashboard/sub-admin/users/create' },
-    { title: 'New Category', description: 'Organize content with new categories', icon: Layers, href: '/dashboard/sub-admin/categories/create' },
-    { title: 'Review Courses', description: 'Approve or reject course submissions', icon: CheckCircle, href: '/dashboard/sub-admin/approvals' },
+    { title: 'View Attendance', description: 'Check sessions attended by students', icon: Users, href: '/dashboard/sub-admin/students' },
+    { title: 'Assign Trainers', description: 'Assign or reassign trainers to groups', icon: UserCheck, href: '/dashboard/sub-admin/trainers' },
+    { title: 'Manage Groups', description: 'Organize and assign student groups', icon: Group, href: '/dashboard/sub-admin/groups' },
   ];
 
-  const recentActivity = [
-    { user: 'John Doe', action: 'Created new course "Advanced Python"', time: '2 hours ago' },
-    { user: 'Admin', action: 'Approved 4 course modules', time: '5 hours ago' },
-    { user: 'Sarah Wilson', action: 'Updated category settings', time: 'Yesterday' },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50/50 p-8">
       <div className="max-w-7xl mx-auto space-y-10">
         {/* Header */}
         <header>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="text-3xl font-bold text-gray-900"
           >
             Sub-Admin Dashboard
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
             className="text-gray-500 mt-1"
           >
-            Manage users, categories and course approvals.
+            Manage students, trainers and groups.
           </motion.p>
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stats.map((stat, index) => (
             <StatCard key={index} {...stat} />
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="space-y-10">
           {/* Quick Actions */}
-          <section className="lg:col-span-2 space-y-6">
+          <section className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Activity className="w-5 h-5 text-blue-500" />
               Quick Actions
@@ -109,27 +101,6 @@ const SubAdminDashboard = () => {
                 <ActionButton key={index} {...action} />
               ))}
             </div>
-          </section>
-
-          {/* Recent Activity */}
-          <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 border-b pb-4">Recent Activity</h2>
-            <div className="space-y-6">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex gap-4">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      <span className="font-bold">{activity.user}</span> {activity.action}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button className="w-full py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors mt-4">
-              View All Activity
-            </button>
           </section>
         </div>
       </div>
