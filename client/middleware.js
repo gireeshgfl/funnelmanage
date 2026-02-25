@@ -13,10 +13,11 @@ const ROLE_DASHBOARD_MAP = {
   trainer: "/dashboard/trainer",
   student: "/dashboard/student",
   "super-admin": "/dashboard/super-admin",
+  "sub-admin": "/dashboard/sub-admin",
 };
 
 // Role priority list for determining the highest role
-const ROLE_PRIORITY_LIST = ["super-admin", "trainer", "student"];
+const ROLE_PRIORITY_LIST = ["super-admin", "sub-admin", "trainer", "student"];
 
 /**
  * Extracts the token from the Authorization header or cookies.

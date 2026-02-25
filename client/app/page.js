@@ -28,7 +28,7 @@ export default function WelcomePage() {
     // Role-based redirection logic
     if (!loading && user) {
       const role = user.role; // Role from AuthContext (from API)
-      if (['trainer', 'student', 'super-admin'].includes(role)) {
+      if (['trainer', 'student', 'super-admin', 'sub-admin'].includes(role)) {
         router.push(`/dashboard/${role}`);
       } else {
         // Handle unknown roles
