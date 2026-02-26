@@ -106,8 +106,10 @@ class FunnelService:
         Cross-checks 'groups' and 'funnel' collections.
         """
         try:
+            print(f"--- DEBUG: get_attempted_students triggered for user_id: {user_id} ---")
             # 1. Fetch groups created by the sub-admin
             groups = self.group_dao.get_groups_by_user(user_id)
+            print(f"DEBUG: Retrieved {len(groups) if groups else 0} groups.")
             if not groups:
                 return {
                     "message": "No groups found for this user.",
@@ -118,11 +120,13 @@ class FunnelService:
             # 2. Get all unique student IDs from the funnel collection (representing attendance)
             # This represents anyone who has been recorded in the funnel service
             attended_user_ids = set(self.funnel_dao.collection.distinct("userId"))
+            print(f"DEBUG: Found {len(attended_user_ids)} unique attended_user_ids in funnel.")
 
             # 3. Fetch all participants from profile service to get name and phone
             # Using the logic from question_bank_generation.py
             try:
                 profile_response = self.profile_rpc.get_participants()
+                print(f"DEBUG: Fetched {len(profile_response) if profile_response else 0} participants from profile_service_v1.")
                 # Create a map for quick lookup: userId string -> participant info
                 user_info_map = {
                     str(p.get('_id')): {
@@ -134,6 +138,7 @@ class FunnelService:
                 }
             except Exception as profile_err:
                 logger.error(f"Failed to fetch profiles: {str(profile_err)}")
+                print(f"DEBUG: Error fetching profiles: {str(profile_err)}")
                 user_info_map = {}
 
             # 4. Process each student in each group
@@ -141,6 +146,7 @@ class FunnelService:
             for group in groups:
                 group_name = group.get('name', 'Unnamed Group')
                 student_ids = group.get('studentIds', [])
+                print(f"DEBUG: Processing group '{group_name}' with {len(student_ids)} students.")
                 
                 for student_id in student_ids:
                     student_id_str = str(student_id)
@@ -156,7 +162,7 @@ class FunnelService:
                         "email": student_info.get('email', 'N/A'),
                         "status": status
                     })
-
+            print(f"DEBUG: Final result generated with {len(result)} records.")
             return {
                 "message": "Attempted students fetched successfully.",
                 "status": 200,
@@ -164,6 +170,7 @@ class FunnelService:
             }
         except Exception as e:
             logger.exception("Error in get_attempted_students: %s", str(e))
+            print(f"DEBUG: Exception in get_attempted_students: {str(e)}")
             return {
                 "message": f"Failed to fetch attempted students: {str(e)}",
                 "status": 500,
