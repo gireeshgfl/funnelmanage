@@ -1150,3 +1150,34 @@ class InSessionQuestionsDAO(BaseDAO):
 
 
 
+
+# ------------------------------
+# Group Service DAO Module
+# Handles group-related operations.
+# ------------------------------
+class GroupDAO(BaseDAO):
+    def __init__(self, db_connection):
+        """
+        Initialize GroupDAO with the 'groups' collection.
+        """
+        super().__init__(db_connection, collection_name="groups")
+
+    def save_group(self, user_id, data):
+        """
+        Save a new group into the groups collection.
+        """
+        data['created_by'] = ObjectId(user_id)
+        data['created_at'] = datetime.utcnow()
+
+        result = self.insert_one(data)
+        data['_id'] = result.inserted_id
+        return data
+
+    def get_groups_by_user(self, user_id):
+        """
+        Retrieve all groups created by a specific user.
+        """
+        user_object_id = ObjectId(user_id)
+        query = { "created_by": user_object_id }
+        results = self.find_many(query)
+        return list(results)

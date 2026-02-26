@@ -2,7 +2,7 @@ from nameko.rpc import rpc
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from nameko_services.common.dependencies import MongoProvider, WorkerContextProvider
-from nameko_services.common.DAO import FunnelDAO, SessionDAO
+from nameko_services.common.DAO import FunnelDAO, SessionDAO, GroupDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher
@@ -24,6 +24,10 @@ class FunnelService:
     @property
     def session_dao(self):
         return SessionDAO(self.mongo_provider)
+
+    @property
+    def group_dao(self):
+        return GroupDAO(self.mongo_provider)
 
 
     def dispatch_event(event_type):
@@ -130,3 +134,26 @@ class FunnelService:
 
 
 
+
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['sub-admin', 'trainer'])
+    @serialize_result
+    def save_group(self, user_id, data):
+        self.group_dao.save_group(user_id, data)
+        return {
+            "message": "Group saved successfully.",
+            "status": 201
+        }
+
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['sub-admin', 'trainer'])
+    @serialize_result
+    def get_groups(self, user_id, payload):
+        groups = self.group_dao.get_groups_by_user(user_id)
+        return {
+            "message": "Groups fetched successfully.",
+            "status": 200,
+            "data": groups
+        }

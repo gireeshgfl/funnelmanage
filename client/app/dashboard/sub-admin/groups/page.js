@@ -120,16 +120,18 @@ const GroupsPage = () => {
                                     <motion.div
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        key={group.id}
+                                        key={group._id}
                                         className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all"
                                     >
                                         <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-bold text-gray-900">{group.name}</h4>
-                                            <span className="text-xs font-medium text-gray-400">{group.createdAt}</span>
+                                            <span className="text-xs font-medium text-gray-400">
+                                                {group.created_at ? new Date(group.created_at).toLocaleDateString() : 'N/A'}
+                                            </span>
                                         </div>
                                         <div className="flex items-center text-sm text-gray-500">
                                             <User className="w-4 h-4 mr-1" />
-                                            {group.studentCount} Students
+                                            {group.studentIds?.length || 0} Students
                                         </div>
                                     </motion.div>
                                 ))}
@@ -179,7 +181,7 @@ const GroupsPage = () => {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: index * 0.02 }}
-                                                key={index}
+                                                key={person._id || index}
                                                 className="flex items-center space-x-4 p-4 rounded-xl border border-gray-50 bg-white hover:border-blue-100 transition-all group"
                                             >
                                                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
