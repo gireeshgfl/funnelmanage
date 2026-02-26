@@ -131,8 +131,8 @@ class FunnelService:
                 user_info_map = {
                     str(p.get('_id')): {
                         "name": p.get('fullName') or p.get('username') or "Unknown",
-                        "phone": p.get('phone') or "N/A",
-                        "email": p.get('email') or "N/A"
+                        "phone": p.get('phone') or "not updated in database",
+                        "email": p.get('email') or "not updated in database"
                     }
                     for p in profile_response
                 }
@@ -158,8 +158,8 @@ class FunnelService:
                     result.append({
                         "groupName": group_name,
                         "studentName": student_info.get('name', 'Unknown'),
-                        "phone": student_info.get('phone', 'N/A'),
-                        "email": student_info.get('email', 'N/A'),
+                        "phone": student_info.get('phone', 'not updated in database'),
+                        "email": student_info.get('email', 'not updated in database'),
                         "status": status
                     })
             print(f"DEBUG: Final result generated with {len(result)} records.")

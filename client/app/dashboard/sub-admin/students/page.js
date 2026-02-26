@@ -29,6 +29,7 @@ const StudentsPage = () => {
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
     const [attendanceFilter, setAttendanceFilter] = useState('All'); // 'All', 'Attended', 'Missed'
+    const [groupFilter, setGroupFilter] = useState('All Groups');
 
     useEffect(() => {
         fetchAttemptedStudents();
@@ -49,6 +50,8 @@ const StudentsPage = () => {
         avatar: s.studentName.split(' ').map(n => n[0]).join('')
     }));
 
+    const uniqueGroups = ['All Groups', ...new Set(studentsData.map(s => s.group).filter(Boolean))];
+
     const filteredStudents = studentsData.filter(student => {
         const matchesSearch =
             (student.name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -60,6 +63,11 @@ const StudentsPage = () => {
 
         // Attendance Status Filter
         if (attendanceFilter !== 'All' && student.attendanceStatus !== attendanceFilter) {
+            return false;
+        }
+
+        // Group Filter
+        if (groupFilter !== 'All Groups' && student.group !== groupFilter) {
             return false;
         }
 
@@ -128,6 +136,20 @@ const StudentsPage = () => {
                         </div>
 
                         <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-3 w-full lg:w-auto">
+                            <div className="relative flex items-center bg-gray-50/50 p-1.5 rounded-2xl border border-gray-100 group w-full md:w-48">
+                                <Users className="w-4 h-4 ml-2 text-gray-400" />
+                                <select
+                                    value={groupFilter}
+                                    onChange={(e) => setGroupFilter(e.target.value)}
+                                    className="bg-transparent pl-2 pr-8 py-2 text-xs font-bold text-gray-700 outline-none appearance-none cursor-pointer w-full"
+                                >
+                                    {uniqueGroups.map(group => (
+                                        <option key={group} value={group}>{group}</option>
+                                    ))}
+                                </select>
+                                <ChevronRight className="w-4 h-4 mr-2 text-gray-400 rotate-90 absolute right-2 pointer-events-none" />
+                            </div>
+
                             {dateFilter === 'Custom' && (
                                 <div className="flex items-center space-x-2 w-full md:w-auto">
                                     <div className="flex items-center bg-gray-50/50 p-1.5 rounded-2xl border border-gray-100 flex-1 md:flex-none">
@@ -171,7 +193,7 @@ const StudentsPage = () => {
                     </div>
 
                     {/* Active Filters */}
-                    {(searchQuery || dateFilter !== 'All Time' || attendanceFilter !== 'All') && (
+                    {(searchQuery || dateFilter !== 'All Time' || attendanceFilter !== 'All' || groupFilter !== 'All Groups') && (
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">Active Filters:</span>
                             {searchQuery && (
@@ -197,6 +219,16 @@ const StudentsPage = () => {
                                     <button onClick={() => setAttendanceFilter('All')} className="ml-2 hover:opacity-70">×</button>
                                 </motion.div>
                             )}
+                            {groupFilter !== 'All Groups' && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-xl text-[10px] font-black border border-purple-100 flex items-center"
+                                >
+                                    Group: {groupFilter}
+                                    <button onClick={() => setGroupFilter('All Groups')} className="ml-2 hover:text-purple-800">×</button>
+                                </motion.div>
+                            )}
                             {dateFilter !== 'All Time' && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.8 }}
@@ -218,6 +250,7 @@ const StudentsPage = () => {
                                     setSearchQuery('');
                                     setDateFilter('All Time');
                                     setAttendanceFilter('All');
+                                    setGroupFilter('All Groups');
                                     setCustomStartDate('');
                                     setCustomEndDate('');
                                 }}
