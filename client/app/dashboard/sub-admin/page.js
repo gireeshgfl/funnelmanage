@@ -11,21 +11,7 @@ import {
   Group
 } from 'lucide-react';
 
-const StatCard = ({ title, value, icon: Icon, color }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4"
-  >
-    <div className={`p-3 rounded-lg ${color}`}>
-      <Icon className="w-6 h-6 text-white" />
-    </div>
-    <div>
-      <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{title}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-    </div>
-  </motion.div>
-);
+
 
 const ActionButton = ({ title, icon: Icon, href, description }) => (
   <Link href={href}>
@@ -47,11 +33,7 @@ const ActionButton = ({ title, icon: Icon, href, description }) => (
 );
 
 const SubAdminDashboard = () => {
-  const stats = [
-    { title: 'Total Students', value: '450', icon: Users, color: 'bg-indigo-500' },
-    { title: 'Total Trainers', value: '25', icon: UserCheck, color: 'bg-emerald-500' },
-    { title: 'Active Groups', value: '18', icon: Group, color: 'bg-amber-500' },
-  ];
+
 
   const actions = [
     { title: 'View Attendance', description: 'Check sessions attended by students', icon: Users, href: '/dashboard/sub-admin/students' },
@@ -82,12 +64,7 @@ const SubAdminDashboard = () => {
           </motion.p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {stats.map((stat, index) => (
-            <StatCard key={index} {...stat} />
-          ))}
-        </div>
+
 
         <div className="space-y-10">
           {/* Quick Actions */}
