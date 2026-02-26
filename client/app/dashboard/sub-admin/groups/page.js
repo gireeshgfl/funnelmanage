@@ -13,39 +13,28 @@ import {
     Check
 } from 'lucide-react';
 import Link from 'next/link';
-import apiClient from '@/utils/axiosinterceptor';
-import { API_ROUTES } from '@/config';
+import { useGroups } from '@/hooks/useGroups';
 
 const GroupsPage = () => {
-    const [data, setData] = useState({ trainers: [], students: [], others: [] });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const {
+        groups,
+        loading: groupsLoading,
+        error: groupsError,
+        participants,
+        participantsLoading,
+        participantsError,
+        feedbackMessage,
+        setFeedbackMessage,
+        createGroup
+    } = useGroups();
+
     const [searchQuery, setSearchQuery] = useState('');
-    const [groups, setGroups] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [modalSearchQuery, setModalSearchQuery] = useState('');
 
-    useEffect(() => {
-        const fetchParticipants = async () => {
-            try {
-                const response = await apiClient.get(API_ROUTES.QUESTION_SERVICE.GET_PARTICIPANTS);
-                if (response.data?.status === 200 && response.data?.data) {
-                    setData(response.data.data);
-                } else {
-                    throw new Error("Failed to load participants data");
-                }
-            } catch (err) {
-                console.error("Error fetching participants:", err);
-                setError(err);
-            } finally {
-                setLoading(false);
-            }
-        };
 
-        fetchParticipants();
-    }, []);
 
     const toggleStudentSelection = (studentId) => {
         setSelectedStudents(prev =>
@@ -55,29 +44,27 @@ const GroupsPage = () => {
         );
     };
 
-    const handleCreateGroup = () => {
-        if (!newGroupName.trim()) return;
+    const handleCreateGroup = async () => {
+        if (!newGroupName.trim() || selectedStudents.length === 0) return;
 
-        const newGroup = {
-            id: Date.now(),
+        const success = await createGroup({
             name: newGroupName,
-            studentIds: selectedStudents,
-            studentCount: selectedStudents.length,
-            createdAt: new Date().toLocaleDateString()
-        };
+            studentIds: selectedStudents
+        });
 
-        setGroups(prev => [newGroup, ...prev]);
-        setIsModalOpen(false);
-        setNewGroupName('');
-        setSelectedStudents([]);
+        if (success) {
+            setIsModalOpen(false);
+            setNewGroupName('');
+            setSelectedStudents([]);
+        }
     };
 
-    const filteredStudentsForModal = data.students.filter(p =>
+    const filteredStudentsForModal = participants.students.filter(p =>
         (p.fullName?.toLowerCase() || '').includes(modalSearchQuery.toLowerCase()) ||
         (p.email?.toLowerCase() || '').includes(modalSearchQuery.toLowerCase())
     );
 
-    const filteredStudents = data.students.filter(p =>
+    const filteredStudents = participants.students.filter(p =>
         (p.fullName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
         (p.email?.toLowerCase() || '').includes(searchQuery.toLowerCase())
     );
@@ -122,7 +109,12 @@ const GroupsPage = () => {
                             <Users className="w-5 h-5 mr-2 text-blue-600" />
                             Created Groups
                         </h3>
-                        {groups.length > 0 ? (
+                        {groupsLoading ? (
+                            <div className="flex items-center justify-center p-8 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-3"></div>
+                                <span className="text-gray-500 text-sm">Loading groups...</span>
+                            </div>
+                        ) : groups.length > 0 ? (
                             <div className="space-y-4">
                                 {groups.map((group) => (
                                     <motion.div
@@ -168,10 +160,15 @@ const GroupsPage = () => {
                             </div>
                         </div>
 
-                        {loading ? (
+                        {participantsLoading ? (
                             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100">
                                 <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                 <p className="text-gray-500 mt-4 font-medium">Loading students...</p>
+                            </div>
+                        ) : participantsError ? (
+                            <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-3xl text-center shadow-sm">
+                                <p className="font-semibold text-lg mb-1">Participants Load Error</p>
+                                <p className="opacity-80 text-sm">{participantsError.message || "Failed to reach participant service."}</p>
                             </div>
                         ) : (
                             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
@@ -250,6 +247,15 @@ const GroupsPage = () => {
                                     />
                                 </div>
 
+                                {feedbackMessage && (
+                                    <div className={`p-3 rounded-xl text-sm font-medium ${feedbackMessage.toLowerCase().includes("success")
+                                        ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                                        : "bg-red-50 text-red-600 border border-red-100"
+                                        }`}>
+                                        {feedbackMessage}
+                                    </div>
+                                )}
+
                                 {/* Student Selection */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
@@ -275,9 +281,9 @@ const GroupsPage = () => {
                                             {filteredStudentsForModal.length > 0 ? (
                                                 filteredStudentsForModal.map((student) => (
                                                     <div
-                                                        key={student.id || student.email}
-                                                        onClick={() => toggleStudentSelection(student.id || student.email)}
-                                                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedStudents.includes(student.id || student.email)
+                                                        key={student._id}
+                                                        onClick={() => toggleStudentSelection(student._id)}
+                                                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedStudents.includes(student._id)
                                                             ? 'border-blue-600 bg-blue-50/50'
                                                             : 'border-transparent hover:bg-gray-50'
                                                             }`}
@@ -291,11 +297,11 @@ const GroupsPage = () => {
                                                                 <p className="text-xs text-gray-500">{student.email}</p>
                                                             </div>
                                                         </div>
-                                                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${selectedStudents.includes(student.id || student.email)
+                                                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${selectedStudents.includes(student._id)
                                                             ? 'bg-blue-600 border-blue-600'
                                                             : 'bg-white border-gray-300'
                                                             }`}>
-                                                            {selectedStudents.includes(student.id || student.email) && (
+                                                            {selectedStudents.includes(student._id) && (
                                                                 <Check className="w-3 h-3 text-white" />
                                                             )}
                                                         </div>
