@@ -157,3 +157,24 @@ class FunnelService:
             "status": 200,
             "data": groups
         }
+
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['sub-admin'])
+    @serialize_result
+    def assign_trainer(self, user_id, data):
+        group_id = data.get('groupId')
+        trainer_id = data.get('trainerId')
+        
+        if not group_id or not trainer_id:
+            return {
+                "message": "groupId and trainerId are required.",
+                "status": 400
+            }
+            
+        self.group_dao.assign_trainer(group_id, trainer_id)
+        
+        return {
+            "message": "Trainer assigned successfully.",
+            "status": 200
+        }

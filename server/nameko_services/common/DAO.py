@@ -1181,3 +1181,12 @@ class GroupDAO(BaseDAO):
         query = { "created_by": user_object_id }
         results = self.find_many(query)
         return list(results)
+
+    def assign_trainer(self, group_id, trainer_id):
+        """
+        Assign a trainer to a specific group.
+        """
+        return self.update_one(
+            {'_id': ObjectId(group_id)},
+            {'$set': {'trainerId': ObjectId(trainer_id)}}
+        )

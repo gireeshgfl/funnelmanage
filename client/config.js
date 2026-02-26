@@ -107,6 +107,7 @@ export const API_ROUTES = {
     FUNNELLING: `${BASE_URL}/funnel_service/funnelling/`,
     GET_GROUPS: `${BASE_URL}/funnel_service/get_groups/`,
     SAVE_GROUP: `${BASE_URL}/funnel_service/save_group/`,
+    ASSIGN_TRAINER: `${BASE_URL}/funnel_service/assign_trainer/`,
   },
 
   // ===========================

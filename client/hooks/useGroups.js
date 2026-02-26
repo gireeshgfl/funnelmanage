@@ -73,6 +73,32 @@ export function useGroups() {
         }
     }, [fetchGroups]);
 
+    const assignTrainer = useCallback(async (groupId, trainerId) => {
+        setLoading(true);
+        setFeedbackMessage("");
+        try {
+            const response = await apiClient.post(
+                API_ROUTES.FUNNEL_SERVICE.ASSIGN_TRAINER,
+                { groupId, trainerId }
+            );
+
+            if (response.data?.status === 200) {
+                setFeedbackMessage("Trainer assigned successfully!");
+                await fetchGroups(); // Refresh groups to show updated assignment
+                return true;
+            } else {
+                setFeedbackMessage(response.data?.message || "Failed to assign trainer");
+                return false;
+            }
+        } catch (err) {
+            console.error("Error assigning trainer:", err);
+            setFeedbackMessage(err.response?.data?.message || "Error occurred while assigning trainer.");
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }, [fetchGroups]);
+
     useEffect(() => {
         fetchGroups();
         fetchParticipants();
@@ -89,6 +115,7 @@ export function useGroups() {
         setFeedbackMessage,
         fetchGroups,
         fetchParticipants,
-        createGroup
+        createGroup,
+        assignTrainer
     };
 }

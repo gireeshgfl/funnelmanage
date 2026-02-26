@@ -128,3 +128,8 @@ export const GroupSaveSchema = z.object({
   name: z.string().min(1, "Group name is required"),
   studentIds: z.array(z.string().length(24, "Invalid student ID format")).min(1, "At least one student is required"),
 });
+
+export const AssignTrainerSchema = z.object({
+  groupId: z.string().length(24, "Invalid group ID format"),
+  trainerId: z.string().length(24, "Invalid trainer ID format"),
+});
