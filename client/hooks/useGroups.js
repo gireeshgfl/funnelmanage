@@ -5,6 +5,7 @@ import { API_ROUTES } from "@/config";
 export function useGroups() {
     const [groups, setGroups] = useState([]);
     const [participants, setParticipants] = useState({ trainers: [], students: [], others: [] });
+    const [attemptedStudents, setAttemptedStudents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [participantsLoading, setParticipantsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -73,6 +74,24 @@ export function useGroups() {
         }
     }, [fetchGroups]);
 
+    const fetchAttemptedStudents = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await apiClient.get(API_ROUTES.FUNNEL_SERVICE.GET_ATTEMPTED_STUDENTS);
+            if (response.data?.status === 200) {
+                setAttemptedStudents(response.data.data || []);
+            } else {
+                setError(response.data?.message || "Failed to fetch attempted students");
+            }
+        } catch (err) {
+            console.error("Error fetching attempted students:", err);
+            setError(err.response?.data?.message || "Error occurred while fetching attempted students.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     const assignTrainer = useCallback(async (groupId, trainerId) => {
         setLoading(true);
         setFeedbackMessage("");
@@ -107,6 +126,7 @@ export function useGroups() {
     return {
         groups,
         participants,
+        attemptedStudents,
         loading,
         participantsLoading,
         error,
@@ -115,6 +135,7 @@ export function useGroups() {
         setFeedbackMessage,
         fetchGroups,
         fetchParticipants,
+        fetchAttemptedStudents,
         createGroup,
         assignTrainer
     };

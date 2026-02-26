@@ -1,4 +1,4 @@
-from nameko.rpc import rpc
+from nameko.rpc import rpc, RpcProxy
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from nameko_services.common.dependencies import MongoProvider, WorkerContextProvider
@@ -16,6 +16,7 @@ class FunnelService:
     mongo_provider = MongoProvider()
     dispatch = EventDispatcher()
     worker_ctx = WorkerContextProvider()
+    profile_rpc = RpcProxy('profile_service_v1')
     
     @property
     def funnel_dao(self):
@@ -76,7 +77,7 @@ class FunnelService:
 
     @rpc
     @error_handler
-    @rbac_check(required_roles=['trainer'])
+    @rbac_check(required_roles=['sub-admin', 'trainer'])
     @serialize_result
     def get_participants(self, user_id):
         try:
@@ -94,10 +95,84 @@ class FunnelService:
                 "status": 400,
                 "data": []
             }
+
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['sub-admin'])
+    @serialize_result
+    def get_attempted_students(self, user_id, payload=None):
+        """
+        RPC method to fetch all students who have attempted sessions.
+        Cross-checks 'groups' and 'funnel' collections.
+        """
+        try:
+            # 1. Fetch groups created by the sub-admin
+            groups = self.group_dao.get_groups_by_user(user_id)
+            if not groups:
+                return {
+                    "message": "No groups found for this user.",
+                    "status": 200,
+                    "data": []
+                }
+
+            # 2. Get all unique student IDs from the funnel collection (representing attendance)
+            # This represents anyone who has been recorded in the funnel service
+            attended_user_ids = set(self.funnel_dao.collection.distinct("userId"))
+
+            # 3. Fetch all participants from profile service to get name and phone
+            # Using the logic from question_bank_generation.py
+            try:
+                profile_response = self.profile_rpc.get_participants()
+                # Create a map for quick lookup: userId string -> participant info
+                user_info_map = {
+                    str(p.get('_id')): {
+                        "name": p.get('fullName') or p.get('username') or "Unknown",
+                        "phone": p.get('phone') or "N/A",
+                        "email": p.get('email') or "N/A"
+                    }
+                    for p in profile_response
+                }
+            except Exception as profile_err:
+                logger.error(f"Failed to fetch profiles: {str(profile_err)}")
+                user_info_map = {}
+
+            # 4. Process each student in each group
+            result = []
+            for group in groups:
+                group_name = group.get('name', 'Unnamed Group')
+                student_ids = group.get('studentIds', [])
+                
+                for student_id in student_ids:
+                    student_id_str = str(student_id)
+                    student_info = user_info_map.get(student_id_str, {})
+                    
+                    # Logic: present in funnel = Attended
+                    status = "Attended" if student_id_str in attended_user_ids else "Missed"
+                    
+                    result.append({
+                        "groupName": group_name,
+                        "studentName": student_info.get('name', 'Unknown'),
+                        "phone": student_info.get('phone', 'N/A'),
+                        "email": student_info.get('email', 'N/A'),
+                        "status": status
+                    })
+
+            return {
+                "message": "Attempted students fetched successfully.",
+                "status": 200,
+                "data": result
+            }
+        except Exception as e:
+            logger.exception("Error in get_attempted_students: %s", str(e))
+            return {
+                "message": f"Failed to fetch attempted students: {str(e)}",
+                "status": 500,
+                "data": []
+            }
     
     @rpc
     @error_handler
-    @get_rbac_check(required_roles=['trainer'])
+    @get_rbac_check(required_roles=['sub-admin', 'trainer'])
     @serialize_result
     def funnelling(self, user_id, payload):
         """
