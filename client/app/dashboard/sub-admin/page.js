@@ -61,26 +61,26 @@ const SubAdminDashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-10">
-        {/* Header */}
-        <header>
+        {/* Page Title for Context */}
+        <div className="mb-6">
           <motion.h1
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-3xl font-bold text-gray-900"
+            className="text-3xl font-bold text-gray-900 dark:text-white"
           >
-            Sub-Admin Dashboard
+            Dashboard Overview
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-gray-500 mt-1"
+            className="text-gray-500 dark:text-gray-400 mt-1"
           >
             Manage students, trainers and groups.
           </motion.p>
-        </header>
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
