@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import apiClient from "@/utils/axiosinterceptor";
 import { API_ROUTES } from "@/config";
 
-export function useGroups() {
+export function useGroups(options = { fetchOnMount: true }) {
     const [groups, setGroups] = useState([]);
     const [participants, setParticipants] = useState({ trainers: [], students: [], others: [] });
     const [attemptedStudents, setAttemptedStudents] = useState([]);
@@ -119,9 +119,11 @@ export function useGroups() {
     }, [fetchGroups]);
 
     useEffect(() => {
-        fetchGroups();
-        fetchParticipants();
-    }, [fetchGroups, fetchParticipants]);
+        if (options?.fetchOnMount) {
+            fetchGroups();
+            fetchParticipants();
+        }
+    }, [fetchGroups, fetchParticipants, options?.fetchOnMount]);
 
     return {
         groups,

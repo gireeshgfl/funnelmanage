@@ -117,10 +117,13 @@ class FunnelService:
                     "data": []
                 }
 
-            # 2. Get all unique student IDs from the funnel collection (representing attendance)
-            # This represents anyone who has been recorded in the funnel service
-            attended_user_ids = set(self.funnel_dao.collection.distinct("userId"))
-            print(f"DEBUG: Found {len(attended_user_ids)} unique attended_user_ids in funnel.")
+            # 2. Get all unique student IDs from the funnel collection along with their latest attendance datetime
+            pipeline = [
+                {"$group": {"_id": "$userId", "created_at": {"$max": "$created_at"}}}
+            ]
+            attended_users_info = list(self.funnel_dao.collection.aggregate(pipeline))
+            attended_user_map = {str(item["_id"]): item.get("created_at") for item in attended_users_info}
+            print(f"DEBUG: Found {len(attended_user_map)} unique attended users in funnel.")
 
             # 3. Fetch all participants from profile service to get name and phone
             # Using the logic from question_bank_generation.py
@@ -153,15 +156,19 @@ class FunnelService:
                     student_info = user_info_map.get(student_id_str, {})
                     
                     # Logic: present in funnel = Attended
-                    status = "Attended" if student_id_str in attended_user_ids else "Missed"
+                    status = "Attended" if student_id_str in attended_user_map else "Missed"
                     
-                    result.append({
+                    student_record = {
                         "groupName": group_name,
                         "studentName": student_info.get('name', 'Unknown'),
                         "phone": student_info.get('phone', 'not updated in database'),
                         "email": student_info.get('email', 'not updated in database'),
                         "status": status
-                    })
+                    }
+                    if status == "Attended" and attended_user_map.get(student_id_str):
+                        student_record["created_at"] = self.format_due_date(attended_user_map[student_id_str])
+                        
+                    result.append(student_record)
             print(f"DEBUG: Final result generated with {len(result)} records.")
             return {
                 "message": "Attempted students fetched successfully.",

@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { useGroups } from '@/hooks/useGroups';
 
 const StudentsPage = () => {
-    const { attemptedStudents, fetchAttemptedStudents, loading, error: apiError } = useGroups();
+    const { attemptedStudents, fetchAttemptedStudents, loading, error: apiError } = useGroups({ fetchOnMount: false });
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFilter, setDateFilter] = useState('All Time'); // 'All Time', 'Last 7 Days', 'Last 30 Days', 'This Year', 'Custom'
     const [customStartDate, setCustomStartDate] = useState('');
@@ -44,10 +44,10 @@ const StudentsPage = () => {
         group: s.groupName,
         status: 'Active', // Default status as it's not in the API yet
         lastActive: 'Recently',
-        enrollmentDate: new Date().toISOString(), // Fallback
+        enrollmentDate: s.created_at || null, // Use created_at from API
         attendanceStatus: s.status, // "Attended" or "Missed"
         progress: s.status === 'Attended' ? 100 : 0,
-        avatar: s.studentName.split(' ').map(n => n[0]).join('')
+        avatar: s.studentName?.split(' ').map(n => n[0]).join('') || 'U'
     }));
 
     const uniqueGroups = ['All Groups', ...new Set(studentsData.map(s => s.group).filter(Boolean))];
@@ -71,10 +71,37 @@ const StudentsPage = () => {
             return false;
         }
 
-        // Date filter is currently limited as real data doesn't have timestamps yet
-        if (dateFilter === 'All Time') return true;
+        // Date Filter
+        if (dateFilter !== 'All Time') {
+            if (!student.enrollmentDate) return false;
 
-        // For now, return all since we don't have accurate enrollmentDate in API
+            const studentDate = new Date(student.enrollmentDate);
+            const now = new Date();
+
+            if (dateFilter === 'Last 7 Days') {
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(now.getDate() - 7);
+                if (studentDate < sevenDaysAgo) return false;
+            } else if (dateFilter === 'Last 30 Days') {
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(now.getDate() - 30);
+                if (studentDate < thirtyDaysAgo) return false;
+            } else if (dateFilter === 'This Year') {
+                if (studentDate.getFullYear() !== now.getFullYear()) return false;
+            } else if (dateFilter === 'Custom') {
+                if (customStartDate) {
+                    const start = new Date(customStartDate);
+                    start.setHours(0, 0, 0, 0);
+                    if (studentDate < start) return false;
+                }
+                if (customEndDate) {
+                    const end = new Date(customEndDate);
+                    end.setHours(23, 59, 59, 999);
+                    if (studentDate > end) return false;
+                }
+            }
+        }
+
         return true;
     });
 
@@ -347,8 +374,10 @@ const StudentsPage = () => {
                                                 <div className="flex items-center justify-between pt-2">
                                                     <div className="flex items-center space-x-4">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Enrolled</span>
-                                                            <span className="text-xs text-gray-700 font-black">{new Date(student.enrollmentDate).toLocaleDateString()}</span>
+                                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Date</span>
+                                                            <span className="text-xs text-gray-700 font-black">
+                                                                {student.enrollmentDate ? new Date(student.enrollmentDate).toLocaleDateString() : 'N/A'}
+                                                            </span>
                                                         </div>
                                                         <div className="w-px h-8 bg-gray-100" />
                                                         <div className="flex flex-col">
