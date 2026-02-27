@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Calendar,
@@ -9,16 +9,17 @@ import {
     User,
     ArrowLeft,
     Search,
-    ChevronRight,
-    Filter,
-    MoreVertical,
     CheckCircle2,
     Timer,
     AlertCircle,
-    Loader2
+    Loader2,
+    Mail,
+    BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 import { getSessions } from '@/hooks/session_management/sessionService';
+import apiClient from '@/utils/axiosinterceptor';
+import { API_ROUTES } from '@/config';
 
 const SessionsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +28,10 @@ const SessionsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [students, setStudents] = useState([]);
+    const [studentsLoading, setStudentsLoading] = useState(true);
+
+    // Fetch sessions
     useEffect(() => {
         const fetchSessions = async () => {
             try {
@@ -36,13 +41,30 @@ const SessionsPage = () => {
                 setSessions(data || []);
             } catch (err) {
                 console.error('Failed to fetch sessions:', err);
-                setError('Failed to load sessions. Please try again.');
+                setError('Failed to load sessions.');
             } finally {
                 setLoading(false);
             }
         };
-
         fetchSessions();
+    }, []);
+
+    // Fetch participants (students only) — avoids unnecessary groups call
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                setStudentsLoading(true);
+                const response = await apiClient.get(API_ROUTES.QUESTION_SERVICE.GET_PARTICIPANTS);
+                if (response.data?.status === 200 && response.data?.data) {
+                    setStudents(response.data.data.students || []);
+                }
+            } catch (err) {
+                console.error('Failed to fetch participants:', err);
+            } finally {
+                setStudentsLoading(false);
+            }
+        };
+        fetchStudents();
     }, []);
 
     const getStatusStyles = (status) => {
@@ -52,7 +74,7 @@ const SessionsPage = () => {
             case 'Deactivate':
                 return 'bg-amber-50 text-amber-700 border-amber-100';
             case 'ENDED':
-                return 'bg-gray-50 text-gray-700 border-gray-100';
+                return 'bg-gray-100 text-gray-600 border-gray-200';
             default:
                 return 'bg-blue-50 text-blue-700 border-blue-100';
         }
@@ -60,14 +82,10 @@ const SessionsPage = () => {
 
     const getStatusLabel = (status) => {
         switch (status) {
-            case 'Activate':
-                return 'Active';
-            case 'Deactivate':
-                return 'Inactive';
-            case 'ENDED':
-                return 'Ended';
-            default:
-                return status || 'Unknown';
+            case 'Activate': return 'Active';
+            case 'Deactivate': return 'Inactive';
+            case 'ENDED': return 'Ended';
+            default: return status || 'Unknown';
         }
     };
 
@@ -85,8 +103,10 @@ const SessionsPage = () => {
     };
 
     const filteredSessions = sessions.filter(session => {
-        const sessionName = (session.sessionName || '').toLowerCase();
-        const matchesSearch = sessionName.includes(searchQuery.toLowerCase());
+        const name = (session.sessionName || '').toLowerCase();
+        const topic = (session.topic || '').toLowerCase();
+        const q = searchQuery.toLowerCase();
+        const matchesSearch = name.includes(q) || topic.includes(q);
         const matchesStatus = statusFilter === 'All' || session.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -116,7 +136,7 @@ const SessionsPage = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="relative group flex-1 md:w-64">
+                        <div className="relative flex-1 md:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
@@ -140,11 +160,12 @@ const SessionsPage = () => {
                 </div>
 
                 {/* Stats Summary */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
                         { label: 'Total Sessions', value: sessions.length, icon: Calendar, color: 'blue' },
                         { label: 'Active', value: sessions.filter(s => s.status === 'Activate').length, icon: CheckCircle2, color: 'emerald' },
                         { label: 'Ended', value: sessions.filter(s => s.status === 'ENDED').length, icon: AlertCircle, color: 'gray' },
+                        { label: 'Total Students', value: students.length, icon: Users, color: 'violet' },
                     ].map((stat, i) => (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -166,106 +187,136 @@ const SessionsPage = () => {
                     ))}
                 </div>
 
-                {/* Loading State */}
-                {loading && (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-                        <p className="text-gray-500 font-medium">Loading sessions...</p>
-                    </div>
-                )}
-
-                {/* Error State */}
-                {error && !loading && (
-                    <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-                        <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-                        <p className="text-red-700 font-medium">{error}</p>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="mt-3 text-red-600 font-semibold hover:underline"
-                        >
-                            Retry
-                        </button>
-                    </div>
-                )}
-
-                {/* Sessions List */}
-                {!loading && !error && (
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-100">
-                                        <th className="px-6 py-4 text-sm font-bold text-gray-700">Session Name</th>
-                                        <th className="px-6 py-4 text-sm font-bold text-gray-700">Created At</th>
-                                        <th className="px-6 py-4 text-sm font-bold text-gray-700">Status</th>
-                                        <th className="px-6 py-4 text-sm font-bold text-gray-700"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <AnimatePresence mode='popLayout'>
-                                        {filteredSessions.length > 0 ? (
-                                            filteredSessions.map((session) => (
-                                                <motion.tr
-                                                    layout
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.2 }}
-                                                    key={session._id}
-                                                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors group"
-                                                >
-                                                    <td className="px-6 py-5">
-                                                        <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                                            {session.sessionName || 'Untitled Session'}
-                                                        </p>
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <div className="flex items-center text-sm text-gray-700">
-                                                            <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                                                            <span>
-                                                                {session.created_at
-                                                                    ? new Date(session.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                                                    : '—'}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${getStatusStyles(session.status)}`}>
-                                                            {getStatusIcon(session.status)}
-                                                            {getStatusLabel(session.status)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-5 text-right">
-                                                        <button className="p-2 hover:bg-white rounded-lg transition-all border border-transparent hover:border-gray-200">
-                                                            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                                                        </button>
-                                                    </td>
-                                                </motion.tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="4" className="px-6 py-12 text-center">
-                                                    <div className="flex flex-col items-center">
-                                                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                                                            <Search className="w-8 h-8 text-gray-300" />
-                                                        </div>
-                                                        <p className="text-gray-500 font-medium">No sessions found matching your criteria.</p>
-                                                        <button
-                                                            onClick={() => { setSearchQuery(''); setStatusFilter('All'); }}
-                                                            className="mt-2 text-blue-600 font-semibold hover:underline"
-                                                        >
-                                                            Clear all filters
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </AnimatePresence>
-                                </tbody>
-                            </table>
+                {/* Side by Side: Sessions & Students */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Sessions List */}
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center space-x-3">
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                                <Calendar className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <h2 className="text-lg font-bold text-gray-900">Sessions</h2>
+                            <span className="text-sm text-gray-500">({filteredSessions.length})</span>
                         </div>
+                        {loading ? (
+                            <div className="flex items-center justify-center py-16 flex-1">
+                                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                            </div>
+                        ) : error ? (
+                            <div className="flex flex-col items-center py-16 px-6 flex-1">
+                                <AlertCircle className="w-8 h-8 text-red-500 mb-3" />
+                                <p className="text-red-700 font-medium text-sm text-center">{error}</p>
+                            </div>
+                        ) : filteredSessions.length > 0 ? (
+                            <div className="overflow-y-auto max-h-[520px] flex-1">
+                                {filteredSessions.map((session, index) => (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.2, delay: index * 0.03 }}
+                                        key={session._id}
+                                        className="px-6 py-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors group"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-semibold text-sm text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                                                    {session.sessionName || 'Untitled Session'}
+                                                </p>
+                                                {session.topic && (
+                                                    <div className="flex items-center mt-1 text-xs text-gray-500">
+                                                        <BookOpen className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                                                        <span className="truncate">{session.topic}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center gap-3 mt-1.5">
+                                                    {session.date && (
+                                                        <span className="flex items-center text-xs text-gray-400">
+                                                            <Calendar className="w-3 h-3 mr-1" />
+                                                            {new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        </span>
+                                                    )}
+                                                    {session.time && (
+                                                        <span className="flex items-center text-xs text-gray-400">
+                                                            <Clock className="w-3 h-3 mr-1" />
+                                                            {session.time}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border whitespace-nowrap ${getStatusStyles(session.status)}`}>
+                                                {getStatusIcon(session.status)}
+                                                {getStatusLabel(session.status)}
+                                            </span>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center py-16 flex-1">
+                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                                    <Search className="w-6 h-6 text-gray-300" />
+                                </div>
+                                <p className="text-gray-500 font-medium text-sm">No sessions found.</p>
+                                <button
+                                    onClick={() => { setSearchQuery(''); setStatusFilter('All'); }}
+                                    className="mt-2 text-blue-600 text-sm font-semibold hover:underline"
+                                >
+                                    Clear filters
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
+
+                    {/* Students List */}
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center space-x-3">
+                            <div className="p-2 bg-violet-50 rounded-lg">
+                                <Users className="w-5 h-5 text-violet-600" />
+                            </div>
+                            <h2 className="text-lg font-bold text-gray-900">Students</h2>
+                            <span className="text-sm text-gray-500">({students.length})</span>
+                        </div>
+                        {studentsLoading ? (
+                            <div className="flex items-center justify-center py-16 flex-1">
+                                <Loader2 className="w-8 h-8 text-violet-600 animate-spin" />
+                            </div>
+                        ) : students.length > 0 ? (
+                            <div className="overflow-y-auto max-h-[520px] flex-1">
+                                {students.map((student, index) => (
+                                    <div
+                                        key={student._id || index}
+                                        className="px-6 py-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors flex items-center gap-4"
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center flex-shrink-0">
+                                            <span className="text-sm font-bold text-violet-600">
+                                                {(student.fullName || student.email || '?').charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-gray-900 truncate">
+                                                {student.fullName || 'Unknown'}
+                                            </p>
+                                            <div className="flex items-center text-xs text-gray-500 mt-0.5">
+                                                <Mail className="w-3 h-3 mr-1 flex-shrink-0" />
+                                                <span className="truncate">{student.email || '—'}</span>
+                                            </div>
+                                        </div>
+                                        <span className="px-2 py-0.5 rounded-md bg-violet-50 text-violet-600 text-xs font-medium flex-shrink-0">
+                                            Student
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center py-16 flex-1">
+                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                                    <Users className="w-6 h-6 text-gray-300" />
+                                </div>
+                                <p className="text-gray-500 font-medium text-sm">No students found.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );
