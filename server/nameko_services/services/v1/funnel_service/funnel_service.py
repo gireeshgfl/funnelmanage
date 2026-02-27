@@ -240,7 +240,12 @@ class FunnelService:
     @get_rbac_check(required_roles=['sub-admin', 'trainer'])
     @serialize_result
     def get_groups(self, user_id, payload):
-        groups = self.group_dao.get_groups_by_user(user_id)
+        roles = payload.get('roles', [])
+        if 'sub-admin' in roles:
+            groups = self.group_dao.get_all_groups()
+        else:
+            groups = self.group_dao.get_groups_by_user(user_id)
+            
         return {
             "message": "Groups fetched successfully.",
             "status": 200,

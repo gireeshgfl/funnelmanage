@@ -1182,6 +1182,13 @@ class GroupDAO(BaseDAO):
         results = self.find_many(query)
         return list(results)
 
+    def get_all_groups(self):
+        """
+        Retrieve all groups regradless who created it.
+        """
+        results = self.find_many({})
+        return list(results)
+
     def assign_trainer(self, group_id, trainer_id):
         """
         Assign a trainer to a specific group.
