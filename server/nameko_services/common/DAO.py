@@ -1190,3 +1190,31 @@ class GroupDAO(BaseDAO):
             {'_id': ObjectId(group_id)},
             {'$set': {'trainerId': ObjectId(trainer_id)}}
         )
+
+    def set_group_reassign_flag(self, user_id, group_id):
+        """
+        Flag a group for reassignment if the user is the creator or assigned trainer.
+        """
+        group_oid = ObjectId(group_id)
+        user_oid = ObjectId(user_id)
+
+        # Permission check: created_by == user_id OR trainerId == user_id
+        query = {
+            "_id": group_oid,
+            "$or": [
+                {"created_by": user_oid},
+                {"trainerId": user_oid}
+            ]
+        }
+
+        update = {
+            "$set": {
+                "reassign": True,
+                "updated_at": datetime.utcnow()
+            }
+        }
+
+        result = self.update_one(query, update)
+        if result.matched_count == 0:
+            raise Exception("Group not found or you don't have permission to reassign it.")
+        return True

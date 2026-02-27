@@ -118,6 +118,32 @@ export function useGroups(options = { fetchOnMount: true }) {
         }
     }, [fetchGroups]);
 
+    const reassignGroup = useCallback(async (groupId) => {
+        setLoading(true);
+        setFeedbackMessage("");
+        try {
+            const response = await apiClient.post(
+                API_ROUTES.FUNNEL_SERVICE.REASSIGN_GROUP,
+                { group_id: groupId }
+            );
+
+            if (response.data?.status === 200) {
+                setFeedbackMessage("Group marked for reassignment!");
+                await fetchGroups();
+                return true;
+            } else {
+                setFeedbackMessage(response.data?.message || "Failed to mark group for reassignment");
+                return false;
+            }
+        } catch (err) {
+            console.error("Error reassigning group:", err);
+            setFeedbackMessage(err.response?.data?.message || "Error occurred while reassigning group.");
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }, [fetchGroups]);
+
     useEffect(() => {
         if (options?.fetchOnMount) {
             fetchGroups();
@@ -139,6 +165,7 @@ export function useGroups(options = { fetchOnMount: true }) {
         fetchParticipants,
         fetchAttemptedStudents,
         createGroup,
-        assignTrainer
+        assignTrainer,
+        reassignGroup
     };
 }

@@ -108,6 +108,7 @@ export const API_ROUTES = {
     GET_GROUPS: `${BASE_URL}/funnel_service/get_groups/`,
     SAVE_GROUP: `${BASE_URL}/funnel_service/save_group/`,
     ASSIGN_TRAINER: `${BASE_URL}/funnel_service/assign_trainer/`,
+    REASSIGN_GROUP: `${BASE_URL}/funnel_service/reassign_group/`,
     GET_ATTEMPTED_STUDENTS: `${BASE_URL}/funnel_service/get_attempted_students/`,
   },
 

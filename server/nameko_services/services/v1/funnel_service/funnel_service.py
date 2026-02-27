@@ -249,6 +249,29 @@ class FunnelService:
 
     @rpc
     @error_handler
+    @rbac_check(required_roles=['sub-admin', 'trainer'])
+    @serialize_result
+    def reassign_group(self, user_id, data):
+        group_id = data.get('group_id')
+        if not group_id:
+            return {
+                "message": "group_id is required.",
+                "status": 400
+            }
+        try:
+            self.group_dao.set_group_reassign_flag(user_id, group_id)
+            return {
+                "message": "Group flagged for reassignment successfully.",
+                "status": 200
+            }
+        except Exception as e:
+            return {
+                "message": str(e),
+                "status": 403
+            }
+
+    @rpc
+    @error_handler
     @rbac_check(required_roles=['sub-admin'])
     @serialize_result
     def assign_trainer(self, user_id, data):

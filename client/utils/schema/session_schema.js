@@ -133,3 +133,7 @@ export const AssignTrainerSchema = z.object({
   groupId: z.string().length(24, "Invalid group ID format"),
   trainerId: z.string().length(24, "Invalid trainer ID format"),
 });
+
+export const ReassignGroupSchema = z.object({
+  group_id: z.string().length(24, "Invalid group ID format"),
+});
