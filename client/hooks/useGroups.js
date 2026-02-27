@@ -4,6 +4,7 @@ import { API_ROUTES } from "@/config";
 
 export function useGroups(options = { fetchOnMount: true }) {
     const [groups, setGroups] = useState([]);
+    const [reassigningIds, setReassigningIds] = useState([]);
     const [participants, setParticipants] = useState({ trainers: [], students: [], others: [] });
     const [attemptedStudents, setAttemptedStudents] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -12,8 +13,8 @@ export function useGroups(options = { fetchOnMount: true }) {
     const [participantsError, setParticipantsError] = useState(null);
     const [feedbackMessage, setFeedbackMessage] = useState("");
 
-    const fetchGroups = useCallback(async () => {
-        setLoading(true);
+    const fetchGroups = useCallback(async (silent = false) => {
+        if (!silent) setLoading(true);
         setError(null);
         try {
             const response = await apiClient.get(API_ROUTES.FUNNEL_SERVICE.GET_GROUPS);
@@ -119,7 +120,7 @@ export function useGroups(options = { fetchOnMount: true }) {
     }, [fetchGroups]);
 
     const reassignGroup = useCallback(async (groupId) => {
-        setLoading(true);
+        setReassigningIds(prev => [...prev, groupId]);
         setFeedbackMessage("");
         try {
             const response = await apiClient.post(
@@ -129,7 +130,7 @@ export function useGroups(options = { fetchOnMount: true }) {
 
             if (response.data?.status === 200) {
                 setFeedbackMessage("Group marked for reassignment!");
-                await fetchGroups();
+                await fetchGroups(true); // Silent refresh
                 return true;
             } else {
                 setFeedbackMessage(response.data?.message || "Failed to mark group for reassignment");
@@ -140,7 +141,7 @@ export function useGroups(options = { fetchOnMount: true }) {
             setFeedbackMessage(err.response?.data?.message || "Error occurred while reassigning group.");
             return false;
         } finally {
-            setLoading(false);
+            setReassigningIds(prev => prev.filter(id => id !== groupId));
         }
     }, [fetchGroups]);
 
@@ -166,6 +167,7 @@ export function useGroups(options = { fetchOnMount: true }) {
         fetchAttemptedStudents,
         createGroup,
         assignTrainer,
-        reassignGroup
+        reassignGroup,
+        reassigningIds
     };
 }

@@ -6,14 +6,13 @@ import { Users, Search, Loader2, Plus, X, Check } from 'lucide-react';
 import { useGroups } from '@/hooks/useGroups';
 
 export default function GroupsPage() {
-    const { groups, loading, error, createGroup, feedbackMessage, participants, participantsLoading, fetchParticipants, reassignGroup } = useGroups();
+    const { groups, loading, error, createGroup, feedbackMessage, participants, participantsLoading, fetchParticipants, reassignGroup, reassigningIds } = useGroups();
 
     // State for create group modal
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selectedGroupId, setSelectedGroupId] = useState(null);
     const [hoveredGroupId, setHoveredGroupId] = useState(null);
 
     // Student dropdown state
@@ -120,7 +119,7 @@ export default function GroupsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {loading && !isSubmitting ? (
+                            {loading && groups?.length === 0 && !isSubmitting ? (
                                 <tr>
                                     <td colSpan="3" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                         <div className="flex flex-col items-center justify-center space-y-3">
@@ -144,20 +143,22 @@ export default function GroupsPage() {
                             ) : (
                                 groups?.map((group) => {
                                     const groupId = group.id || group._id;
-                                    const isSelected = selectedGroupId === groupId;
+                                    const isReassigned = group.reassign === true || group.status === 'Reassigned';
+                                    const isReassigning = reassigningIds.includes(groupId);
 
                                     return (
                                         <tr
                                             key={groupId}
-                                            className={`transition-colors ${isSelected
-                                                ? 'bg-primary-50/50 dark:bg-primary-900/10'
-                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                                                }`}
+                                            className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                                         >
-                                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white border-l-4 transition-colors ${isSelected ? 'border-primary-600' : 'border-transparent'
-                                                }`}>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white border-l-4 border-transparent transition-colors">
                                                 <div className="flex items-center gap-2">
                                                     {group.name || group.group_name || 'Unnamed Group'}
+                                                    {isReassigned && (
+                                                        <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full uppercase tracking-wider">
+                                                            Reassigned
+                                                        </span>
+                                                    )}
                                                     {group.description && (
                                                         <span className="text-xs text-gray-400 hidden lg:inline truncate max-w-[200px]" title={group.description}>
                                                             - {group.description}
@@ -171,11 +172,9 @@ export default function GroupsPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <ReassignButton
                                                     groupId={groupId}
-                                                    isSelected={isSelected}
-                                                    onSelect={() => {
-                                                        setSelectedGroupId(groupId);
-                                                        reassignGroup(groupId);
-                                                    }}
+                                                    isReassigned={isReassigned}
+                                                    isReassigning={isReassigning}
+                                                    onSelect={() => reassignGroup(groupId)}
                                                 />
                                             </td>
                                         </tr>
@@ -350,7 +349,7 @@ export default function GroupsPage() {
 
 // --- Helper Components ---
 
-function ReassignButton({ groupId, isSelected, onSelect }) {
+function ReassignButton({ groupId, isReassigned, isReassigning, onSelect }) {
     const buttonRef = useRef(null);
     const [isHovered, setIsHovered] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0 });
@@ -365,12 +364,22 @@ function ReassignButton({ groupId, isSelected, onSelect }) {
         }
     };
 
+    if (isReassigned) {
+        return (
+            <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-semibold px-2 py-1 bg-green-50 dark:bg-green-900/10 rounded-lg justify-end ml-auto w-fit">
+                <Check className="h-4 w-4" />
+                Completed
+            </span>
+        );
+    }
+
     return (
         <>
             <button
                 ref={buttonRef}
-                className={`transition-colors font-medium ${isSelected
-                    ? 'text-primary-700 dark:text-primary-400 underline underline-offset-4'
+                disabled={isReassigning}
+                className={`transition-all font-medium flex items-center gap-2 ml-auto ${isReassigning
+                    ? 'text-gray-400 cursor-not-allowed'
                     : 'text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300'
                     }`}
                 onClick={onSelect}
@@ -380,7 +389,14 @@ function ReassignButton({ groupId, isSelected, onSelect }) {
                 }}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                Reassign
+                {isReassigning ? (
+                    <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
+                    </>
+                ) : (
+                    'Reassign'
+                )}
             </button>
             {isHovered && typeof document !== 'undefined' && createPortal(
                 <div
