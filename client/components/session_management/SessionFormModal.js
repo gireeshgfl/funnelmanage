@@ -1,9 +1,9 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, BookOpen, Users, Info, X, Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Calendar, Clock, BookOpen, Users, Info, X, Check, ChevronsUpDown, Search, Layers } from 'lucide-react';
 import { Input, Dropdown, Button, DropdownItem } from '@components/ui/components';
 
-const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopics = [], availableParticipants = [], fetchFunnellingData }) => {
+const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopics = [], availableParticipants = [], availableGroups = [], fetchFunnellingData }) => {
   const [sessionName, setSessionName] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -11,6 +11,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +49,14 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
     [availableParticipants]
   );
 
+  const groupOptions = useMemo(() =>
+    availableGroups.map(group => ({
+      value: group._id || group.id || group.value,
+      label: group.group_name || group.name || group.text || `Group ${group._id}`
+    })),
+    [availableGroups]
+  );
+
   useEffect(() => {
     if (initialData) {
       setSessionName(initialData.sessionName || '');
@@ -57,6 +66,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       setAdditionalInfo(initialData.additionalInfo || '');
       setSelectedTopics(initialData.questions ? initialData.questions.map(q => q.id) : []);
       setSelectedParticipants(initialData.participants ? initialData.participants.map(p => p.id) : []);
+      setSelectedGroups(initialData.groups ? initialData.groups.map(g => g.id || g) : []);
       setSelectedFunnelParticipants(initialData.funnelParticipants || []);
       setFunnelParticipants(initialData.funnelParticipantsData || []);
       setHasFetchedParticipants(!!initialData.funnelParticipantsData);
@@ -74,6 +84,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
     setAdditionalInfo('');
     setSelectedTopics([]);
     setSelectedParticipants([]);
+    setSelectedGroups([]);
     setSelectedFunnelParticipants([]);
     setFunnelCount(1);
     setFunnelParticipants([]);
@@ -95,9 +106,10 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       discount !== (initialData.discount || '') ||
       JSON.stringify(selectedTopics.sort()) !== JSON.stringify((initialData.questions ? initialData.questions.map(q => q.id) : []).sort()) ||
       JSON.stringify(selectedParticipants.sort()) !== JSON.stringify((initialData.participants ? initialData.participants.map(p => p.id) : []).sort()) ||
+      JSON.stringify(selectedGroups.sort()) !== JSON.stringify((initialData.groups ? initialData.groups.map(g => g.id || g) : []).sort()) ||
       JSON.stringify(selectedFunnelParticipants.sort()) !== JSON.stringify((initialData.funnelParticipants || []).sort())
     );
-  }, [sessionName, date, time, topic, additionalInfo, discount, selectedTopics, selectedParticipants, selectedFunnelParticipants, initialData]);
+  }, [sessionName, date, time, topic, additionalInfo, discount, selectedTopics, selectedParticipants, selectedGroups, selectedFunnelParticipants, initialData]);
 
   const handleDiscountChange = (e) => {
     const value = e.target.value;
@@ -135,6 +147,14 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       } : { id, name: "" };
     });
 
+    const groupsPayload = selectedGroups.map((id) => {
+      const found = availableGroups.find((g) => (g._id || g.id || g.value) === id);
+      return found ? {
+        id,
+        name: found.group_name || found.name || found.text
+      } : { id, name: "" };
+    });
+
     const participantsPayload = selectedParticipants.map((id) => {
       const found = availableParticipants.find((p) => (p.id || p.value) === id);
       return found ? {
@@ -157,6 +177,7 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       discount: discount || 0, // Include discount (default to 0 if empty)
       questions: questionsPayload,
       participants: participantsPayload,
+      groups: groupsPayload,
       funnelParticipants: funnelParticipantsPayload,
       funnelParticipantsData: funnelParticipants
     };
@@ -177,6 +198,14 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
       prev.includes(topicId)
         ? prev.filter(id => id !== topicId)
         : [...prev, topicId]
+    );
+  };
+
+  const handleGroupSelect = (groupId) => {
+    setSelectedGroups(prev =>
+      prev.includes(groupId)
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
     );
   };
 
@@ -449,6 +478,72 @@ const SessionFormModal = ({ open, onClose, onSubmit, initialData, availableTopic
                           <button
                             onClick={() => handleParticipantSelect(participantId)}
                             className="ml-1.5 inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Groups Section */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Groups <span className="text-xs text-gray-400">(optional)</span>
+                </label>
+                <Dropdown
+                  trigger={
+                    <button className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-left flex justify-between items-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                      {selectedGroups.length > 0
+                        ? `${selectedGroups.length} group(s) selected`
+                        : 'Select groups'}
+                      <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  }
+                  position="bottom"
+                  className="w-full"
+                >
+                  <div className="max-h-60 overflow-y-auto">
+                    {groupOptions.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                        No groups available
+                      </div>
+                    ) : (
+                      groupOptions.map(option => (
+                        <DropdownItem
+                          key={option.value}
+                          onClick={() => handleGroupSelect(option.value)}
+                          className={`flex items-center ${selectedGroups.includes(option.value) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedGroups.includes(option.value)}
+                            readOnly
+                            className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
+                          />
+                          {option.label}
+                        </DropdownItem>
+                      ))
+                    )}
+                  </div>
+                </Dropdown>
+                {selectedGroups.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedGroups.map(groupId => {
+                      const group = availableGroups.find(g => (g._id || g.id || g.value) === groupId);
+                      return (
+                        <span
+                          key={groupId}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200"
+                        >
+                          {group?.group_name || group?.name || group?.text || groupId}
+                          <button
+                            onClick={() => handleGroupSelect(groupId)}
+                            className="ml-1.5 inline-flex text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>

@@ -14,6 +14,7 @@ import {
   activateSession
 } from '@/hooks/session_management/sessionService';
 import { useFunnel } from '@/hooks/useFunnel';
+import { useGroups } from '@/hooks/useGroups';
 import { getTopics } from '@/hooks/session_management/topicService';
 import { getParticipants } from '@/hooks/session_management/participantService';
 import { encryptId } from '@/utils/encryption';
@@ -26,6 +27,7 @@ const SessionManagementPage = () => {
   const [topics, setTopics] = useState([]);
   const [participants, setParticipants] = useState([]);
   const { fetchFunnellingData } = useFunnel();
+  const { groups, fetchGroups } = useGroups({ fetchOnMount: true });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterType, setFilterType] = useState('active');
@@ -228,6 +230,7 @@ const SessionManagementPage = () => {
         initialData={currentSession}
         availableTopics={topics}
         availableParticipants={participants}
+        availableGroups={groups}
         fetchFunnellingData={fetchFunnellingData}
       />
     </div>
