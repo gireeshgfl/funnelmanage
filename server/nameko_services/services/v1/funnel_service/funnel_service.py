@@ -284,8 +284,14 @@ class FunnelService:
                 "status": 400
             }
             
-        self.group_dao.assign_trainer(group_id, trainer_id)
+        success = self.group_dao.assign_trainer(group_id, trainer_id)
         
+        if not success:
+            return {
+                "message": "Failed to assign trainer. Group may already have a trainer assigned and is not marked for reassignment.",
+                "status": 403
+            }
+            
         return {
             "message": "Trainer assigned successfully.",
             "status": 200

@@ -1185,11 +1185,34 @@ class GroupDAO(BaseDAO):
     def assign_trainer(self, group_id, trainer_id):
         """
         Assign a trainer to a specific group.
+        Initial assignment allowed if trainerId is missing.
+        Reassignment allowed only if reassign flag is True.
         """
-        return self.update_one(
-            {'_id': ObjectId(group_id)},
-            {'$set': {'trainerId': ObjectId(trainer_id)}}
-        )
+        group_oid = ObjectId(group_id)
+        trainer_oid = ObjectId(trainer_id)
+
+        # Query to allow assignment if:
+        # 1. trainerId is missing or null
+        # 2. reassign flag is True
+        query = {
+            "_id": group_oid,
+            "$or": [
+                {"trainerId": {"$exists": False}},
+                {"trainerId": None},
+                {"reassign": True}
+            ]
+        }
+
+        update = {
+            "$set": {
+                "trainerId": trainer_oid,
+                "reassign": False,
+                "updated_at": datetime.utcnow()
+            }
+        }
+
+        result = self.update_one(query, update)
+        return result.matched_count > 0
 
     def set_group_reassign_flag(self, user_id, group_id):
         """
