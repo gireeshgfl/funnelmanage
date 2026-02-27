@@ -129,8 +129,8 @@ const SessionsPage = () => {
                                 <Calendar className="w-8 h-8 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900">Training Sessions</h1>
-                                <p className="text-gray-500 mt-1">Monitor and manage all training activities across groups.</p>
+                                <h1 className="text-3xl font-bold text-gray-900">Session Management</h1>
+                                <p className="text-gray-500 mt-1">Request trainers to add students to sessions.</p>
                             </div>
                         </div>
                     </div>
