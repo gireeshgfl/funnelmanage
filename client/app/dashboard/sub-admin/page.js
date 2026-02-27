@@ -8,7 +8,8 @@ import {
   Activity,
   ArrowRight,
   UserCheck,
-  Group
+  Group,
+  Calendar
 } from 'lucide-react';
 
 
@@ -39,6 +40,7 @@ const SubAdminDashboard = () => {
     { title: 'View Attendance', description: 'Check sessions attended by students', icon: Users, href: '/dashboard/sub-admin/students' },
     { title: 'Assign Trainers', description: 'Assign or reassign trainers to groups', icon: UserCheck, href: '/dashboard/sub-admin/trainers' },
     { title: 'Manage Groups', description: 'Organize and assign student groups', icon: Group, href: '/dashboard/sub-admin/groups' },
+    { title: 'View Sessions', description: 'Monitor upcoming and past sessions', icon: Calendar, href: '/dashboard/sub-admin/sessions' },
   ];
 
 

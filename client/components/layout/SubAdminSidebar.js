@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Filter, Users, UserCheck, Group, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut } from 'lucide-react';
+import { Filter, Users, UserCheck, Group, Calendar, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut } from 'lucide-react';
 
 export default function SubAdminSidebar({ onCollapseChange, initialCollapsed = true }) {
     const { signout } = useAuth();
@@ -40,6 +40,7 @@ export default function SubAdminSidebar({ onCollapseChange, initialCollapsed = t
         { href: '/dashboard/sub-admin/students', label: 'Students', icon: Users },
         { href: '/dashboard/sub-admin/trainers', label: 'Trainers', icon: UserCheck },
         { href: '/dashboard/sub-admin/groups', label: 'Groups', icon: Group },
+        { href: '/dashboard/sub-admin/sessions', label: 'Sessions', icon: Calendar },
     ];
 
     return (

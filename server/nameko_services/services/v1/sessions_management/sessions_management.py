@@ -102,10 +102,14 @@ class SessionService:
 
     @rpc
     @error_handler
-    @get_rbac_check(required_roles=['trainer'])
+    @get_rbac_check(required_roles=['trainer', 'sub-admin'])
     @serialize_result
     def get_sessions(self, user_id, payload):
-        result = self.session_service_dao.get_sessions_by_user(user_id)
+        roles = payload.get('roles', [])
+        if 'sub-admin' in roles:
+            result = self.session_service_dao.get_sessions()
+        else:
+            result = self.session_service_dao.get_sessions_by_user(user_id)
         if result:
             response = {
                 "message": "Session(s) fetched successfully",
