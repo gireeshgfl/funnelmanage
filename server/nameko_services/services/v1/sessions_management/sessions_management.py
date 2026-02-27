@@ -744,10 +744,12 @@ class SessionService:
     def request_student_to_session(self, user_id, data):
         """
         RPC method to request a trainer to add a student to a particular session.
-        Expects 'data' with 'student_id' and 'session_id'.
+        Expects 'data' with 'student_id', 'session_id', and optionally 'student_name' and 'student_email'.
         """
         student_id = data.get('student_id')
         session_id = data.get('session_id')
+        student_name = data.get('student_name', '')
+        student_email = data.get('student_email', '')
 
         if not student_id or not session_id:
             return {
@@ -758,7 +760,9 @@ class SessionService:
         request = self.session_student_request_dao.create_request(
             student_id=student_id,
             session_id=session_id,
-            requested_by=user_id
+            requested_by=user_id,
+            student_name=student_name,
+            student_email=student_email
         )
 
         return {
@@ -775,13 +779,39 @@ class SessionService:
         """
         RPC method to fetch student-to-session requests.
         Optionally filter by session_id via query_params.
+        For trainers, only returns requests for sessions they created.
+        Populates session_name in each request for both roles.
         """
+        roles = payload.get('roles', [])
         session_id = payload.get("query_params", {}).get("session_id")
 
         if session_id:
             requests = self.session_student_request_dao.get_requests_by_session(session_id)
         else:
             requests = self.session_student_request_dao.get_all_requests()
+
+        # For trainers, filter requests to only show those for sessions they created
+        if 'trainer' in roles and 'sub-admin' not in roles:
+            trainer_sessions = self.session_service_dao.get_sessions_by_user(user_id)
+            trainer_session_ids = {str(s['_id']) for s in trainer_sessions}
+            requests = [r for r in requests if str(r.get('session_id')) in trainer_session_ids]
+
+        # Populate session_name for each request
+        if requests:
+            # Collect unique session IDs from the requests
+            unique_session_ids = list({str(r.get('session_id')) for r in requests if r.get('session_id')})
+            session_obj_ids = [ObjectId(sid) for sid in unique_session_ids if ObjectId.is_valid(sid)]
+
+            # Fetch session details in bulk
+            sessions = self.session_service_dao.find_many(
+                {"_id": {"$in": session_obj_ids}},
+                projection={"sessionName": 1}
+            )
+            session_name_map = {str(s['_id']): s.get('sessionName', '') for s in sessions}
+
+            # Attach session_name to each request
+            for req in requests:
+                req['session_name'] = session_name_map.get(str(req.get('session_id')), '')
 
         if requests:
             return {

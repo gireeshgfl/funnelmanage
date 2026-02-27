@@ -86,14 +86,19 @@ const SessionsPage = () => {
         }
     }, [feedbackMsg]);
 
-    const handleRequestStudent = async (studentId) => {
+    const handleRequestStudent = async (student) => {
         if (!selectedSessionId) {
             setFeedbackMsg({ text: 'Please select a session first by clicking on it.', type: 'error' });
             return;
         }
-        setRequestingStudentId(studentId);
+        setRequestingStudentId(student._id);
         try {
-            const success = await requestStudentToSession(studentId, selectedSessionId);
+            const success = await requestStudentToSession(
+                student._id,
+                selectedSessionId,
+                student.fullName || '',
+                student.email || ''
+            );
             if (success) {
                 setFeedbackMsg({ text: 'Student request sent successfully!', type: 'success' });
             } else {
@@ -208,8 +213,8 @@ const SessionsPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             className={`flex items-center gap-3 px-5 py-3 rounded-xl border text-sm font-medium ${feedbackMsg.type === 'success'
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                    : 'bg-red-50 border-red-200 text-red-700'
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                : 'bg-red-50 border-red-200 text-red-700'
                                 }`}
                         >
                             {feedbackMsg.type === 'success' ? (
@@ -299,15 +304,15 @@ const SessionsPage = () => {
                                         key={session._id}
                                         onClick={() => setSelectedSessionId(session._id)}
                                         className={`px-6 py-4 border-b border-gray-50 hover:bg-blue-50/50 transition-colors group cursor-pointer ${selectedSessionId === session._id
-                                                ? 'bg-blue-50 border-l-4 border-l-blue-600'
-                                                : ''
+                                            ? 'bg-blue-50 border-l-4 border-l-blue-600'
+                                            : ''
                                             }`}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
                                                 <p className={`font-semibold text-sm transition-colors truncate ${selectedSessionId === session._id
-                                                        ? 'text-blue-700'
-                                                        : 'text-gray-900 group-hover:text-blue-600'
+                                                    ? 'text-blue-700'
+                                                    : 'text-gray-900 group-hover:text-blue-600'
                                                     }`}>
                                                     {session.sessionName || 'Untitled Session'}
                                                 </p>
@@ -391,13 +396,13 @@ const SessionsPage = () => {
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => handleRequestStudent(student._id)}
+                                            onClick={() => handleRequestStudent(student)}
                                             disabled={requestingStudentId === student._id || !selectedSessionId}
                                             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0 ${!selectedSessionId
-                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    : requestingStudentId === student._id
-                                                        ? 'bg-blue-100 text-blue-500 cursor-wait'
-                                                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
+                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                : requestingStudentId === student._id
+                                                    ? 'bg-blue-100 text-blue-500 cursor-wait'
+                                                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
                                                 }`}
                                             title={!selectedSessionId ? 'Select a session first' : 'Request to add student to session'}
                                         >

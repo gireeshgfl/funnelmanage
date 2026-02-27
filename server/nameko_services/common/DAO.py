@@ -1261,7 +1261,7 @@ class SessionStudentRequestDAO(BaseDAO):
         """
         super().__init__(db_connection, collection_name='session_student_requests')
 
-    def create_request(self, student_id, session_id, requested_by):
+    def create_request(self, student_id, session_id, requested_by, student_name='', student_email=''):
         """
         Create a new request to add a student to a session.
         """
@@ -1269,6 +1269,8 @@ class SessionStudentRequestDAO(BaseDAO):
             "student_id": ObjectId(student_id),
             "session_id": ObjectId(session_id),
             "requested_by": ObjectId(requested_by),
+            "student_name": student_name,
+            "student_email": student_email,
             "status": "pending",
             "created_at": datetime.utcnow()
         }

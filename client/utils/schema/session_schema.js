@@ -141,4 +141,6 @@ export const ReassignGroupSchema = z.object({
 export const RequestStudentToSessionSchema = z.object({
   student_id: z.string().length(24, "Invalid student ID format"),
   session_id: z.string().length(24, "Invalid session ID format"),
+  student_name: z.string(),
+  student_email: z.string(),
 });

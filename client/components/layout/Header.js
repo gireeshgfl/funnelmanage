@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Filter, BookOpen, Gift, Calendar, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut, Users } from 'lucide-react';
+import { Filter, BookOpen, Gift, Calendar, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut, Users, ClipboardList } from 'lucide-react';
 
 export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
   const { signout } = useAuth();
@@ -36,6 +36,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
     { href: '/dashboard/trainer/question-bank', label: 'Question Bank', icon: BookOpen },
     { href: '/dashboard/trainer/funnels', label: 'Funnels', icon: Filter },
     { href: '/dashboard/trainer/rewards', label: 'Rewards', icon: Gift },
+    { href: '/dashboard/trainer/admin-requests', label: 'Admin Requests', icon: ClipboardList },
   ];
 
   return (

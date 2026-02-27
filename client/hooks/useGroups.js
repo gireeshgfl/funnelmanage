@@ -145,13 +145,13 @@ export function useGroups(options = { fetchOnMount: true }) {
         }
     }, [fetchGroups]);
 
-    const requestStudentToSession = useCallback(async (studentId, sessionId) => {
+    const requestStudentToSession = useCallback(async (studentId, sessionId, studentName = '', studentEmail = '') => {
         setLoading(true);
         setFeedbackMessage("");
         try {
             const response = await apiClient.post(
                 API_ROUTES.SESSION_SERVICE.REQUEST_STUDENT_TO_SESSION,
-                { student_id: studentId, session_id: sessionId }
+                { student_id: studentId, session_id: sessionId, student_name: studentName, student_email: studentEmail }
             );
 
             if (response.data?.status === 200 || response.data?.status === 201) {
