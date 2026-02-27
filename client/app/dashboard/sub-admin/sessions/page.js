@@ -14,12 +14,16 @@ import {
     AlertCircle,
     Loader2,
     Mail,
-    BookOpen
+    BookOpen,
+    UserPlus,
+    Check,
+    X
 } from 'lucide-react';
 import Link from 'next/link';
 import { getSessions } from '@/hooks/session_management/sessionService';
 import apiClient from '@/utils/axiosinterceptor';
 import { API_ROUTES } from '@/config';
+import { useGroups } from '@/hooks/useGroups';
 
 const SessionsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -30,6 +34,13 @@ const SessionsPage = () => {
 
     const [students, setStudents] = useState([]);
     const [studentsLoading, setStudentsLoading] = useState(true);
+
+    // Selected session for adding students
+    const [selectedSessionId, setSelectedSessionId] = useState(null);
+    const [requestingStudentId, setRequestingStudentId] = useState(null);
+    const [feedbackMsg, setFeedbackMsg] = useState({ text: '', type: '' }); // type: 'success' | 'error'
+
+    const { requestStudentToSession } = useGroups({ fetchOnMount: false });
 
     // Fetch sessions
     useEffect(() => {
@@ -66,6 +77,34 @@ const SessionsPage = () => {
         };
         fetchStudents();
     }, []);
+
+    // Auto-clear feedback
+    useEffect(() => {
+        if (feedbackMsg.text) {
+            const timer = setTimeout(() => setFeedbackMsg({ text: '', type: '' }), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [feedbackMsg]);
+
+    const handleRequestStudent = async (studentId) => {
+        if (!selectedSessionId) {
+            setFeedbackMsg({ text: 'Please select a session first by clicking on it.', type: 'error' });
+            return;
+        }
+        setRequestingStudentId(studentId);
+        try {
+            const success = await requestStudentToSession(studentId, selectedSessionId);
+            if (success) {
+                setFeedbackMsg({ text: 'Student request sent successfully!', type: 'success' });
+            } else {
+                setFeedbackMsg({ text: 'Failed to send student request.', type: 'error' });
+            }
+        } catch (err) {
+            setFeedbackMsg({ text: 'Error sending student request.', type: 'error' });
+        } finally {
+            setRequestingStudentId(null);
+        }
+    };
 
     const getStatusStyles = (status) => {
         switch (status) {
@@ -110,6 +149,8 @@ const SessionsPage = () => {
         const matchesStatus = statusFilter === 'All' || session.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const selectedSessionName = sessions.find(s => s._id === selectedSessionId)?.sessionName;
 
     return (
         <div className="min-h-screen bg-gray-50/50 p-4 md:p-8">
@@ -159,6 +200,44 @@ const SessionsPage = () => {
                     </div>
                 </div>
 
+                {/* Feedback Alert */}
+                <AnimatePresence>
+                    {feedbackMsg.text && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className={`flex items-center gap-3 px-5 py-3 rounded-xl border text-sm font-medium ${feedbackMsg.type === 'success'
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                    : 'bg-red-50 border-red-200 text-red-700'
+                                }`}
+                        >
+                            {feedbackMsg.type === 'success' ? (
+                                <Check className="w-4 h-4 flex-shrink-0" />
+                            ) : (
+                                <X className="w-4 h-4 flex-shrink-0" />
+                            )}
+                            {feedbackMsg.text}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Selected Session Indicator */}
+                {selectedSessionId && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span className="text-blue-700">
+                            Selected session: <strong>{selectedSessionName || 'Unknown'}</strong> — click a student's <strong>+ Add</strong> button to request.
+                        </span>
+                        <button
+                            onClick={() => setSelectedSessionId(null)}
+                            className="ml-auto text-blue-500 hover:text-blue-700 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
                 {/* Stats Summary */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
@@ -197,6 +276,9 @@ const SessionsPage = () => {
                             </div>
                             <h2 className="text-lg font-bold text-gray-900">Sessions</h2>
                             <span className="text-sm text-gray-500">({filteredSessions.length})</span>
+                            {!selectedSessionId && (
+                                <span className="ml-auto text-xs text-gray-400 italic">Click a session to select it</span>
+                            )}
                         </div>
                         {loading ? (
                             <div className="flex items-center justify-center py-16 flex-1">
@@ -215,11 +297,18 @@ const SessionsPage = () => {
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.2, delay: index * 0.03 }}
                                         key={session._id}
-                                        className="px-6 py-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors group"
+                                        onClick={() => setSelectedSessionId(session._id)}
+                                        className={`px-6 py-4 border-b border-gray-50 hover:bg-blue-50/50 transition-colors group cursor-pointer ${selectedSessionId === session._id
+                                                ? 'bg-blue-50 border-l-4 border-l-blue-600'
+                                                : ''
+                                            }`}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
-                                                <p className="font-semibold text-sm text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                                                <p className={`font-semibold text-sm transition-colors truncate ${selectedSessionId === session._id
+                                                        ? 'text-blue-700'
+                                                        : 'text-gray-900 group-hover:text-blue-600'
+                                                    }`}>
                                                     {session.sessionName || 'Untitled Session'}
                                                 </p>
                                                 {session.topic && (
@@ -301,9 +390,24 @@ const SessionsPage = () => {
                                                 <span className="truncate">{student.email || '—'}</span>
                                             </div>
                                         </div>
-                                        <span className="px-2 py-0.5 rounded-md bg-violet-50 text-violet-600 text-xs font-medium flex-shrink-0">
-                                            Student
-                                        </span>
+                                        <button
+                                            onClick={() => handleRequestStudent(student._id)}
+                                            disabled={requestingStudentId === student._id || !selectedSessionId}
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0 ${!selectedSessionId
+                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    : requestingStudentId === student._id
+                                                        ? 'bg-blue-100 text-blue-500 cursor-wait'
+                                                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
+                                                }`}
+                                            title={!selectedSessionId ? 'Select a session first' : 'Request to add student to session'}
+                                        >
+                                            {requestingStudentId === student._id ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                                <UserPlus className="w-3.5 h-3.5" />
+                                            )}
+                                            {requestingStudentId === student._id ? 'Sending...' : '+ Add'}
+                                        </button>
                                     </div>
                                 ))}
                             </div>
