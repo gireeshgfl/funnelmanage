@@ -292,6 +292,25 @@ class FunnelService:
                 "message": "groupId and trainerId are required.",
                 "status": 400
             }
+        
+        # Fetch the group to check ownership
+        group = self.group_dao.find_one({"_id": ObjectId(group_id)})
+        if not group:
+            return {
+                "message": "Group not found.",
+                "status": 404
+            }
+        
+        created_by = group.get('created_by')
+        is_own_group = (str(created_by) == str(user_id))
+        
+        if not is_own_group:
+            # Not the creator — only allow if reassign flag is True
+            if not group.get('reassign', False):
+                return {
+                    "message": "You can only assign a trainer to groups you created, unless the group is marked for reassignment.",
+                    "status": 403
+                }
             
         success = self.group_dao.assign_trainer(group_id, trainer_id)
         
