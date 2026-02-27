@@ -291,11 +291,11 @@ const TrainersPage = () => {
                                                         setSelectedGroup(assignment);
                                                         setIsModalOpen(true);
                                                     }}
-                                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center group/btn ${assignment.status === 'Assigned'
+                                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center group/btn ${assignment.status === 'Assigned' || !assignment.isOwnGroup
                                                         ? 'bg-gray-900 text-white hover:bg-blue-600'
                                                         : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'
                                                         }`}>
-                                                    {assignment.status === 'Assigned' ? 'Reassign Trainer' : 'Assign Trainer'}
+                                                    {assignment.status === 'Assigned' || !assignment.isOwnGroup ? 'Reassign Trainer' : 'Assign Trainer'}
                                                     <ArrowLeft className="w-3 h-3 ml-2 rotate-180 group-hover/btn:translate-x-1 transition-transform" />
                                                 </button>
                                             </div>
