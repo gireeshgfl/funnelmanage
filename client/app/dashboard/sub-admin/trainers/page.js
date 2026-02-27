@@ -9,7 +9,9 @@ import {
     ShieldCheck,
     Mail,
     X,
-    Check
+    Check,
+    User,
+    LayoutGrid
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -48,7 +50,9 @@ const TrainersPage = () => {
             email: assignedTrainer?.email || 'N/A',
             specialization: assignedTrainer?.specialization || 'N/A',
             status: assignedTrainer ? 'Assigned' : 'Unassigned',
-            experience: assignedTrainer?.experience || 'N/A'
+            experience: assignedTrainer?.experience || 'N/A',
+            isOwnGroup: group.is_own_group,
+            reassign: group.reassign
         };
     });
 
@@ -132,10 +136,26 @@ const TrainersPage = () => {
                                             : 'bg-white border-amber-200 shadow-amber-500/5'
                                             } group`}
                                     >
-                                        <div className={`p-8 rounded-[24px] border flex flex-col h-full relative overflow-hidden ${assignment.status === 'Assigned'
-                                            ? 'bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/40 border-blue-50/50'
-                                            : 'bg-gradient-to-br from-amber-50/40 via-white to-orange-50/40 border-amber-100/50'
+                                        <div className={`p-8 rounded-[24px] border flex flex-col h-full relative overflow-hidden ${assignment.reassign
+                                            ? 'bg-gradient-to-br from-red-50 to-white border-red-200 shadow-red-500/10'
+                                            : assignment.status === 'Assigned' || !assignment.isOwnGroup
+                                                ? 'bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/40 border-blue-50/50'
+                                                : 'bg-gradient-to-br from-amber-50/40 via-white to-orange-50/40 border-amber-100/50'
                                             }`}>
+                                            <div className="absolute top-4 right-4 z-20 flex flex-col items-end space-y-2">
+                                                {assignment.isOwnGroup && (
+                                                    <div className="flex items-center space-x-1.5 bg-blue-600 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/30">
+                                                        <ShieldCheck className="w-2.5 h-2.5" />
+                                                        <span>Your Group</span>
+                                                    </div>
+                                                )}
+                                                {assignment.reassign && (
+                                                    <div className="flex items-center space-x-1.5 bg-red-600 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg shadow-red-500/30 animate-pulse">
+                                                        <Users className="w-2.5 h-2.5" />
+                                                        <span>Reassignment Requested</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-bl-[100px] -mr-8 -mt-8 group-hover:bg-blue-600/10 transition-colors" />
 
                                             <div className="flex justify-between items-start mb-8 relative z-10">
@@ -167,6 +187,15 @@ const TrainersPage = () => {
                                                             <p className="font-black text-gray-900 truncate text-lg">{assignment.trainerName}</p>
                                                         </div>
                                                     </div>
+                                                ) : !assignment.isOwnGroup ? (
+                                                    <div className="flex items-center space-x-4 bg-gray-50/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm">
+                                                        <div className="w-12 h-12 rounded-2xl bg-gray-200 flex items-center justify-center text-gray-400 font-black text-lg">
+                                                            <Users className="w-6 h-6" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-gray-500 text-sm italic">Created by Trainer</p>
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     <div className="flex items-center justify-center p-6 bg-gray-50/50 border border-dashed border-gray-200 rounded-2xl">
                                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No Trainer Assigned</p>
@@ -186,19 +215,25 @@ const TrainersPage = () => {
 
                                             <div className="mt-8 pt-6 border-t border-gray-100/80 flex items-center justify-between relative z-10">
                                                 <div className="flex items-center">
-                                                    {assignment.status === 'Assigned' ? (
+                                                    {assignment.reassign ? (
+                                                        <div className="flex items-center space-x-2 bg-red-50 px-3 py-1.5 rounded-full border border-red-100 shadow-sm shadow-red-500/10">
+                                                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                                            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-red-700">Reassign Needed</span>
+                                                        </div>
+                                                    ) : !assignment.isOwnGroup ? (
                                                         <div className="flex items-center space-x-2">
                                                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                                            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-600">
-                                                                {assignment.status}
-                                                            </span>
+                                                            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-600">Trainer Present</span>
+                                                        </div>
+                                                    ) : assignment.status === 'Assigned' ? (
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-600">Assigned</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-center space-x-2 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100 shadow-sm shadow-amber-500/10">
                                                             <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                                            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-700">
-                                                                Needs Attention
-                                                            </span>
+                                                            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-700">Needs Attention</span>
                                                         </div>
                                                     )}
                                                 </div>

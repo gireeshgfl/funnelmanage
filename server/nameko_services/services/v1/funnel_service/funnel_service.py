@@ -241,10 +241,14 @@ class FunnelService:
     @serialize_result
     def get_groups(self, user_id, payload):
         roles = payload.get('roles', [])
+        user_oid = ObjectId(user_id)
         if 'sub-admin' in roles:
             groups = self.group_dao.get_all_groups()
         else:
             groups = self.group_dao.get_groups_by_user(user_id)
+        
+        for group in groups:
+            group['is_own_group'] = (group.get('created_by') == user_oid)
             
         return {
             "message": "Groups fetched successfully.",
