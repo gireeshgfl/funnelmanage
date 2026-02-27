@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Filter, BookOpen, Gift, Calendar, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut } from 'lucide-react';
+import { Filter, BookOpen, Gift, Calendar, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut, Users } from 'lucide-react';
 
 export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
   const { signout } = useAuth();
@@ -32,6 +32,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
 
   const navItems = [
     { href: '/dashboard/trainer/sessions', label: 'Sessions', icon: Calendar },
+    { href: '/dashboard/trainer/groups', label: 'Groups', icon: Users },
     { href: '/dashboard/trainer/question-bank', label: 'Question Bank', icon: BookOpen },
     { href: '/dashboard/trainer/funnels', label: 'Funnels', icon: Filter },
     { href: '/dashboard/trainer/rewards', label: 'Rewards', icon: Gift },
@@ -216,8 +217,8 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                     key={item.href}
                     href={item.href}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${active
-                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                       }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
