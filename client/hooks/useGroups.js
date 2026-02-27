@@ -130,7 +130,7 @@ export function useGroups(options = { fetchOnMount: true }) {
 
             if (response.data?.status === 200) {
                 setFeedbackMessage("Group marked for reassignment!");
-                await fetchGroups(true); // Silent refresh
+                await fetchGroups(true);
                 return true;
             } else {
                 setFeedbackMessage(response.data?.message || "Failed to mark group for reassignment");
@@ -144,6 +144,54 @@ export function useGroups(options = { fetchOnMount: true }) {
             setReassigningIds(prev => prev.filter(id => id !== groupId));
         }
     }, [fetchGroups]);
+
+    const requestStudentToSession = useCallback(async (studentId, sessionId) => {
+        setLoading(true);
+        setFeedbackMessage("");
+        try {
+            const response = await apiClient.post(
+                API_ROUTES.SESSION_SERVICE.REQUEST_STUDENT_TO_SESSION,
+                { student_id: studentId, session_id: sessionId }
+            );
+
+            if (response.data?.status === 200 || response.data?.status === 201) {
+                setFeedbackMessage("Student session request created successfully!");
+                return true;
+            } else {
+                setFeedbackMessage(response.data?.message || "Failed to create student session request");
+                return false;
+            }
+        } catch (err) {
+            console.error("Error requesting student to session:", err);
+            setFeedbackMessage(err.response?.data?.message || "Error occurred while requesting student to session.");
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const fetchStudentSessionRequests = useCallback(async (sessionId = null) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const url = sessionId
+                ? `${API_ROUTES.SESSION_SERVICE.GET_STUDENT_SESSION_REQUESTS}?session_id=${sessionId}`
+                : API_ROUTES.SESSION_SERVICE.GET_STUDENT_SESSION_REQUESTS;
+            const response = await apiClient.get(url);
+            if (response.data?.status === 200) {
+                return response.data.data || [];
+            } else {
+                setError(response.data?.message || "Failed to fetch student session requests");
+                return [];
+            }
+        } catch (err) {
+            console.error("Error fetching student session requests:", err);
+            setError(err.response?.data?.message || "Error occurred while fetching student session requests.");
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         if (options?.fetchOnMount) {
@@ -168,6 +216,8 @@ export function useGroups(options = { fetchOnMount: true }) {
         createGroup,
         assignTrainer,
         reassignGroup,
-        reassigningIds
+        reassigningIds,
+        requestStudentToSession,
+        fetchStudentSessionRequests
     };
 }

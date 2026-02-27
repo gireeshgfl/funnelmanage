@@ -1248,3 +1248,43 @@ class GroupDAO(BaseDAO):
         if result.matched_count == 0:
             raise Exception("Group not found or you don't have permission to reassign it.")
         return True
+
+
+# ------------------------------
+# Session Student Request DAO Module
+# Handles requests to add students to sessions.
+# ------------------------------
+class SessionStudentRequestDAO(BaseDAO):
+    def __init__(self, db_connection):
+        """
+        Initialize SessionStudentRequestDAO with the 'session_student_requests' collection.
+        """
+        super().__init__(db_connection, collection_name='session_student_requests')
+
+    def create_request(self, student_id, session_id, requested_by):
+        """
+        Create a new request to add a student to a session.
+        """
+        request_data = {
+            "student_id": ObjectId(student_id),
+            "session_id": ObjectId(session_id),
+            "requested_by": ObjectId(requested_by),
+            "status": "pending",
+            "created_at": datetime.utcnow()
+        }
+        result = self.insert_one(request_data)
+        request_data['_id'] = result.inserted_id
+        return request_data
+
+    def get_requests_by_session(self, session_id):
+        """
+        Retrieve all student requests for a given session.
+        """
+        query = {"session_id": ObjectId(session_id)}
+        return list(self.find_many(query))
+
+    def get_all_requests(self):
+        """
+        Retrieve all student-to-session requests.
+        """
+        return list(self.find_many({}))

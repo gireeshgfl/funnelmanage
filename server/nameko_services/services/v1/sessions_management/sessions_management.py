@@ -2,7 +2,7 @@ from nameko.rpc import rpc, RpcProxy
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from nameko_services.common.dependencies import MongoProvider, WorkerContextProvider, AmqpPublisher 
-from nameko_services.common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO, UserDAO
+from nameko_services.common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO, UserDAO, SessionStudentRequestDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher
@@ -46,6 +46,10 @@ class SessionService:
     @property
     def user_dao(self):
         return UserDAO(self.mongo_provider)
+
+    @property
+    def session_student_request_dao(self):
+        return SessionStudentRequestDAO(self.mongo_provider)
 
 
     def dispatch_event(event_type):
@@ -732,4 +736,63 @@ class SessionService:
             "data": questions,
             "status": 200
         }
+
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['sub-admin'])
+    @serialize_result
+    def request_student_to_session(self, user_id, data):
+        """
+        RPC method to request a trainer to add a student to a particular session.
+        Expects 'data' with 'student_id' and 'session_id'.
+        """
+        student_id = data.get('student_id')
+        session_id = data.get('session_id')
+
+        if not student_id or not session_id:
+            return {
+                "message": "student_id and session_id are required.",
+                "status": 400
+            }
+
+        request = self.session_student_request_dao.create_request(
+            student_id=student_id,
+            session_id=session_id,
+            requested_by=user_id
+        )
+
+        return {
+            "message": "Student session request created successfully.",
+            "data": request,
+            "status": 200
+        }
+
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['sub-admin', 'trainer'])
+    @serialize_result
+    def get_student_session_requests(self, user_id, payload):
+        """
+        RPC method to fetch student-to-session requests.
+        Optionally filter by session_id via query_params.
+        """
+        session_id = payload.get("query_params", {}).get("session_id")
+
+        if session_id:
+            requests = self.session_student_request_dao.get_requests_by_session(session_id)
+        else:
+            requests = self.session_student_request_dao.get_all_requests()
+
+        if requests:
+            return {
+                "message": "Student session requests fetched successfully.",
+                "data": requests,
+                "status": 200
+            }
+        else:
+            return {
+                "message": "No student session requests found.",
+                "data": [],
+                "status": 200
+            }
 
