@@ -102,7 +102,7 @@ export function useGroups(options = { fetchOnMount: true }) {
                 { groupId, trainerId }
             );
 
-            if (response.data?.status === 200) {
+            if (response.data?.status === 200 || response.data?.status === 201) {
                 setFeedbackMessage("Trainer assigned successfully!");
                 await fetchGroups(); // Refresh groups to show updated assignment
                 return true;

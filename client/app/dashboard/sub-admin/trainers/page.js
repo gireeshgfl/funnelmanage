@@ -11,7 +11,10 @@ import {
     X,
     Check,
     User,
-    LayoutGrid
+    LayoutGrid,
+    AlertCircle,
+    CheckCircle2,
+    Info
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,6 +32,16 @@ const TrainersPage = () => {
         feedbackMessage,
         setFeedbackMessage
     } = useGroups();
+
+    // Auto-clear feedback message
+    React.useEffect(() => {
+        if (feedbackMessage) {
+            const timer = setTimeout(() => {
+                setFeedbackMessage("");
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [feedbackMessage, setFeedbackMessage]);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,6 +79,42 @@ const TrainersPage = () => {
 
     return (
         <div className="min-h-screen bg-transparent p-8">
+            {/* Floating Alert */}
+            <AnimatePresence>
+                {feedbackMessage && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, x: '-50%' }}
+                        animate={{ opacity: 1, y: 0, x: '-50%' }}
+                        exit={{ opacity: 0, y: -20, x: '-50%' }}
+                        className="fixed top-8 left-1/2 z-[100] w-full max-w-md px-4"
+                    >
+                        <div className={`p-4 rounded-2xl shadow-2xl border backdrop-blur-md flex items-center space-x-4 ${feedbackMessage.toLowerCase().includes('success')
+                            ? 'bg-emerald-500/90 border-emerald-400 text-white'
+                            : 'bg-red-500/90 border-red-400 text-white'
+                            }`}>
+                            <div className="flex-shrink-0">
+                                {feedbackMessage.toLowerCase().includes('success') ? (
+                                    <CheckCircle2 className="w-6 h-6" />
+                                ) : feedbackMessage.toLowerCase().includes('wait') || feedbackMessage.toLowerCase().includes('process') ? (
+                                    <Info className="w-6 h-6" />
+                                ) : (
+                                    <AlertCircle className="w-6 h-6" />
+                                )}
+                            </div>
+                            <div className="flex-1 font-bold text-sm">
+                                {feedbackMessage}
+                            </div>
+                            <button
+                                onClick={() => setFeedbackMessage("")}
+                                className="flex-shrink-0 hover:bg-white/20 p-1 rounded-full transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="max-w-6xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="flex justify-between items-start">
