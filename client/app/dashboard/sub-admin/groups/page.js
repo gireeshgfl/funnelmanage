@@ -169,8 +169,8 @@ const GroupsPage = () => {
                             </div>
                         ) : participantsError ? (
                             <div className="bg-red-50 border border-red-100 text-red-600 p-8 rounded-3xl text-center shadow-sm">
-                                <p className="font-semibold text-lg mb-1">Participants Load Error</p>
-                                <p className="opacity-80 text-sm">{participantsError.message || "Failed to reach participant service."}</p>
+                                <p className="font-semibold text-lg mb-1">Service Unavailable</p>
+                                <p className="opacity-80 text-sm">Eduvocate is down or unable to fetch data. Please try again later.</p>
                             </div>
                         ) : (
                             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
