@@ -30,6 +30,18 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
 
   useEffect(() => {
     loadPendingCount();
+
+    // Poll every 30 seconds so the badge stays in sync
+    const interval = setInterval(loadPendingCount, 30000);
+
+    // Listen for approval events from the admin-requests page
+    const handleApproval = () => loadPendingCount();
+    window.addEventListener('admin-request-approved', handleApproval);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('admin-request-approved', handleApproval);
+    };
   }, [loadPendingCount]);
 
   const handleSignout = async () => {
@@ -134,7 +146,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
               >
                 <div className="relative">
                   <item.icon className={`h-5 w-5 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'} transition-colors`} />
-                  {item.badge && item.badge > 0 && collapsed && (
+                  {item.badge > 0 && collapsed && (
                     <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center h-4 min-w-[16px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
                       {item.badge > 99 ? '99+' : item.badge}
                     </span>
@@ -145,7 +157,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                   <span className="ml-3 flex-1">{item.label}</span>
                 )}
 
-                {!collapsed && item.badge && item.badge > 0 && (
+                {!collapsed && item.badge > 0 && (
                   <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[11px] font-bold text-white bg-red-500 rounded-full">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
@@ -259,7 +271,7 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                       <item.icon className={`h-5 w-5 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`} />
                     </div>
                     <span className="flex-1">{item.label}</span>
-                    {item.badge && item.badge > 0 && (
+                    {item.badge > 0 && (
                       <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[11px] font-bold text-white bg-red-500 rounded-full">
                         {item.badge > 99 ? '99+' : item.badge}
                       </span>

@@ -17,7 +17,7 @@ if [ -d "dist" ]; then
     
     echo "Executing remote commands..."
     # NOTE: Ensure 'api-funnel' and 'nameko-funnel' are correct service names and 'ubuntu' user has sudo rights
-    ssh ubuntu "cd ~/funnelmanagement/server && \
+    ssh -t ubuntu "cd ~/funnelmanagement/server && \
     source venv/bin/activate && \
     echo 'Installing new server package...' && \
     pip install funnel_server-1.0.0-py3-none-any.whl --force-reinstall && \
