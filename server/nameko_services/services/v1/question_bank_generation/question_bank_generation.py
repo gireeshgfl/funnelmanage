@@ -303,6 +303,19 @@ class QuestionService:
             # Fetch the participant data from RPC
             response = self.profile_rpc.get_participants()  # Call remote RPC method
 
+            # Check if any participant has roles
+            has_roles = any('roles' in participant for participant in response)
+            if not has_roles:
+                return {
+                    "status": 200,
+                    "data": {
+                        "trainers": [],
+                        "students": [],
+                        "others": []
+                    },
+                    "message": "Unable to fetch roles from eduvocate"
+                }
+
             # Directly separate the participants within this method
             trainers = []
             students = []

@@ -38,8 +38,11 @@ export function useGroups(options = { fetchOnMount: true }) {
             const response = await apiClient.get(API_ROUTES.QUESTION_SERVICE.GET_PARTICIPANTS);
             if (response.data?.status === 200 && response.data?.data) {
                 setParticipants(response.data.data);
+                if (response.data?.message && response.data.message !== "Participants Fetched") {
+                    setParticipantsError(new Error(response.data.message));
+                }
             } else {
-                throw new Error("Failed to load participants data");
+                throw new Error(response.data?.message || "Failed to load participants data");
             }
         } catch (err) {
             console.error("Error fetching participants:", err);
