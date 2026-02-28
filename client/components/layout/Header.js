@@ -31,15 +31,11 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
   useEffect(() => {
     loadPendingCount();
 
-    // Poll every 30 seconds so the badge stays in sync
-    const interval = setInterval(loadPendingCount, 30000);
-
     // Listen for approval events from the admin-requests page
     const handleApproval = () => loadPendingCount();
     window.addEventListener('admin-request-approved', handleApproval);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('admin-request-approved', handleApproval);
     };
   }, [loadPendingCount]);
