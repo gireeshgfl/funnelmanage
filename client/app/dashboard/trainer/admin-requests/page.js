@@ -38,6 +38,8 @@ export default function AdminRequestsPage() {
                     (r._id || r.id) === reqId ? { ...r, status: 'approved' } : r
                 )
             );
+            // Notify sidebar to refresh its pending count immediately
+            window.dispatchEvent(new Event('admin-request-approved'));
         }
         setMarkingIds(prev => prev.filter(id => id !== reqId));
     };
