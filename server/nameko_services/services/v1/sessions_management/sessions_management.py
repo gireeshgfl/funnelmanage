@@ -826,3 +826,27 @@ class SessionService:
                 "status": 200
             }
 
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def mark_requests_seen(self, user_id, data):
+        """
+        RPC method to mark admin requests as seen.
+        Expects 'data' with 'request_ids' (list of request ID strings).
+        """
+        request_ids = data.get('request_ids', [])
+
+        if not request_ids:
+            return {
+                "message": "request_ids is required.",
+                "status": 400
+            }
+
+        modified_count = self.session_student_request_dao.mark_requests_seen(request_ids)
+
+        return {
+            "message": f"{modified_count} request(s) marked as seen.",
+            "data": {"modified_count": modified_count},
+            "status": 200
+        }

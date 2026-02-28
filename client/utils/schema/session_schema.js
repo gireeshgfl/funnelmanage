@@ -144,3 +144,7 @@ export const RequestStudentToSessionSchema = z.object({
   student_name: z.string(),
   student_email: z.string(),
 });
+
+export const MarkRequestsSeenSchema = z.object({
+  request_ids: z.array(z.string().length(24, "Invalid request ID format")).min(1, "At least one request ID is required"),
+});

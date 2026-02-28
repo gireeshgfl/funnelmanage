@@ -65,6 +65,7 @@ export const API_ROUTES = {
     GET_IN_SESSION_QUESTIONS: `${BASE_URL}/session_service/get_in_session_questions/`,
     REQUEST_STUDENT_TO_SESSION: `${BASE_URL}/session_service/request_student_to_session/`,
     GET_STUDENT_SESSION_REQUESTS: `${BASE_URL}/session_service/get_student_session_requests/`,
+    MARK_REQUESTS_SEEN: `${BASE_URL}/session_service/mark_requests_seen/`,
   },
 
   // ===========================

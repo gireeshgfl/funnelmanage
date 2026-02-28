@@ -1290,3 +1290,14 @@ class SessionStudentRequestDAO(BaseDAO):
         Retrieve all student-to-session requests.
         """
         return list(self.find_many({}))
+
+    def mark_requests_seen(self, request_ids):
+        """
+        Mark one or more requests as seen by their IDs.
+        """
+        object_ids = [ObjectId(rid) for rid in request_ids]
+        result = self.collection.update_many(
+            {"_id": {"$in": object_ids}},
+            {"$set": {"seen": True, "seen_at": datetime.utcnow(), "status": "approved"}}
+        )
+        return result.modified_count
