@@ -178,10 +178,14 @@ export function useGroups(options = { fetchOnMount: true }) {
                 ? `${API_ROUTES.SESSION_SERVICE.GET_STUDENT_SESSION_REQUESTS}?session_id=${sessionId}`
                 : API_ROUTES.SESSION_SERVICE.GET_STUDENT_SESSION_REQUESTS;
             const response = await apiClient.get(url);
-            if (response.data?.status === 200) {
-                return response.data.data || [];
+            const resData = response.data;
+            // Handle both wrapped { status, data } and raw array responses
+            if (Array.isArray(resData)) {
+                return resData;
+            } else if (resData?.status === 200) {
+                return resData.data || [];
             } else {
-                setError(response.data?.message || "Failed to fetch student session requests");
+                setError(resData?.message || "Failed to fetch student session requests");
                 return [];
             }
         } catch (err) {

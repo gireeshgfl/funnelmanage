@@ -54,9 +54,11 @@ export default function AdminRequestsPage() {
 
     const filteredRequests = requests.filter((req) => {
         const studentName = req.student_name || req.studentName || req.student_id || '';
+        const studentEmail = req.student_email || req.studentEmail || '';
         const sessionName = req.session_name || req.sessionName || req.session_id || '';
         const matchesSearch =
             studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            studentEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
             sessionName.toLowerCase().includes(searchQuery.toLowerCase());
 
         const status = (req.status || 'pending').toLowerCase();
@@ -171,6 +173,7 @@ export default function AdminRequestsPage() {
                                 filteredRequests.map((req, index) => {
                                     const reqId = req._id || req.id || index;
                                     const studentName = req.student_name || req.studentName || req.student_id || 'Unknown';
+                                    const studentEmail = req.student_email || req.studentEmail || '';
                                     const sessionName = req.session_name || req.sessionName || req.session_id || 'Unknown';
                                     const createdAt = req.created_at || req.createdAt || req.date;
 
@@ -184,9 +187,16 @@ export default function AdminRequestsPage() {
                                                     <div className="h-8 w-8 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center flex-shrink-0">
                                                         <User className="h-4 w-4 text-primary-600 dark:text-primary-400" />
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                        {studentName}
-                                                    </span>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            {studentName}
+                                                        </span>
+                                                        {studentEmail && (
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                                {studentEmail}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
