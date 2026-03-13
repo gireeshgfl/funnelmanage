@@ -1150,3 +1150,154 @@ class InSessionQuestionsDAO(BaseDAO):
 
 
 
+
+# ------------------------------
+# Group Service DAO Module
+# Handles group-related operations.
+# ------------------------------
+class GroupDAO(BaseDAO):
+    def __init__(self, db_connection):
+        """
+        Initialize GroupDAO with the 'groups' collection.
+        """
+        super().__init__(db_connection, collection_name="groups")
+
+    def save_group(self, user_id, data):
+        """
+        Save a new group into the groups collection.
+        """
+        data['created_by'] = ObjectId(user_id)
+        data['created_at'] = datetime.utcnow()
+
+        result = self.insert_one(data)
+        data['_id'] = result.inserted_id
+        return data
+
+    def get_groups_by_user(self, user_id):
+        """
+        Retrieve all groups created by a specific user.
+        """
+        user_object_id = ObjectId(user_id)
+        query = { "created_by": user_object_id }
+        results = self.find_many(query)
+        return list(results)
+
+    def get_all_groups(self):
+        """
+        Retrieve all groups regradless who created it.
+        """
+        results = self.find_many({})
+        return list(results)
+
+    def assign_trainer(self, group_id, trainer_id):
+        """
+        Assign a trainer to a specific group.
+        Initial assignment allowed if trainerId is missing.
+        Reassignment allowed only if reassign flag is True.
+        """
+        group_oid = ObjectId(group_id)
+        trainer_oid = ObjectId(trainer_id)
+
+        # Query to allow assignment if:
+        # 1. trainerId is missing or null
+        # 2. reassign flag is True
+        query = {
+            "_id": group_oid,
+            "$or": [
+                {"trainerId": {"$exists": False}},
+                {"trainerId": None},
+                {"reassign": True}
+            ]
+        }
+
+        update = {
+            "$set": {
+                "trainerId": trainer_oid,
+                "reassign": False,
+                "updated_at": datetime.utcnow()
+            }
+        }
+
+        result = self.update_one(query, update)
+        return result.matched_count > 0
+
+    def set_group_reassign_flag(self, user_id, group_id):
+        """
+        Flag a group for reassignment if the user is the creator or assigned trainer.
+        """
+        group_oid = ObjectId(group_id)
+        user_oid = ObjectId(user_id)
+
+        # Permission check: created_by == user_id OR trainerId == user_id
+        query = {
+            "_id": group_oid,
+            "$or": [
+                {"created_by": user_oid},
+                {"trainerId": user_oid}
+            ]
+        }
+
+        update = {
+            "$set": {
+                "reassign": True,
+                "updated_at": datetime.utcnow()
+            }
+        }
+
+        result = self.update_one(query, update)
+        if result.matched_count == 0:
+            raise Exception("Group not found or you don't have permission to reassign it.")
+        return True
+
+
+# ------------------------------
+# Session Student Request DAO Module
+# Handles requests to add students to sessions.
+# ------------------------------
+class SessionStudentRequestDAO(BaseDAO):
+    def __init__(self, db_connection):
+        """
+        Initialize SessionStudentRequestDAO with the 'session_student_requests' collection.
+        """
+        super().__init__(db_connection, collection_name='session_student_requests')
+
+    def create_request(self, student_id, session_id, requested_by, student_name='', student_email=''):
+        """
+        Create a new request to add a student to a session.
+        """
+        request_data = {
+            "student_id": ObjectId(student_id),
+            "session_id": ObjectId(session_id),
+            "requested_by": ObjectId(requested_by),
+            "student_name": student_name,
+            "student_email": student_email,
+            "status": "pending",
+            "created_at": datetime.utcnow()
+        }
+        result = self.insert_one(request_data)
+        request_data['_id'] = result.inserted_id
+        return request_data
+
+    def get_requests_by_session(self, session_id):
+        """
+        Retrieve all student requests for a given session.
+        """
+        query = {"session_id": ObjectId(session_id)}
+        return list(self.find_many(query))
+
+    def get_all_requests(self):
+        """
+        Retrieve all student-to-session requests.
+        """
+        return list(self.find_many({}))
+
+    def mark_requests_seen(self, request_ids):
+        """
+        Mark one or more requests as seen by their IDs.
+        """
+        object_ids = [ObjectId(rid) for rid in request_ids]
+        result = self.collection.update_many(
+            {"_id": {"$in": object_ids}},
+            {"$set": {"seen": True, "seen_at": datetime.utcnow(), "status": "approved"}}
+        )
+        return result.modified_count

@@ -63,6 +63,9 @@ export const API_ROUTES = {
     SAVE_SESSION_POINTS: `${BASE_URL}/session_service/save_session_points/`,
     GET_SESSIONS_WITH_QUESTIONS: `${BASE_URL}/session_service/get_sessions_with_questions/`,
     GET_IN_SESSION_QUESTIONS: `${BASE_URL}/session_service/get_in_session_questions/`,
+    REQUEST_STUDENT_TO_SESSION: `${BASE_URL}/session_service/request_student_to_session/`,
+    GET_STUDENT_SESSION_REQUESTS: `${BASE_URL}/session_service/get_student_session_requests/`,
+    MARK_REQUESTS_SEEN: `${BASE_URL}/session_service/mark_requests_seen/`,
   },
 
   // ===========================
@@ -105,6 +108,11 @@ export const API_ROUTES = {
     SAVE_PARTICIPANTS: `${BASE_URL}/funnel_service/save_participants/`,
     GET_PARTICIPANTS: `${BASE_URL}/funnel_service/get_participants/`,
     FUNNELLING: `${BASE_URL}/funnel_service/funnelling/`,
+    GET_GROUPS: `${BASE_URL}/funnel_service/get_groups/`,
+    SAVE_GROUP: `${BASE_URL}/funnel_service/save_group/`,
+    ASSIGN_TRAINER: `${BASE_URL}/funnel_service/assign_trainer/`,
+    REASSIGN_GROUP: `${BASE_URL}/funnel_service/reassign_group/`,
+    GET_ATTEMPTED_STUDENTS: `${BASE_URL}/funnel_service/get_attempted_students/`,
   },
 
   // ===========================

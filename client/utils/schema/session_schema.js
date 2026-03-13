@@ -123,3 +123,28 @@ export const participantEmailsSchema = z.object({
   sessionId: z.string().length(24, "Invalid session ID format"),
   emails: z.array(z.string().email("Invalid email address")).min(1, "At least one email is required"),
 });
+
+export const GroupSaveSchema = z.object({
+  name: z.string().min(1, "Group name is required"),
+  studentIds: z.array(z.string().length(24, "Invalid student ID format")).min(1, "At least one student is required"),
+});
+
+export const AssignTrainerSchema = z.object({
+  groupId: z.string().length(24, "Invalid group ID format"),
+  trainerId: z.string().length(24, "Invalid trainer ID format"),
+});
+
+export const ReassignGroupSchema = z.object({
+  group_id: z.string().length(24, "Invalid group ID format"),
+});
+
+export const RequestStudentToSessionSchema = z.object({
+  student_id: z.string().length(24, "Invalid student ID format"),
+  session_id: z.string().length(24, "Invalid session ID format"),
+  student_name: z.string(),
+  student_email: z.string(),
+});
+
+export const MarkRequestsSeenSchema = z.object({
+  request_ids: z.array(z.string().length(24, "Invalid request ID format")).min(1, "At least one request ID is required"),
+});

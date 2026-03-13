@@ -2,7 +2,7 @@ from nameko.rpc import rpc, RpcProxy
 from common.utils import rbac_check, setup_logging, error_handler, get_rbac_check
 from bson_serilizer.bson_serialization import serialize_result, custom_json_dumps  # type: ignore
 from nameko_services.common.dependencies import MongoProvider, WorkerContextProvider, AmqpPublisher 
-from nameko_services.common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO, UserDAO
+from nameko_services.common.DAO import SessionDAO, PointsDAO, QuestionDAO, BroadcastQuestionsDAO, FunnelDAO, InSessionQuestionsDAO, UserDAO, SessionStudentRequestDAO
 import logging
 from functools import wraps
 from nameko.events import EventDispatcher
@@ -46,6 +46,10 @@ class SessionService:
     @property
     def user_dao(self):
         return UserDAO(self.mongo_provider)
+
+    @property
+    def session_student_request_dao(self):
+        return SessionStudentRequestDAO(self.mongo_provider)
 
 
     def dispatch_event(event_type):
@@ -102,10 +106,14 @@ class SessionService:
 
     @rpc
     @error_handler
-    @get_rbac_check(required_roles=['trainer'])
+    @get_rbac_check(required_roles=['trainer', 'sub-admin'])
     @serialize_result
     def get_sessions(self, user_id, payload):
-        result = self.session_service_dao.get_sessions_by_user(user_id)
+        roles = payload.get('roles', [])
+        if 'sub-admin' in roles:
+            result = self.session_service_dao.get_sessions()
+        else:
+            result = self.session_service_dao.get_sessions_by_user(user_id)
         if result:
             response = {
                 "message": "Session(s) fetched successfully",
@@ -729,3 +737,116 @@ class SessionService:
             "status": 200
         }
 
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['sub-admin'])
+    @serialize_result
+    def request_student_to_session(self, user_id, data):
+        """
+        RPC method to request a trainer to add a student to a particular session.
+        Expects 'data' with 'student_id', 'session_id', and optionally 'student_name' and 'student_email'.
+        """
+        student_id = data.get('student_id')
+        session_id = data.get('session_id')
+        student_name = data.get('student_name', '')
+        student_email = data.get('student_email', '')
+
+        if not student_id or not session_id:
+            return {
+                "message": "student_id and session_id are required.",
+                "status": 400
+            }
+
+        request = self.session_student_request_dao.create_request(
+            student_id=student_id,
+            session_id=session_id,
+            requested_by=user_id,
+            student_name=student_name,
+            student_email=student_email
+        )
+
+        return {
+            "message": "Student session request created successfully.",
+            "data": request,
+            "status": 200
+        }
+
+    @rpc
+    @error_handler
+    @get_rbac_check(required_roles=['sub-admin', 'trainer'])
+    @serialize_result
+    def get_student_session_requests(self, user_id, payload):
+        """
+        RPC method to fetch student-to-session requests.
+        Optionally filter by session_id via query_params.
+        For trainers, only returns requests for sessions they created.
+        Populates session_name in each request for both roles.
+        """
+        roles = payload.get('roles', [])
+        session_id = payload.get("query_params", {}).get("session_id")
+
+        if session_id:
+            requests = self.session_student_request_dao.get_requests_by_session(session_id)
+        else:
+            requests = self.session_student_request_dao.get_all_requests()
+
+        # For trainers, filter requests to only show those for sessions they created
+        if 'trainer' in roles and 'sub-admin' not in roles:
+            trainer_sessions = self.session_service_dao.get_sessions_by_user(user_id)
+            trainer_session_ids = {str(s['_id']) for s in trainer_sessions}
+            requests = [r for r in requests if str(r.get('session_id')) in trainer_session_ids]
+
+        # Populate session_name for each request
+        if requests:
+            # Collect unique session IDs from the requests
+            unique_session_ids = list({str(r.get('session_id')) for r in requests if r.get('session_id')})
+            session_obj_ids = [ObjectId(sid) for sid in unique_session_ids if ObjectId.is_valid(sid)]
+
+            # Fetch session details in bulk
+            sessions = self.session_service_dao.find_many(
+                {"_id": {"$in": session_obj_ids}},
+                projection={"sessionName": 1}
+            )
+            session_name_map = {str(s['_id']): s.get('sessionName', '') for s in sessions}
+
+            # Attach session_name to each request
+            for req in requests:
+                req['session_name'] = session_name_map.get(str(req.get('session_id')), '')
+
+        if requests:
+            return {
+                "message": "Student session requests fetched successfully.",
+                "data": requests,
+                "status": 200
+            }
+        else:
+            return {
+                "message": "No student session requests found.",
+                "data": [],
+                "status": 200
+            }
+
+    @rpc
+    @error_handler
+    @rbac_check(required_roles=['trainer'])
+    @serialize_result
+    def mark_requests_seen(self, user_id, data):
+        """
+        RPC method to mark admin requests as seen.
+        Expects 'data' with 'request_ids' (list of request ID strings).
+        """
+        request_ids = data.get('request_ids', [])
+
+        if not request_ids:
+            return {
+                "message": "request_ids is required.",
+                "status": 400
+            }
+
+        modified_count = self.session_student_request_dao.mark_requests_seen(request_ids)
+
+        return {
+            "message": f"{modified_count} request(s) marked as seen.",
+            "data": {"modified_count": modified_count},
+            "status": 200
+        }

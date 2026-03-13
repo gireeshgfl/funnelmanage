@@ -20,7 +20,7 @@ export default function LoginPage() {
   const handleRoleBasedRedirect = (role) => {
     console.log('Redirecting with role:', role);
 
-    const validRoles = ['trainer', 'student', 'super-admin'];
+    const validRoles = ['trainer', 'student', 'super-admin', 'sub-admin'];
 
     if (role && validRoles.includes(role.toLowerCase())) {
       router.replace(`/dashboard/${role.toLowerCase()}`);

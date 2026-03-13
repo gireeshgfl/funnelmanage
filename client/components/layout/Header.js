@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@hooks/useAuth';
+import { useGroups } from '@/hooks/useGroups';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Filter, BookOpen, Gift, Calendar, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut } from 'lucide-react';
+import { Filter, BookOpen, Gift, Calendar, Menu, X, ChevronLeft, ChevronRight, User, Settings, LogOut, Users, ClipboardList } from 'lucide-react';
 
 export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
   const { signout } = useAuth();
@@ -12,6 +13,32 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const [pendingCount, setPendingCount] = useState(0);
+  const { fetchStudentSessionRequests } = useGroups({ fetchOnMount: false });
+
+  const loadPendingCount = useCallback(async () => {
+    try {
+      const data = await fetchStudentSessionRequests();
+      const pending = (data || []).filter(
+        (r) => (r.status || '').toLowerCase() !== 'approved'
+      );
+      setPendingCount(pending.length);
+    } catch (err) {
+      console.error('Error fetching pending count:', err);
+    }
+  }, [fetchStudentSessionRequests]);
+
+  useEffect(() => {
+    loadPendingCount();
+
+    // Listen for approval events from the admin-requests page
+    const handleApproval = () => loadPendingCount();
+    window.addEventListener('admin-request-approved', handleApproval);
+
+    return () => {
+      window.removeEventListener('admin-request-approved', handleApproval);
+    };
+  }, [loadPendingCount]);
 
   const handleSignout = async () => {
     try {
@@ -32,9 +59,11 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
 
   const navItems = [
     { href: '/dashboard/trainer/sessions', label: 'Sessions', icon: Calendar },
+    { href: '/dashboard/trainer/groups', label: 'Groups', icon: Users },
     { href: '/dashboard/trainer/question-bank', label: 'Question Bank', icon: BookOpen },
     { href: '/dashboard/trainer/funnels', label: 'Funnels', icon: Filter },
     { href: '/dashboard/trainer/rewards', label: 'Rewards', icon: Gift },
+    { href: '/dashboard/trainer/admin-requests', label: 'Admin Requests', icon: ClipboardList, badge: pendingCount },
   ];
 
   return (
@@ -111,10 +140,23 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
               >
-                <item.icon className={`h-5 w-5 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'} transition-colors`} />
+                <div className="relative">
+                  <item.icon className={`h-5 w-5 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'} transition-colors`} />
+                  {item.badge > 0 && collapsed && (
+                    <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center h-4 min-w-[16px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </div>
 
                 {!collapsed && (
-                  <span className="ml-3">{item.label}</span>
+                  <span className="ml-3 flex-1">{item.label}</span>
+                )}
+
+                {!collapsed && item.badge > 0 && (
+                  <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[11px] font-bold text-white bg-red-500 rounded-full">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
                 )}
 
                 {/* Tooltip for collapsed state */}
@@ -216,13 +258,20 @@ export default function Sidebar({ onCollapseChange, initialCollapsed = true }) {
                     key={item.href}
                     href={item.href}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${active
-                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                       }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <item.icon className={`h-5 w-5 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`} />
-                    <span>{item.label}</span>
+                    <div className="relative">
+                      <item.icon className={`h-5 w-5 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                    </div>
+                    <span className="flex-1">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[11px] font-bold text-white bg-red-500 rounded-full">
+                        {item.badge > 99 ? '99+' : item.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
